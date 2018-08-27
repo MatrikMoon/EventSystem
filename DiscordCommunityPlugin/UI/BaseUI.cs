@@ -28,7 +28,7 @@ namespace DiscordCommunityPlugin
             {
                 return;
             }
-            new GameObject("BeatSaber Custom UI").AddComponent<BaseUI>();
+            new GameObject("BaseUI").AddComponent<BaseUI>();
         }
 
         private void Awake()
@@ -103,8 +103,8 @@ namespace DiscordCommunityPlugin
             textMesh.fontSize = 4;
             textMesh.color = Color.white;
             textMesh.font = Resources.Load<TMP_FontAsset>("Teko-Medium SDF No Glow");
-            textMesh.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            textMesh.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            //textMesh.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            //textMesh.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             textMesh.rectTransform.sizeDelta = new Vector2(60f, 10f);
             textMesh.rectTransform.anchoredPosition = position;
 
@@ -115,7 +115,6 @@ namespace DiscordCommunityPlugin
         {
             if (_button.GetComponentInChildren<TextMeshProUGUI>() != null)
             {
-
                 _button.GetComponentInChildren<TextMeshProUGUI>().text = _text;
             }
 

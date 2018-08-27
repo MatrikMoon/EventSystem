@@ -74,6 +74,13 @@ namespace DiscordCommunityPlugin
             return Type.GetType(clazz);
         }
 
+        //Returns a list (of strings) of the names of all loaded assemblies
+        public static IEnumerable<string> GetLoadedAssemblies()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .Select(a => a.GetName().Name);
+        }
+
         //Returns a list of all loaded namespaces
         //TODO: Check up on time complexity here, could potentially be parallelized
         public static IEnumerable<string> ListNamespaces()

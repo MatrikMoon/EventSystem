@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiscordCommunityPlugin.UI;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +19,7 @@ namespace DiscordCommunityPlugin
 
         private RectTransform _mainMenuRectTransform;
         private MainMenuViewController _mainMenuViewController;
+        private ModalViewController _requiredModsModal;
         private Button _beatSaverButton;
         
         public static void OnLoad()
@@ -53,7 +55,23 @@ namespace DiscordCommunityPlugin
                 BaseUI.SetButtonText(_beatSaverButton, "DiscordCommunity");
 
                 _beatSaverButton.onClick.AddListener(() => {
-                    
+                    if (ReflectionUtil.GetLoadedAssemblies().Contains("SongLoaderPlugin"))
+                    {
+                        if (_requiredModsModal == null)
+                        {
+                            _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
+                            _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
+                            "SongLoaderPlugin\n\n" +
+                            "DiscordCommunityPlugin will not function.";
+                            _requiredModsModal.Type = ModalViewController.ModalType.YesNo;
+
+                            _requiredModsModal.YesCallback = () =>
+                            {
+                                Logger.Warning("YESCALLBACK ONCLICK");
+                            };
+                        }
+                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, false);
+                    }
                 });
             }
             catch (Exception e)

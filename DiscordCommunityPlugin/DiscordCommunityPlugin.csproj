@@ -72,13 +72,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseUI.cs" />
-    <Compile Include="CommunityUI.cs" />
-    <Compile Include="WinConsole.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="UI\BaseUI.cs" />
+    <Compile Include="UI\CommunityUI.cs" />
+    <Compile Include="Misc\Logger.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReflectionUtils.cs" />
+    <Compile Include="Misc\ReflectionUtils.cs" />
+    <Compile Include="UI\ModalViewController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
