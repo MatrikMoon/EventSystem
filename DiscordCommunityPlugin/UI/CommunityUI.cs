@@ -21,6 +21,7 @@ namespace DiscordCommunityPlugin
         private MainMenuViewController _mainMenuViewController;
         private ModalViewController _requiredModsModal;
         private Button _beatSaverButton;
+        private MultiplayerRoomViewController _multiplayerRoomViewController;
         
         public static void OnLoad()
         {
@@ -55,23 +56,31 @@ namespace DiscordCommunityPlugin
                 BaseUI.SetButtonText(_beatSaverButton, "DiscordCommunity");
 
                 _beatSaverButton.onClick.AddListener(() => {
-                    if (ReflectionUtil.GetLoadedAssemblies().Contains("SongLoaderPlugin"))
+                    //If the user doesn't have the songloader plugin installed, we definitely can't continue
+                    if (!ReflectionUtil.GetLoadedAssemblies().Contains("SongLoaderPlugin")) //TODO: Not entirely sure this works
                     {
+                        Logger.Warning("CHECKING REQUIRED MODS");
                         if (_requiredModsModal == null)
                         {
                             _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
                             _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
                             "SongLoaderPlugin\n\n" +
                             "DiscordCommunityPlugin will not function.";
-                            _requiredModsModal.Type = ModalViewController.ModalType.YesNo;
-
-                            _requiredModsModal.YesCallback = () =>
-                            {
-                                Logger.Warning("YESCALLBACK ONCLICK");
-                            };
+                            _requiredModsModal.Type = ModalViewController.ModalType.Ok;
                         }
-                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, false);
+                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, _mainMenuViewController.isRebuildingHierarchy);
                     }
+                    else
+                    {
+                        _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
+                        _requiredModsModal.Message = "You do have the following required mods installed:\n" +
+                        "SongLoaderPlugin\n\n" +
+                        "DiscordCommunityPlugin will function.";
+                        _requiredModsModal.Type = ModalViewController.ModalType.Ok;
+                    }
+
+                    Logger.Warning("TRYING TO LAUNCH MULTIPLAYER");
+                    _mainMenuViewController.PresentModalViewController(_multiplayerRoomViewController, null, _mainMenuViewController.isRebuildingHierarchy);
                 });
             }
             catch (Exception e)

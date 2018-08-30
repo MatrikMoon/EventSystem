@@ -72,6 +72,8 @@ namespace DiscordCommunityPlugin.UI
             promptText.alignment = TextAlignmentOptions.Center;
             promptText.fontSize = 5;
 
+            Logger.Error("RECT SIZE: " + rectTransform.rect.width + " : " + rectTransform.rect.height);
+
             if (Type == ModalType.Ok)
             {
                 okButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
@@ -114,7 +116,7 @@ namespace DiscordCommunityPlugin.UI
             if (okButton != null) Destroy(okButton);
             Destroy(promptText);
 
-            DismissModalViewController(null, false);
+            DismissModalViewController(null, true);
         }
     }
 }
