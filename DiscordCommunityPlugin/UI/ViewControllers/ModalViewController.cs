@@ -68,11 +68,9 @@ namespace DiscordCommunityPlugin.UI
 
             TextMeshProUGUI promptText = BaseUI.CreateText(rectTransform,
                 Message,
-                new Vector2(0f, 15f));
+                new Vector2(0f, -30f));
             promptText.alignment = TextAlignmentOptions.Center;
             promptText.fontSize = 5;
-
-            Logger.Error("RECT SIZE: " + rectTransform.rect.width + " : " + rectTransform.rect.height);
 
             if (Type == ModalType.Ok)
             {
