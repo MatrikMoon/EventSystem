@@ -12,6 +12,8 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
     {
         public MainMenuViewController mmvc;
 
+        private MainModNavigationController _mainModNavigationController;
+
         private SongListViewController _songListViewController;
 
         LevelCollectionsForGameplayModes _levelCollections;
@@ -32,6 +34,17 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             private set { _songPreviewPlayer = value; }
         }
 
+        public void PresentMainModUI(bool immediately = false)
+        {
+            if (_mainModNavigationController == null)
+            {
+                _mainModNavigationController = BaseUI.CreateViewController<MainModNavigationController>();
+            }
+
+            mmvc.PresentModalViewController(_mainModNavigationController, null);
+            OpenSongsList();
+        }
+
         public void OpenSongsList()
         {
             if (mmvc == null) return;
@@ -39,12 +52,17 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             {
                 _songListViewController = BaseUI.CreateViewController<SongListViewController>();
             }
-            mmvc.PresentModalViewController(_songListViewController, null, false);
             List<IStandardLevel> availableSongs = new List<IStandardLevel>();
             _levelCollections.GetLevels(GameplayMode.SoloStandard).AsParallel().ForAll(x => availableSongs.Add(x));
 
             _songListViewController.SetSongs(availableSongs);
             _songListViewController.UpdateViewController(true);
+            _mainModNavigationController.PushViewController(_songListViewController);
+        }
+
+        public void LeaveMod()
+        {
+            _mainModNavigationController.PopViewControllerImmediately();
         }
     }
 }

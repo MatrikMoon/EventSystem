@@ -23,7 +23,7 @@ namespace DiscordCommunityPlugin
         private MainMenuViewController _mainMenuViewController;
         private ModalViewController _requiredModsModal;
         private Button _beatSaverButton;
-        private MainModFlowCoordinator _mainFlowCooridnator;
+        public MainModFlowCoordinator _mainFlowCooridnator;
         
         public static void OnLoad()
         {
@@ -64,7 +64,7 @@ namespace DiscordCommunityPlugin
 
                 _beatSaverButton.onClick.AddListener(() => {
                     //If the user doesn't have the songloader plugin installed, we definitely can't continue
-                    if (!ReflectionUtil.GetLoadedAssemblies().Contains("SongLoaderPlugin")) //TODO: Not entirely sure this works
+                    if (!ReflectionUtil.GetLoadedAssemblies().Contains("SongLoaderPlugin"))
                     {
                         _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
                         _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
@@ -76,10 +76,8 @@ namespace DiscordCommunityPlugin
                     else
                     {
                         Logger.Warning("TRYING TO LAUNCH MAIN MOD FLOW");
-                        _mainFlowCooridnator.OpenSongsList();
+                        _mainFlowCooridnator.PresentMainModUI();
                     }
-
-                    //_mainMenuViewController.PresentModalViewController(_multiplayerRoomViewController, null, _mainMenuViewController.isRebuildingHierarchy);
                 });
             }
             catch (Exception e)

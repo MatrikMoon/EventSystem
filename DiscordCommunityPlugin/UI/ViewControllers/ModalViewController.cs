@@ -17,7 +17,7 @@ using VRUI;
 
 namespace DiscordCommunityPlugin.UI
 {
-    class ModalViewController : VRUINavigationController
+    class ModalViewController : VRUIViewController
     {
         public string Message { get; set; } = "Default Text";
         public ModalType Type { get; set; } = ModalType.None;
