@@ -2,29 +2,37 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 
+/**
+ * Created by andruzzzhka, from the BeatSaverMultiplayer plugin
+ */
+
 namespace DiscordCommunityPlugin.UI.ViewControllers
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource
     {
         public event Action<IStandardLevel> SongSelected;
+        public bool errorHappened = false;
 
         private Button _pageUpButton;
         private Button _pageDownButton;
 
-        TextMeshProUGUI _hostIsSelectingSongText;
-
         TableView _songsTableView;
         StandardLevelListTableCell _songTableCellInstance;
+        TextMeshProUGUI _songsDownloadingText;
+        TextMeshProUGUI _downloadErrorText;
 
         List<IStandardLevel> availableSongs = new List<IStandardLevel>();
 
+        protected HowToPlayViewController _howToPlayViewController;
+
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             if (firstActivation && type == ActivationType.AddedToHierarchy)
@@ -68,23 +76,55 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_songsTableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
                 (_songsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
 
+                _songsDownloadingText = BaseUI.CreateText(rectTransform, "Downloading weekly songs...", new Vector2(0f, -25f));
+                _songsDownloadingText.fontSize = 8f;
+                _songsDownloadingText.alignment = TextAlignmentOptions.Center;
+                _songsDownloadingText.rectTransform.sizeDelta = new Vector2(120f, 6f);
+
+                _downloadErrorText = BaseUI.CreateText(rectTransform, "Generic Error", new Vector2(0f, -25f));
+                _downloadErrorText.fontSize = 8f;
+                _downloadErrorText.alignment = TextAlignmentOptions.Center;
+                _downloadErrorText.rectTransform.sizeDelta = new Vector2(120f, 6f);
+
                 _songsTableView.SetField("_pageUpButton", _pageUpButton);
                 _songsTableView.SetField("_pageDownButton", _pageDownButton);
 
                 _songsTableView.didSelectRowEvent += SongsTableView_DidSelectRow;
                 _songsTableView.dataSource = this;
 
-                _hostIsSelectingSongText = BaseUI.CreateText(rectTransform, "Host is selecting song...", new Vector2(0f, -25f));
-                _hostIsSelectingSongText.fontSize = 8f;
-                _hostIsSelectingSongText.alignment = TextAlignmentOptions.Center;
-                _hostIsSelectingSongText.rectTransform.sizeDelta = new Vector2(120f, 6f);
-
+                //Set to view "Downloading weekly songs..." until the songs are set
+                _songsTableView.gameObject.SetActive(false);
+                _pageUpButton.gameObject.SetActive(false);
+                _pageDownButton.gameObject.SetActive(false);
+                _downloadErrorText.gameObject.SetActive(false);
+                _songsDownloadingText.gameObject.SetActive(true);
             }
             else
             {
                 _songsTableView.ReloadData();
             }
+        }
 
+        /*
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
+        protected override void LeftAndRightScreenViewControllers(out VRUIViewController leftScreenViewController, out VRUIViewController rightScreenViewController)
+        {
+            _howToPlayViewController.Init(showTutorialButton: true);
+            leftScreenViewController = _howToPlayViewController;
+            rightScreenViewController = null;
+        }
+        */
+
+        public void DownloadErrorHappened(string error)
+        {
+            _songsTableView.gameObject.SetActive(false);
+            _pageUpButton.gameObject.SetActive(false);
+            _pageDownButton.gameObject.SetActive(false);
+            _downloadErrorText.gameObject.SetActive(true);
+            _songsDownloadingText.gameObject.SetActive(false);
+
+            _downloadErrorText.SetText(error);
+            errorHappened = true;
         }
 
         private void SongsTableView_DidSelectRow(TableView sender, int row)
@@ -94,9 +134,28 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
         public void SetSongs(List<IStandardLevel> levels)
         {
+            try
+            {
+                DiscordCommunityShared.Logger.Info($"SHOWING {levels.Count} songs");
+                levels.ForEach(x => DiscordCommunityShared.Logger.Info($"SHOWING: {x.songName}"));
+                DiscordCommunityShared.Logger.Info("CONTINUING TO SHOW");
+            }
+            catch (Exception e)
+            {
+                DiscordCommunityShared.Logger.Error($"ERROR ADDING SONGS: {e}");
+                DownloadErrorHappened($"ERROR ADDING SONGS: {e}");
+            }
+
+            //Now that songs are being set, hide the "downloading" text
+            if (_downloadErrorText.gameObject.activeSelf) return; //If there was an error earlier, don't continue
+            _songsTableView.gameObject.SetActive(true);
+            _pageUpButton.gameObject.SetActive(true);
+            _pageDownButton.gameObject.SetActive(true);
+            _songsDownloadingText.gameObject.SetActive(false);
+
             availableSongs = levels;
 
-            if (_songsTableView.dataSource != this)
+            if (_songsTableView.dataSource != (TableView.IDataSource)this)
             {
                 _songsTableView.dataSource = this;
             }
@@ -108,12 +167,9 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             _songsTableView.ScrollToRow(0, false);
         }
 
-        public void UpdateViewController(bool isHost)
+        public bool HasSongs()
         {
-            _songsTableView.gameObject.SetActive(isHost);
-            _pageUpButton.gameObject.SetActive(isHost);
-            _pageDownButton.gameObject.SetActive(isHost);
-            _hostIsSelectingSongText.gameObject.SetActive(!isHost);
+            return availableSongs.Count > 0;
         }
 
         public TableCell CellForRow(int row)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,6 +14,7 @@ using Image = UnityEngine.UI.Image;
 
 namespace DiscordCommunityPlugin
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class BaseUI : MonoBehaviour
     {
         private Button _backButtonInstance;
@@ -22,6 +24,7 @@ namespace DiscordCommunityPlugin
 
         public static bool initialized = false;
 
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         internal static void OnLoad()
         {
             if (_instance != null)
@@ -31,6 +34,7 @@ namespace DiscordCommunityPlugin
             new GameObject("BaseUI").AddComponent<BaseUI>();
         }
 
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         private void Awake()
         {
 

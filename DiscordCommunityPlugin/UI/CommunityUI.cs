@@ -3,7 +3,9 @@ using DiscordCommunityPlugin.UI.FlowCoordinators;
 using DiscordCommunityPlugin.UI.ViewControllers;
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /**
@@ -15,31 +17,59 @@ using UnityEngine.UI;
 
 namespace DiscordCommunityPlugin
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CommunityUI : MonoBehaviour
     {
-        public static CommunityUI _instance;
+        public static CommunityUI instance;
+        public bool playerIsPlayingWithMe = false;
 
+        private MainModFlowCoordinator _mainFlowCooridnator;
         private RectTransform _mainMenuRectTransform;
         private MainMenuViewController _mainMenuViewController;
         private ModalViewController _requiredModsModal;
         private Button _beatSaverButton;
-        public MainModFlowCoordinator _mainFlowCooridnator;
-        
+
+        //Called on Menu scene load
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         public static void OnLoad()
         {
-            if (_instance != null)
+            if (instance != null)
             {
                 return;
             }
             new GameObject("Discord Community Plugin").AddComponent<CommunityUI>();
         }
 
+        //Called on object creation (only once in lifetime)
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         public void Awake()
         {
-            _instance = this;
+            if (instance != this)
+            {
+                instance = this;
+                DontDestroyOnLoad(this);
+
+                SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
+                CreateCommunitiyButton();
+            }
         }
 
-        public void Start()
+        private void SceneManager_activeSceneChanged(Scene prev, Scene next)
+        {
+            if (next.name == "Menu")
+            {
+                DiscordCommunityShared.Logger.Warning("CHANGED TO MENU SCENE");
+                if (playerIsPlayingWithMe)
+                {
+                    playerIsPlayingWithMe = false;
+                    DiscordCommunityShared.Logger.Warning("SHOULD LOAD MOD MENU");
+                    CreateCommunitiyButton();
+                }
+                else CreateCommunitiyButton();
+            }
+        }
+
+        private void CreateCommunitiyButton()
         {
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
@@ -48,11 +78,7 @@ namespace DiscordCommunityPlugin
                 _mainFlowCooridnator = new GameObject("MainModFlow").AddComponent<MainModFlowCoordinator>();
                 _mainFlowCooridnator.mmvc = _mainMenuViewController;
             }
-            CreateCommunitiyButton();
-        }
 
-        private void CreateCommunitiyButton()
-        {
             _beatSaverButton = BaseUI.CreateUIButton(_mainMenuRectTransform, "QuitButton");
 
             try
@@ -75,15 +101,14 @@ namespace DiscordCommunityPlugin
                     }
                     else
                     {
-                        Logger.Warning("TRYING TO LAUNCH MAIN MOD FLOW");
                         _mainFlowCooridnator.PresentMainModUI();
                     }
                 });
             }
             catch (Exception e)
             {
-                Logger.Error("Error: " + e.Message);
-                Logger.Error(e.StackTrace);
+                DiscordCommunityShared.Logger.Error("Error: " + e.Message);
+                DiscordCommunityShared.Logger.Error(e.StackTrace);
             }
         }
     }

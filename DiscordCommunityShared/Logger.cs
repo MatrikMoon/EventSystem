@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace DiscordCommunityPlugin
+namespace DiscordCommunityShared
 {
-    class Logger
+    public class Logger
     {
         private const string prefix = "[DiscordCommunityPlugin]: ";
 
@@ -26,6 +26,14 @@ namespace DiscordCommunityPlugin
         {
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(prefix + message);
+            Console.ForegroundColor = originalColor;
+        }
+
+        public static void Success(string message)
+        {
+            ConsoleColor originalColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(prefix + message);
             Console.ForegroundColor = originalColor;
         }
