@@ -24,12 +24,15 @@ namespace DiscordCommunityPlugin
         }
 
         //Gets the value of a (static?) field in object "obj" with name "fieldName"
-        public static T GetField<T>(this object obj, string fieldName)
+        public static object GetField(this object obj, string fieldName)
         {
-            return (T)(obj is Type ? (Type)obj : obj.GetType())
+            return (obj is Type ? (Type)obj : obj.GetType())
                 .GetField(fieldName, _allBindingFlags)
                 .GetValue(obj);
         }
+
+        //Gets the value of a (static?) field in object "obj" with name "fieldName" (TYPED)
+        public static T GetField<T>(this object obj, string fieldName) => (T)GetField(obj, fieldName);
 
         //Sets the value of a (static?) Property specified by the object "obj" and the name "propertyName"
         public static void SetProperty(this object obj, string propertyName, object value)
@@ -40,18 +43,21 @@ namespace DiscordCommunityPlugin
         }
 
         //Gets the value of a (static?) Property specified by the object "obj" and the name "propertyName"
-        public static T GetProperty<T>(this object obj, string propertyName)
+        public static object GetProperty(this object obj, string propertyName)
         {
-            return (T)(obj is Type ? (Type)obj : obj.GetType())
+            return (obj is Type ? (Type)obj : obj.GetType())
                 .GetProperty(propertyName, _allBindingFlags)
                 .GetValue(obj);
         }
 
+        //Gets the value of a (static?) Property specified by the object "obj" and the name "propertyName" (TYPED)
+        public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
+
         //Invokes a (static?) private method with name "methodName" and params "methodParams", returns an object of the specified type
-        public static T InvokePrivateMethod<T>(this object obj, string methodName, params object[] methodParams) => (T)InvokePrivateMethod(obj, methodName, methodParams);
+        public static T InvokeMethod<T>(this object obj, string methodName, params object[] methodParams) => (T)InvokeMethod(obj, methodName, methodParams);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams"
-        public static object InvokePrivateMethod(this object obj, string methodName, params object[] methodParams)
+        public static object InvokeMethod(this object obj, string methodName, params object[] methodParams)
         {
             return (obj is Type ? (Type)obj : obj.GetType())
                 .GetMethod(methodName, _allBindingFlags)

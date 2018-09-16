@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
@@ -17,6 +18,7 @@ using VRUI;
 
 namespace DiscordCommunityPlugin.UI
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class ModalViewController : VRUIViewController
     {
         public string Message { get; set; } = "Default Text";
@@ -38,6 +40,7 @@ namespace DiscordCommunityPlugin.UI
             None
         };
 
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             if (_backButton == null)
@@ -52,6 +55,7 @@ namespace DiscordCommunityPlugin.UI
             StartCoroutine(Prompt());
         }
 
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidDeactivate(DeactivationType deactivationType)
         {
             action?.Invoke();
@@ -114,7 +118,7 @@ namespace DiscordCommunityPlugin.UI
             if (okButton != null) Destroy(okButton);
             Destroy(promptText);
 
-            DismissModalViewController(null, true);
+            DismissModalViewController(null, false);
         }
     }
 }

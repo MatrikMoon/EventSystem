@@ -5,15 +5,14 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DiscordCommunityPlugin")]
+[assembly: AssemblyTitle("DiscordCommunityShared")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("DiscordCommunityPlugin")]
+[assembly: AssemblyProduct("DiscordCommunityShared")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: Obfuscation(Exclude = false, Feature = "preset(none);+anti ildasm;+constants;+ctrl flow;+resources;")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
@@ -21,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("e9e3e3ea-dd75-46ed-8026-845c0ccdae2b")]
+[assembly: Guid("37b20d14-8113-478c-ad9f-0e7c7d9e6b3c")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -33,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.0.0.1")]
-[assembly: AssemblyFileVersion("0.0.0.1")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

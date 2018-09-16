@@ -1,3 +1,10 @@
-DiscordCommunityPlugin/bin/
+*/bin/
 .vs/
-DiscordCommunityPlugin/obj/
+*/obj/
+confuserex/
+protoc/
+rsakeys.txt
+sqlStatements.txt
+DiscordCommunityServer/Dependencies/costura32/SQLite.Interop.dll
+DiscordCommunityServer/Dependencies/costura64/SQLite.Interop.dll
+packages/

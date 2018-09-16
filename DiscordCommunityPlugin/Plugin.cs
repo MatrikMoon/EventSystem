@@ -1,17 +1,57 @@
 ﻿using IllusionPlugin;
+using System.Collections;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using DiscordCommunityShared;
 
 namespace DiscordCommunityPlugin
 {
     public class Plugin : IPlugin
     {
-        public string Name => "DiscordCommunityPlugin";
-        public string Version => "0.0.1";
+        public string Name => SharedConstructs.Name;
+        public string Version => SharedConstructs.Version;
+
         public void OnApplicationStart()
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+            //DiscordCommunityShared.Logger.Error("STARTING COROUTINE");
+            //SharedCoroutineStarter.instance.StartCoroutine(WaitForLevelSelection());
         }
+
+        /*
+        private IEnumerator WaitForLevelSelection()
+        {
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any());
+            DiscordCommunityShared.Logger.Error("FLOWCOORDINATOR CREATED, ADDING/REMOVING CALLBACKS");
+            StandardLevelSelectionFlowCoordinator slsfc = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
+            StandardLevelListViewController slsvc = slsfc.GetField<StandardLevelListViewController>("_levelListViewController");
+            StandardLevelDifficultyViewController sldvc = slsfc.GetField<StandardLevelDifficultyViewController>("_levelDifficultyViewController");
+            slsvc.didSelectLevelEvent -= slsfc.HandleLevelListViewControllerDidSelectLevel;
+            sldvc.didSelectDifficultyEvent -= slsfc.HandleDifficultyViewControllerDidSelectDifficulty;
+            slsvc.didSelectLevelEvent += HandleLevelListViewControllerDidSelectLevel;
+            sldvc.didSelectDifficultyEvent += HandleDifficultyViewControllerDidSelectDifficulty;
+        }
+
+        public void HandleLevelListViewControllerDidSelectLevel(StandardLevelListViewController viewController, IStandardLevel level)
+        {
+            DiscordCommunityShared.Logger.Warning("LEVEL SELECTED");
+        }
+
+        public void HandleDifficultyViewControllerDidSelectDifficulty(StandardLevelDifficultyViewController viewController, IStandardLevelDifficultyBeatmap difficultyLevel)
+        {
+            DiscordCommunityShared.Logger.Warning("DIFFICULTY SELECTED");
+        }
+
+        private IEnumerator WaitForBuildMode()
+        {
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<GameBuildMode>().Any());
+            DiscordCommunityShared.Logger.Error("SETTING BUILD TO DEMO");
+            GameBuildMode buildMode = Resources.FindObjectsOfTypeAll<GameBuildMode>().First();
+            buildMode.ForceSetMode(GameBuildMode.Mode.Arcade);
+        }
+        */
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
         {
