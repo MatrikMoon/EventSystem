@@ -56,8 +56,8 @@ namespace DiscordCommunityServer
                                 else player.IncrementSongsPlayed();
                                 player.IncrementTotalScore(s.Score_ - oldScore); //Increment total score only by the amount the score has increased
 
-                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode, s.Score_);
-                                Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId, s.GameplayMode).GetSongName()}!");
+                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode).SetScore(s.Score_);
+                                Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId).GetSongName()}!");
                             }
 
                             return new HttpResponse()

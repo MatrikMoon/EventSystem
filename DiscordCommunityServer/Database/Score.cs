@@ -15,16 +15,16 @@ namespace DiscordCommunityServer.Database
     {
         private Song song;
         private Player player;
+        private int _difficultyLevel;
 
-        public Score(string songId, string steamId, int difficultyLevel, int gameplayMode) : this(songId, steamId, difficultyLevel, gameplayMode, 0) { }
-
-        public Score(string songId, string steamId, int difficultyLevel, int gameplayMode, long score)
+        public Score(string songId, string steamId, int difficultyLevel, int gameplayMode)
         {
             song = new Song(songId, gameplayMode);
             player = new Player(steamId);
-            if (!Exists(difficultyLevel))
+            _difficultyLevel = difficultyLevel;
+            if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, gameplayMode, score);
+                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, gameplayMode, 0);
             }
         }
 
@@ -49,9 +49,9 @@ namespace DiscordCommunityServer.Database
             return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score} WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}") > 1;
         }
 
-        public bool Exists(int difficultyLevel)
+        public bool Exists()
         {
-            return Exists(song.GetSongId(), player.GetSteamId(), difficultyLevel);
+            return Exists(song.GetSongId(), player.GetSteamId(), _difficultyLevel);
         }
 
         public static bool Exists(string songId, string steamId, int difficultyLevel)

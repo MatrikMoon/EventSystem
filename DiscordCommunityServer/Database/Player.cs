@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiscordCommunityShared;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,8 +29,8 @@ namespace DiscordCommunityServer.Database
 
         public static Player GetByDiscord(string mention)
         {
-            var steamId = SimpleSql.ExecuteQuery($"SELECT steamId FROM playerTable WHERE discordMention = \'{mention}\'", "steamId").First();
-            return new Player(steamId);
+            var steamId = SimpleSql.ExecuteQuery($"SELECT steamId FROM playerTable WHERE discordMention = \'{mention}\'", "steamId").FirstOrDefault();
+            return steamId != null ? new Player(steamId) : null;
         }
 
         public string GetSteamId()
@@ -105,6 +106,34 @@ namespace DiscordCommunityServer.Database
         public bool IncrementSongsPlayed()
         {
             return SimpleSql.ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{steamId}\'") > 1;
+        }
+
+        //Returns the amount of tokens the user would get if scores were calculated now
+        public int GetProjectedTokens()
+        {
+            int rank = GetRank();
+            if (rank != (int)SharedConstructs.Rank.Purple)
+            {
+                int tokens = GetTokens();
+
+                IDictionary<string, long> personalScores = SimpleSql.GetScoresForPlayer(steamId);
+
+                IDictionary<string, IDictionary<string, long>> rankAboveScores = SimpleSql.GetAllActiveScoresForRank((SharedConstructs.Rank)rank + 1);
+
+                personalScores.ToList().ForEach(x =>
+                {
+                    IDictionary<string, long> rankAboveForSong = rankAboveScores[x.Key];
+                    if (rankAboveForSong != null) tokens += rankAboveForSong.Where(y => y.Value < x.Value).Count();
+                });
+
+                return tokens;
+            }
+            return 0;
+        }
+
+        public static List<string> GetPlayersInRank(int rank)
+        {
+            return SimpleSql.ExecuteQuery($"SELECT steamId FROM playerTable WHERE rank = {rank}", "steamId");
         }
 
         public bool Exists()

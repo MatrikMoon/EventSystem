@@ -17,6 +17,8 @@ namespace DiscordCommunityServer.Database
         private string songId;
         private SharedConstructs.GameplayMode mode;
 
+        public Song(string songId) : this(songId, (int)SharedConstructs.GameplayMode.SoloStandard) { }
+
         public Song(string songId, int mode)
         {
             this.songId = songId;
