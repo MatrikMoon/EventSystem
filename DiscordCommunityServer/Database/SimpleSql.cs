@@ -119,8 +119,22 @@ namespace DiscordCommunityServer.Database
             return ExecuteCommand("UPDATE scoreTable, songTable SET old = 1");
         }
 
-        //This is in here and not the Scores.cs file because in here, we have direct access to the database and
+        //These are in here and not the Scores.cs file because in here, we have direct access to the database and
         //can grab what we need in less queries
+        //Returns a dictionary of <songId + rank, Dictionary<steamId, score>>
+        public static IDictionary<string, IDictionary<string, long>> GetAllActiveScoresForRank(SharedConstructs.Rank r)
+        {
+            List<Dictionary<string, string>> songIds = ExecuteQuery("SELECT songId, mode FROM songTable WHERE NOT old = 1", "songId", "mode");
+            Dictionary<string, IDictionary<string, long>> scores = new Dictionary<string, IDictionary<string, long>>();
+            songIds.ForEach(x => {
+                string songId = x["songId"];
+                int mode = Convert.ToInt32(x["mode"]);
+                scores.Add(songId + mode, GetScoresForSong(songId, mode, (long)r));
+            });
+
+            return scores;
+        }
+
         //Returns a dictionary of steamIds and scores for the designated song and rank
         public static IDictionary<string, long> GetScoresForSong(string songId, int mode, long rank)
         {
@@ -133,6 +147,27 @@ namespace DiscordCommunityServer.Database
                     while (reader.Read())
                     {
                         ret.Add(reader["steamId"].ToString(), Convert.ToInt64(reader["score"].ToString()));
+                    }
+                }
+            }
+
+            db.Close();
+
+            return ret;
+        }
+
+        //Returns a dictionary of songIds + mode and scores for the designated song and rank
+        public static IDictionary<string, long> GetScoresForPlayer(string steamId)
+        {
+            Dictionary<string, long> ret = new Dictionary<string, long>();
+            SQLiteConnection db = OpenConnection();
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, mode, songId FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        ret.Add(reader["songId"].ToString() + reader["mode"].ToString(), Convert.ToInt64(reader["score"].ToString()));
                     }
                 }
             }

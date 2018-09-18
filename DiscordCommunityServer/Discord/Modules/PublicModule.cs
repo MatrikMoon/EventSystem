@@ -20,6 +20,8 @@ namespace DiscordCommunityServer.Discord.Modules
 
         private static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
         private static string[] _saberRoles = { "white", "bronze", "silver", "gold", "blue", "purple" };
+        Rank[] _ranksToList = { Rank.Purple, Rank.Blue, Rank.Gold,
+                                            Rank.Silver, Rank.Bronze };
 
         [Command("register")]
         public async Task RegisterAsync([Remainder] string steamId)
@@ -31,19 +33,22 @@ namespace DiscordCommunityServer.Discord.Modules
                 player.SetDiscordExtension(Context.User.Discriminator);
                 player.SetDiscordMention(Context.User.Mention);
 
-                ulong[] discordRoleIds = 
-                    Context.Guild.Roles.ToList()
-                    .Where(x => _saberRoles.Contains(x.Name))
+                var guildRoles = Context.Guild.Roles.ToList();
+
+                ulong[] discordRoleIds = guildRoles
+                    .Where(x => _saberRoles.Contains(x.Name.ToLower()))
                     .Select(x => x.Id)
                     .ToArray();
 
                 ulong saberRole = ((IGuildUser)Context.User).RoleIds.ToList().Where(x => discordRoleIds.Contains(x)).FirstOrDefault();
+                string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
                 if (saberRole >= 0)
                 {
-                    player.SetRank(_saberRankValues[discordRoleIds.ToList().IndexOf(saberRole)]);
+                    player.SetRank(_saberRankValues[_saberRoles.ToList().IndexOf(userRoleText)]);
                 }
+
                 string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}`";
-                if (saberRole >= 0) reply += $" with role `{_saberRoles[discordRoleIds.ToList().IndexOf(saberRole)]}`";
+                if (saberRole >= 0) reply += $" with role `{userRoleText}`";
                 await ReplyAsync(reply);
             }
             else
@@ -124,10 +129,7 @@ namespace DiscordCommunityServer.Discord.Modules
             string finalMessage = "Weekly Leaderboard:\n\n";
             List<Dictionary<string, string>> songIds = SimpleSql.ExecuteQuery("SELECT songId, mode FROM songTable WHERE NOT old = 1", "songId", "mode");
 
-            Rank[] ranksToList = { Rank.Purple, Rank.Blue, Rank.Gold,
-                                            Rank.Silver, Rank.Bronze };
-
-            foreach (Rank r in ranksToList)
+            foreach (Rank r in _ranksToList)
             {
                 Dictionary<string, IDictionary<string, long>> scores = new Dictionary<string, IDictionary<string, long>>();
                 songIds.ForEach(x => {
@@ -155,6 +157,32 @@ namespace DiscordCommunityServer.Discord.Modules
                 });
             }
             await ReplyAsync(finalMessage);
+        }
+
+        [Command("tokens")]
+        [RequireUserPermission(ChannelPermission.ManageChannel)]
+        public async Task TokensAsync()
+        {
+            string finalReply = "TOKENS:\n\n";
+
+            finalReply += "Blue:\n";
+            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Blue))
+            {
+                Player player = new Player(steamId);
+                int proejectedTokens = player.GetProjectedTokens();
+                if (proejectedTokens > 0) finalReply += $"{player.GetDiscordName()} = {proejectedTokens}\n";
+            }
+            finalReply += "\n";
+
+            finalReply += "Gold:\n";
+            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Gold))
+            {
+                Player player = new Player(steamId);
+                int proejectedTokens = player.GetProjectedTokens();
+                if (proejectedTokens > 0) finalReply += $"{player.GetDiscordName()} = {proejectedTokens}\n";
+            }
+
+            await ReplyAsync(finalReply);
         }
 
         [Command("cat")]
