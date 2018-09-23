@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DiscordCommunityServer.Database.SimpleSql;
 
 /*
  * Created by Moon on 9/11/2018
@@ -116,14 +117,14 @@ namespace DiscordCommunityServer.Database
             {
                 int tokens = GetTokens();
 
-                IDictionary<string, long> personalScores = SimpleSql.GetScoresForPlayer(steamId);
+                IDictionary<string, ScoreConstruct> personalScores = GetScoresForPlayer(steamId);
 
-                IDictionary<string, IDictionary<string, long>> rankAboveScores = SimpleSql.GetAllActiveScoresForRank((SharedConstructs.Rank)rank + 1);
+                IDictionary<string, IDictionary<string, ScoreConstruct>> rankAboveScores = GetAllActiveScoresForRank((SharedConstructs.Rank)rank + 1);
 
                 personalScores.ToList().ForEach(x =>
                 {
-                    IDictionary<string, long> rankAboveForSong = rankAboveScores[x.Key];
-                    if (rankAboveForSong != null) tokens += rankAboveForSong.Where(y => y.Value < x.Value).Count();
+                    IDictionary<string, ScoreConstruct> rankAboveForSong = rankAboveScores[x.Key];
+                    if (rankAboveForSong != null) tokens += rankAboveForSong.Where(y => y.Value.Score < x.Value.Score).Count();
                 });
 
                 return tokens;

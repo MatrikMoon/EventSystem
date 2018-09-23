@@ -4,8 +4,10 @@ using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
+using static DiscordCommunityServer.Database.SimpleSql;
 
 namespace DiscordCommunityServer
 {
@@ -27,7 +29,7 @@ namespace DiscordCommunityServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
-                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.Score_) == s.Signed)
+                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.FullCombo, s.Score_) == s.Signed)
                             {
                                 Logger.Info($"RECEIVED VALID SCORE: {s.Score_}");
                             }
@@ -56,8 +58,8 @@ namespace DiscordCommunityServer
                                 else player.IncrementSongsPlayed();
                                 player.IncrementTotalScore(s.Score_ - oldScore); //Increment total score only by the amount the score has increased
 
-                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode).SetScore(s.Score_);
-                                Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId).GetSongName()}!");
+                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode).SetScore(s.Score_, s.FullCombo);
+                                Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId, s.GameplayMode).GetSongName()}!");
                             }
 
                             return new HttpResponse()
@@ -107,7 +109,7 @@ namespace DiscordCommunityServer
 
                         string steamId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
 
-                        if (steamId.Length != 17)
+                        if (!(steamId.Length == 17 || steamId.Length == 16))
                         {
                             Logger.Error($"Invalid id size: {steamId.Length}");
                             return new HttpResponse()
@@ -131,6 +133,55 @@ namespace DiscordCommunityServer
                             StatusCode = "200"
                         };
                      }
+                },
+                new Route {
+                    Name = "Song Leaderboard Getter",
+                    UrlRegex = @"^/getsongleaderboards/",
+                    Method = "GET",
+                    Callable = (HttpRequest request) => {
+                        Logger.Success($"Leaderboard request path: {request.Path}");
+
+                        string[] requestData = request.Path.Substring(1).Split('/');
+
+                        Logger.Info($"{requestData[1]} {requestData[2]} {requestData[3]}");
+
+                        string songId = requestData[1];
+                        int rank = Convert.ToInt32(requestData[2]);
+                        int mode = Convert.ToInt32(requestData[3]);
+
+                        if (!Database.Song.Exists(songId, Convert.ToInt32(mode)))
+                        {
+                            Logger.Error($"Song doesn't exist for leaderboards: {songId} {mode}");
+                            return new HttpResponse()
+                            {
+                                ReasonPhrase = "Bad Request",
+                                StatusCode = "400"
+                            };
+                        }
+
+                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songId, mode, rank);
+
+                        JSONNode json = new JSONObject();
+
+                        int place = 1;
+                        scores.ToList().ForEach(x =>
+                        {
+                            JSONNode node = new JSONObject();
+                            node["score"] = x.Value.Score;
+                            node["player"] = new Database.Player(x.Key).GetDiscordName();
+                            node["rank"] = place;
+                            node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
+                            node["steamId"] = x.Key;
+                            json.Add(Convert.ToString(place++), node);
+                        });
+
+                        return new HttpResponse()
+                        {
+                            ContentAsUTF8 = json.ToString(),
+                            ReasonPhrase = "OK",
+                            StatusCode = "200"
+                        };
+                    }
                 }
             };
             
