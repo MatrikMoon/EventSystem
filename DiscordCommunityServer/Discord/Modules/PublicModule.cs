@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static DiscordCommunityServer.Database.SimpleSql;
 using static DiscordCommunityShared.SharedConstructs;
 
 namespace DiscordCommunityServer.Discord.Modules
@@ -88,7 +89,7 @@ namespace DiscordCommunityServer.Discord.Modules
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task EndEventAsync()
         {
-            SimpleSql.MarkAllOld();
+            MarkAllOld();
             await ReplyAsync("All songs and scores are marked as Old. You may now add new songs.");
         }
 
@@ -131,7 +132,7 @@ namespace DiscordCommunityServer.Discord.Modules
 
             foreach (Rank r in _ranksToList)
             {
-                Dictionary<string, IDictionary<string, long>> scores = new Dictionary<string, IDictionary<string, long>>();
+                Dictionary<string, IDictionary<string, ScoreConstruct>> scores = new Dictionary<string, IDictionary<string, ScoreConstruct>>();
                 songIds.ForEach(x => {
                     string songId = x["songId"];
                     int mode = Convert.ToInt32(x["mode"]);
@@ -148,9 +149,9 @@ namespace DiscordCommunityServer.Discord.Modules
                     {
                         finalMessage += new Song(songId, mode).GetSongName() + (mode != 0 ? " " + ((GameplayMode)mode).ToString() + ":\n" : ":\n");
 
-                        foreach (KeyValuePair<string, long> item in scores[songId + mode])
+                        foreach (KeyValuePair<string, ScoreConstruct> item in scores[songId + mode])
                         {
-                            finalMessage += new Player(item.Key).GetDiscordName() + " - " + item.Value + "\n";
+                            finalMessage += new Player(item.Key).GetDiscordName() + " - " + item.Value.Score + (item.Value.FullCombo ? "(Full Combo)" : "") + "\n";
                         }
                         finalMessage += "\n";
                     }

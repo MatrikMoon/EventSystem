@@ -24,7 +24,7 @@ namespace DiscordCommunityServer.Database
             _difficultyLevel = difficultyLevel;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, gameplayMode, 0);
+                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, gameplayMode, false, 0);
             }
         }
 
@@ -44,9 +44,9 @@ namespace DiscordCommunityServer.Database
             return Convert.ToInt64(scoreString);
         }
 
-        public bool SetScore(long score)
+        public bool SetScore(long score, bool fullCombo)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score} WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}") > 1;
         }
 
         public bool Exists()

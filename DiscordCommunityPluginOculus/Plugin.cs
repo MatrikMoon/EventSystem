@@ -1,10 +1,6 @@
 ﻿using DiscordCommunityShared;
 using IllusionPlugin;
-using System.Collections;
-using System.Linq;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using Logger = DiscordCommunityShared.Logger;
 
 namespace DiscordCommunityPlugin
 {
@@ -18,14 +14,15 @@ namespace DiscordCommunityPlugin
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-            //SharedCoroutineStarter.instance.StartCoroutine(WaitForBuildMode());
+            //DiscordCommunityShared.Logger.Error("STARTING COROUTINE");
+            //SharedCoroutineStarter.instance.StartCoroutine(WaitForLevelSelection());
         }
 
         /*
         private IEnumerator WaitForLevelSelection()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any());
-            Logger.Error("FLOWCOORDINATOR CREATED, ADDING/REMOVING CALLBACKS");
+            DiscordCommunityShared.Logger.Error("FLOWCOORDINATOR CREATED, ADDING/REMOVING CALLBACKS");
             StandardLevelSelectionFlowCoordinator slsfc = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
             StandardLevelListViewController slsvc = slsfc.GetField<StandardLevelListViewController>("_levelListViewController");
             StandardLevelDifficultyViewController sldvc = slsfc.GetField<StandardLevelDifficultyViewController>("_levelDifficultyViewController");
@@ -37,20 +34,20 @@ namespace DiscordCommunityPlugin
 
         public void HandleLevelListViewControllerDidSelectLevel(StandardLevelListViewController viewController, IStandardLevel level)
         {
-            Logger.Warning("LEVEL SELECTED");
+            DiscordCommunityShared.Logger.Warning("LEVEL SELECTED");
         }
 
         public void HandleDifficultyViewControllerDidSelectDifficulty(StandardLevelDifficultyViewController viewController, IStandardLevelDifficultyBeatmap difficultyLevel)
         {
-            Logger.Warning("DIFFICULTY SELECTED");
+            DiscordCommunityShared.Logger.Warning("DIFFICULTY SELECTED");
         }
 
         private IEnumerator WaitForBuildMode()
         {
             yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<GameBuildMode>().Any());
-            Logger.Error("SETTING BUILD TO DEMO");
+            DiscordCommunityShared.Logger.Error("SETTING BUILD TO DEMO");
             GameBuildMode buildMode = Resources.FindObjectsOfTypeAll<GameBuildMode>().First();
-            buildMode.ForceSetMode(GameBuildMode.Mode.Demo);
+            buildMode.ForceSetMode(GameBuildMode.Mode.Arcade);
         }
         */
 

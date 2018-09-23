@@ -22,14 +22,14 @@ public static partial class ScoreReflection {
   static ScoreReflection() {
     byte[] descriptorData = global::System.Convert.FromBase64String(
         string.Concat(
-          "CgtzY29yZS5wcm90byJ6CgVTY29yZRIQCghzdGVhbV9pZBgBIAEoCRIPCgdz",
-          "b25nX2lkGAIgASgJEg0KBXNjb3JlGAMgASgFEhgKEGRpZmZpY3VsdHlfbGV2",
-          "ZWwYBCABKAUSFQoNZ2FtZXBsYXlfbW9kZRgFIAEoBRIOCgZzaWduZWQYBiAB",
-          "KAliBnByb3RvMw=="));
+          "CgtzY29yZS5wcm90byKOAQoFU2NvcmUSEAoIc3RlYW1faWQYASABKAkSDwoH",
+          "c29uZ19pZBgCIAEoCRINCgVzY29yZRgDIAEoBRIYChBkaWZmaWN1bHR5X2xl",
+          "dmVsGAQgASgFEhUKDWdhbWVwbGF5X21vZGUYBSABKAUSEgoKZnVsbF9jb21i",
+          "bxgGIAEoCBIOCgZzaWduZWQYByABKAliBnByb3RvMw=="));
     descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
         new pbr::FileDescriptor[] { },
         new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-          new pbr::GeneratedClrTypeInfo(typeof(global::Score), global::Score.Parser, new[]{ "SteamId", "SongId", "Score_", "DifficultyLevel", "GameplayMode", "Signed" }, null, null, null)
+          new pbr::GeneratedClrTypeInfo(typeof(global::Score), global::Score.Parser, new[]{ "SteamId", "SongId", "Score_", "DifficultyLevel", "GameplayMode", "FullCombo", "Signed" }, null, null, null)
         }));
   }
   #endregion
@@ -66,6 +66,7 @@ public sealed partial class Score : pb::IMessage<Score> {
     score_ = other.score_;
     difficultyLevel_ = other.difficultyLevel_;
     gameplayMode_ = other.gameplayMode_;
+    fullCombo_ = other.fullCombo_;
     signed_ = other.signed_;
     _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
   }
@@ -130,8 +131,19 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
   }
 
+  /// <summary>Field number for the "full_combo" field.</summary>
+  public const int FullComboFieldNumber = 6;
+  private bool fullCombo_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public bool FullCombo {
+    get { return fullCombo_; }
+    set {
+      fullCombo_ = value;
+    }
+  }
+
   /// <summary>Field number for the "signed" field.</summary>
-  public const int SignedFieldNumber = 6;
+  public const int SignedFieldNumber = 7;
   private string signed_ = "";
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
   public string Signed {
@@ -159,6 +171,7 @@ public sealed partial class Score : pb::IMessage<Score> {
     if (Score_ != other.Score_) return false;
     if (DifficultyLevel != other.DifficultyLevel) return false;
     if (GameplayMode != other.GameplayMode) return false;
+    if (FullCombo != other.FullCombo) return false;
     if (Signed != other.Signed) return false;
     return Equals(_unknownFields, other._unknownFields);
   }
@@ -171,6 +184,7 @@ public sealed partial class Score : pb::IMessage<Score> {
     if (Score_ != 0) hash ^= Score_.GetHashCode();
     if (DifficultyLevel != 0) hash ^= DifficultyLevel.GetHashCode();
     if (GameplayMode != 0) hash ^= GameplayMode.GetHashCode();
+    if (FullCombo != false) hash ^= FullCombo.GetHashCode();
     if (Signed.Length != 0) hash ^= Signed.GetHashCode();
     if (_unknownFields != null) {
       hash ^= _unknownFields.GetHashCode();
@@ -205,8 +219,12 @@ public sealed partial class Score : pb::IMessage<Score> {
       output.WriteRawTag(40);
       output.WriteInt32(GameplayMode);
     }
+    if (FullCombo != false) {
+      output.WriteRawTag(48);
+      output.WriteBool(FullCombo);
+    }
     if (Signed.Length != 0) {
-      output.WriteRawTag(50);
+      output.WriteRawTag(58);
       output.WriteString(Signed);
     }
     if (_unknownFields != null) {
@@ -231,6 +249,9 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
     if (GameplayMode != 0) {
       size += 1 + pb::CodedOutputStream.ComputeInt32Size(GameplayMode);
+    }
+    if (FullCombo != false) {
+      size += 1 + 1;
     }
     if (Signed.Length != 0) {
       size += 1 + pb::CodedOutputStream.ComputeStringSize(Signed);
@@ -260,6 +281,9 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
     if (other.GameplayMode != 0) {
       GameplayMode = other.GameplayMode;
+    }
+    if (other.FullCombo != false) {
+      FullCombo = other.FullCombo;
     }
     if (other.Signed.Length != 0) {
       Signed = other.Signed;
@@ -295,7 +319,11 @@ public sealed partial class Score : pb::IMessage<Score> {
           GameplayMode = input.ReadInt32();
           break;
         }
-        case 50: {
+        case 48: {
+          FullCombo = input.ReadBool();
+          break;
+        }
+        case 58: {
           Signed = input.ReadString();
           break;
         }

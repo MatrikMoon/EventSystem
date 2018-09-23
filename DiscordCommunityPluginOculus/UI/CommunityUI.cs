@@ -1,6 +1,8 @@
 ﻿using DiscordCommunityPlugin.UI;
 using DiscordCommunityPlugin.UI.FlowCoordinators;
 using DiscordCommunityPlugin.UI.ViewControllers;
+using Oculus.Platform;
+using Oculus.Platform.Models;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -54,7 +56,10 @@ namespace DiscordCommunityPlugin
                 instance = this;
                 DontDestroyOnLoad(this);
 
-                Plugin.PlayerId = Steamworks.SteamUser.GetSteamID().m_SteamID;
+                Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
+                {
+                    Plugin.PlayerId = msg.Data.ID;
+                });
 
                 SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
                 SongLoader.SongsLoadedEvent += SongsLoaded;

@@ -59,4 +59,11 @@
     <None Include="score.proto" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o "$(TargetPath)_confused" "$(TargetPath)"
+xcopy /y "$(TargetPath)_confused" "$(TargetPath)"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>"$(SolutionDir)protoc\protoc.exe" --proto_path="$(SolutionDir)DiscordCommunityShared" --csharp_out="$(SolutionDir)DiscordCommunityShared" "$(SolutionDir)DiscordCommunityShared\score.proto"</PreBuildEvent>
+  </PropertyGroup>
 </Project>
