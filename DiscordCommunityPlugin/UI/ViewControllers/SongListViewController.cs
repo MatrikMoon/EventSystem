@@ -21,7 +21,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource
     {
-        public event Action<IStandardLevel> SongPlayPressed;
+        public event Action<IStandardLevel, GameplayOptions> SongPlayPressed;
         public event Action SongsDownloaded;
         public bool errorHappened = false;
 
@@ -199,13 +199,14 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             _communityLeaderboard.PlayPressed -= PlayPressed_Listener;
             _communityLeaderboard.PlayPressed += PlayPressed_Listener;
 
+
             //Set current row
             _currentRow = row;
         }
 
-        private void PlayPressed_Listener()
+        private void PlayPressed_Listener(GameplayOptions options)
         {
-            SongPlayPressed?.Invoke(availableSongs[_currentRow]);
+            SongPlayPressed?.Invoke(availableSongs[_currentRow], options);
         }
 
         public void SelectWhenLoaded(string levelId)

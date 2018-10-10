@@ -138,7 +138,6 @@ namespace DiscordCommunityPlugin
         {
             if (_button.GetComponentsInChildren<Image>().Count() > 1)
             {
-
                 _button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = _icon;
             }
 
@@ -148,7 +147,6 @@ namespace DiscordCommunityPlugin
         {
             if (_button.GetComponentsInChildren<Image>().Count() > 0)
             {
-
                 _button.GetComponentsInChildren<Image>()[0].sprite = _background;
             }
 

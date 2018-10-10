@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
 using DiscordCommunityShared;
+using static DiscordCommunityShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -73,31 +74,6 @@ namespace DiscordCommunityServer.Database
             return ret;
         }
 
-        public static List<Dictionary<string, string>> ExecuteQuery(string query, params string[] columnsToReturn)
-        {
-            List<Dictionary<string, string>> ret = new List<Dictionary<string, string>>();
-            SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand(query, db))
-            {
-                using (SQLiteDataReader reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        Dictionary<string, string> item = new Dictionary<string, string>();
-                        columnsToReturn.ToList().ForEach(x =>
-                        {
-                            item.Add(x, reader[x]?.ToString());
-                        });
-                        ret.Add(item);
-                    }
-                }
-            }
-
-            db.Close();
-
-            return ret;
-        }
-
         public static bool AddPlayer(string steamId, string discordName, string discordExtension, string discordMention, int rank, int tokens, long totalScore, long topScores, int songsPlayed, int personalBestsBeaten, int playersBeat, bool mentionMe)
         {
             return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', {rank}, {tokens}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
@@ -122,28 +98,55 @@ namespace DiscordCommunityServer.Database
             return ret;
         }
 
+        //Returns a list of SongConstruct of the currently active songs
+        public static List<SongConstruct> GetActiveSongs()
+        {
+            List<SongConstruct> ret = new List<SongConstruct>();
+            SQLiteConnection db = OpenConnection();
+            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, mode FROM songTable WHERE NOT old = 1", db))
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        SongConstruct item = new SongConstruct()
+                        {
+                            SongId = reader["songId"].ToString(),
+                            Mode = reader["mode"].ToString()
+                        };
+                        ret.Add(item);
+                    }
+                }
+            }
+
+            db.Close();
+
+            return ret;
+        }
+
         //These are in here and not the Scores.cs file because in here, we have direct access to the database and
         //can grab what we need in less queries
-        //Returns a dictionary of <songId + mode, Dictionary<steamId, ScoreConstruct>>
-        public static IDictionary<string, IDictionary<string, ScoreConstruct>> GetAllActiveScoresForRank(SharedConstructs.Rank r)
+        //Returns a dictionary of <SongConstruct, Dictionary<steamId, ScoreConstruct>>
+        public static IDictionary<SongConstruct, IDictionary<string, ScoreConstruct>> GetAllActiveScoresForRank(SharedConstructs.Rank r)
         {
-            List<Dictionary<string, string>> songIds = ExecuteQuery("SELECT songId, mode FROM songTable WHERE NOT old = 1", "songId", "mode");
-            Dictionary<string, IDictionary<string, ScoreConstruct>> scores = new Dictionary<string, IDictionary<string, ScoreConstruct>>();
-            songIds.ForEach(x => {
-                string songId = x["songId"];
-                int mode = Convert.ToInt32(x["mode"]);
-                scores.Add(songId + mode, GetScoresForSong(songId, mode, (long)r));
+            List<SongConstruct> songs = GetActiveSongs();
+
+            Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
+            songs.ForEach(x => {
+                string songId = x.SongId;
+                int mode = Convert.ToInt32(x.Mode);
+                scores.Add(x, GetScoresForSong(x, (long)r));
             });
 
             return scores;
         }
 
         //Returns a dictionary of steamIds and scores for the designated song and rank
-        public static IDictionary<string, ScoreConstruct> GetScoresForSong(string songId, int mode, long rank)
+        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rank)
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo FROM scoreTable WHERE songId = \'{songId}\' AND rank = \'{rank}\' AND mode = {mode} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel FROM scoreTable WHERE songId = \'{s.SongId}\' AND rank = \'{rank}\' AND mode = {s.Mode} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -154,7 +157,9 @@ namespace DiscordCommunityServer.Database
                             new ScoreConstruct
                             {
                                 Score = Convert.ToInt64(reader["score"].ToString()),
-                                FullCombo = reader["fullCombo"].ToString() == "True"
+                                FullCombo = reader["fullCombo"].ToString() == "True",
+                                Rank = (Rank)rank,
+                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
                             });
                     }
                 }
@@ -165,22 +170,28 @@ namespace DiscordCommunityServer.Database
             return ret;
         }
 
-        //Returns a dictionary of songIds + mode and scores for the designated song and rank
-        public static IDictionary<string, ScoreConstruct> GetScoresForPlayer(string steamId)
+        //Returns a dictionary of SongConstructs and scores for the designated song and rank
+        public static IDictionary<SongConstruct, ScoreConstruct> GetScoresForPlayer(string steamId)
         {
-            Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
+            Dictionary<SongConstruct, ScoreConstruct> ret = new Dictionary<SongConstruct, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, mode, songId, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, mode, songId, rank, difficultyLevel, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
                         ret.Add(
-                            reader["songId"].ToString() + reader["mode"].ToString(), 
+                            new SongConstruct()
+                            {
+                                SongId = reader["songId"].ToString(),
+                                Mode = reader["mode"].ToString()
+                            },
                             new ScoreConstruct {
                                 Score = Convert.ToInt64(reader["score"].ToString()),
-                                FullCombo = reader["fullCombo"].ToString() == "True"
+                                FullCombo = reader["fullCombo"].ToString() == "True",
+                                Rank = (Rank)Convert.ToInt64(reader["rank"].ToString()),
+                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
                             });
                     }
                 }
@@ -191,11 +202,48 @@ namespace DiscordCommunityServer.Database
             return ret;
         }
 
-        //Tiny class to help organize leaderboard commands
+        //Tiny classes to help organize leaderboard commands and reduce strain on SQL
         public class ScoreConstruct
         {
             public long Score { get; set; }
             public bool FullCombo { get; set; }
+            public Rank Rank { get; set; }
+            public LevelDifficulty Difficulty { get; set; }
+        }
+
+        public class SongConstruct
+        {
+            public string SongId { get; set; }
+            public string Mode { get; set; }
+
+            //Necessary overrides for being used as a key in a Dictionary
+            public static bool operator ==(SongConstruct a, SongConstruct b)
+            {
+                if (b == null) return false;
+                return a.GetHashCode() == b.GetHashCode();
+            }
+
+            public static bool operator !=(SongConstruct a, SongConstruct b)
+            {
+                if (b == null) return false;
+                return a.GetHashCode() != b.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null) return false;
+                if (!(obj is SongConstruct)) return false;
+                return GetHashCode() == obj.GetHashCode();
+            }
+
+            public override int GetHashCode()
+            {
+                int hash = 13;
+                hash = (hash * 7) + SongId.GetHashCode();
+                hash = (hash * 7) + Mode.GetHashCode();
+                return hash;
+            }
+            //End necessary overrides
         }
     }
 }

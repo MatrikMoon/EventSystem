@@ -111,6 +111,13 @@ namespace DiscordCommunityPlugin.Misc
                 {
                     var node = JSON.Parse(www.downloadHandler.text);
 
+                    //If there is a message from the server, display it
+                    if (node["message"] != null && node["message"].ToString().Length > 1)
+                    {
+                        slvc.DownloadErrorHappened(node["message"]);
+                        yield break;
+                    }
+
                     //If the client is out of date, show update message
                     if (VersionCode < Convert.ToInt32(node["version"].Value))
                     {

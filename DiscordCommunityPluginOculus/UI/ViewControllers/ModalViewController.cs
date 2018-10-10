@@ -16,7 +16,7 @@ using VRUI;
  * the user doesn't have the mods required for this plugin
  */
 
-namespace DiscordCommunityPlugin.UI
+namespace DiscordCommunityPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class ModalViewController : VRUIViewController

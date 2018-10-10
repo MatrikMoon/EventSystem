@@ -24,11 +24,12 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
     {
         protected LeaderboardTableView _leaderboard;
 
-        public event Action PlayPressed;
+        public event Action<GameplayOptions> PlayPressed;
 
         TextMeshProUGUI _songName;
         TextMeshProUGUI _rank;
         Button _playButton;
+        Button _mirrorButton;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
@@ -59,7 +60,20 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_playButton.transform as RectTransform).sizeDelta = new Vector2(18f, 10f);
                 _playButton.onClick.AddListener(() =>
                 {
-                    PlayPressed?.Invoke();
+                    PlayPressed?.Invoke(new GameplayOptions());
+                });
+
+                _mirrorButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
+                BaseUI.SetButtonText(_mirrorButton, "Mirror");
+                (_mirrorButton.transform as RectTransform).anchorMin = new Vector2(1f, 1f);
+                (_mirrorButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
+                (_mirrorButton.transform as RectTransform).anchoredPosition = new Vector2(-21f, -28f);
+                (_mirrorButton.transform as RectTransform).sizeDelta = new Vector2(18f, 10f);
+                _mirrorButton.onClick.AddListener(() =>
+                {
+                    GameplayOptions options = new GameplayOptions();
+                    options.mirror = true;
+                    PlayPressed?.Invoke(options);
                 });
             }
         }
@@ -104,7 +118,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             {
                 _rank.color = Color.blue;
             }
-            else if (playerRank == Rank.Purple)
+            else if (playerRank == Rank.Master)
             {
                 _rank.color = Color.magenta;
             }

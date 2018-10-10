@@ -1,4 +1,5 @@
-﻿using DiscordCommunityPlugin.UI;
+﻿using DiscordCommunityPlugin.Misc;
+using DiscordCommunityPlugin.UI;
 using DiscordCommunityPlugin.UI.FlowCoordinators;
 using DiscordCommunityPlugin.UI.ViewControllers;
 using Oculus.Platform;
@@ -36,7 +37,7 @@ namespace DiscordCommunityPlugin
         private ModalViewController _requiredModsModal;
         private Button _communityButton;
 
-        //Called on Menu scene load
+        //Called on Menu scene load (only once in lifetime)
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         public static void OnLoad()
         {
@@ -55,6 +56,7 @@ namespace DiscordCommunityPlugin
             {
                 instance = this;
                 DontDestroyOnLoad(this);
+                Config.LoadConfig();
 
                 Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
                 {
@@ -87,6 +89,14 @@ namespace DiscordCommunityPlugin
 
         private void CreateCommunitiyButton()
         {
+            CreateSettingsMenu();
+
+            //Multiplayer score hook
+            if (Config.SooperSecretSetting)
+            {
+                StartCoroutine(Hooks.WaitForMultiplayerLevelComplete());
+            }
+
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
             if (_mainFlowCooridnator == null)
@@ -107,7 +117,7 @@ namespace DiscordCommunityPlugin
 
                 _communityButton.onClick.AddListener(() => {
                     //If the user doesn't have the songloader plugin installed, we definitely can't continue
-                    if (!ReflectionUtil.GetLoadedAssemblies().Contains("SongLoaderPlugin"))
+                    if (!ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                     {
                         _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
                         _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
@@ -129,8 +139,20 @@ namespace DiscordCommunityPlugin
             }
         }
 
+        private void CreateSettingsMenu()
+        {
+            var subMenu = SettingsUI.CreateSubMenu("Community Plugin");
+            var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
+            sooperSecretSetting.GetValue += delegate { return Config.SooperSecretSetting; };
+            sooperSecretSetting.SetValue += delegate (bool value) { Config.SooperSecretSetting = value; };
+
+            //StartCoroutine(GameOptionsUI.DoMenuTesting());
+        }
+
+        //Returns to a view when the scene loads, courtesy of andruzzzhka's BeatSaberMultiplayer
         IEnumerator ReturnToCommunityUI(string selectedLevelId = null)
         {
+            //Wait for screen system to load completely
             yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<VRUIScreenSystem>().Any(); });
             VRUIScreenSystem screenSystem = Resources.FindObjectsOfTypeAll<VRUIScreenSystem>().First();
 
@@ -139,7 +161,9 @@ namespace DiscordCommunityPlugin
 
             try
             {
-
+                //What the hell andruzzzhka
+                //I'm pretty sure this dismisses all viewcontrollers from the bottom
+                //of the tree up to root, not including root. Not sure what that means though.
                 VRUIViewController root = screenSystem.mainScreen.rootViewController;
 
                 List<VRUIViewController> children = new List<VRUIViewController>();

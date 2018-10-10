@@ -45,7 +45,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
                 IStandardLevelDifficultyBeatmap ret2 = null;
                 switch (rank)
                 {
-                    case Rank.Purple:
+                    case Rank.Master:
                     case Rank.Blue:
                     case Rank.Gold:
                     case Rank.Silver:
@@ -64,7 +64,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
             IStandardLevelDifficultyBeatmap ret = null;
             switch (rank)
             {
-                case Rank.Purple:
+                case Rank.Master:
                 case Rank.Blue:
                     ret = GetClosestDifficultyPreferLower(level, LevelDifficulty.ExpertPlus);
                     break;

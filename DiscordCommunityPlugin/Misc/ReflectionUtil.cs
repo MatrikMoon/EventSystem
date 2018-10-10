@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
+using Logger = DiscordCommunityShared.Logger;
 
 /**
  * Modified by Moon on 8/20/2018
@@ -81,24 +83,20 @@ namespace DiscordCommunityPlugin
         }
 
         //Returns a list (of strings) of the names of all loaded assemblies
-        public static IEnumerable<string> GetLoadedAssemblies()
+        public static IEnumerable<Assembly> ListLoadedAssemblies()
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetName().Name);
+            return AppDomain.CurrentDomain.GetAssemblies();
         }
 
         //Returns a list of all loaded namespaces
         //TODO: Check up on time complexity here, could potentially be parallelized
-        public static IEnumerable<string> ListNamespaces()
+        public static IEnumerable<string> ListNamespacesInAssembly(Assembly assembly)
         {
             IEnumerable<string> ret = Enumerable.Empty<string>();
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                ret = ret.Concat(assembly.GetTypes()
+            ret = ret.Concat(assembly.GetTypes()
                     .Select(t => t.Namespace)
                     .Distinct()
                     .Where(n => n != null));
-            }
             return ret.Distinct();
         }
 
@@ -119,6 +117,64 @@ namespace DiscordCommunityPlugin
                 }
             }
             return null;
+
+            //Code to list reflectable classes
+            /*
+            ReflectionUtil.ListLoadedAssemblies().ToList().ForEach(x => {
+                if (x.GetName().Name == "BeatSaberMultiplayer")
+                {
+                    Logger.Success($"ASSEMBLY: {x.GetName().Name}");
+                    ReflectionUtil.ListNamespacesInAssembly(x).ToList().ForEach(y =>
+                    {
+                        Logger.Warning($"NAMESPACE: {y}");
+                        ReflectionUtil.ListClassesInNamespace(y).ToList().ForEach(z =>
+                        {
+                            Logger.Warning($"CLASS: {z} : {((ReflectionUtil.GetStaticType(y + "." + z + "," + x) != null) ? "REFLECTABLE" : "NOT")}");
+                        });
+                    });
+                }
+            });
+            */
+        }
+
+        //(Created by taz?) Copies a component to a destination object, keeping all its field values
+        public static Behaviour CopyComponent(Behaviour original, Type originalType, Type overridingType, GameObject destination)
+        {
+            Behaviour copy = null;
+
+            try
+            {
+                copy = destination.AddComponent(overridingType) as Behaviour;
+            }
+            catch (Exception)
+            {
+
+            }
+
+            copy.enabled = false;
+
+            //Copy types of super classes as well as our class
+            Type type = originalType;
+            while (type != typeof(MonoBehaviour))
+            {
+                CopyForType(type, original, copy);
+                type = type.BaseType;
+            }
+
+            copy.enabled = true;
+            return copy;
+        }
+
+        //(Created by taz?) Copies a Component of Type type, and all its fields
+        private static void CopyForType(Type type, Component source, Component destination)
+        {
+            FieldInfo[] myObjectFields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetField | BindingFlags.SetField);
+
+            foreach (FieldInfo fi in myObjectFields)
+            {
+                Logger.Info($"COPYING: {fi.Name}");
+                fi.SetValue(destination, fi.GetValue(source));
+            }
         }
     }
 }

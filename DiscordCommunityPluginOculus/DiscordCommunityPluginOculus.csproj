@@ -45,6 +45,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\Beat Saber_Data\Managed_Oculus\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="BeatSaberMultiplayer">
+      <HintPath>..\..\Plugins_Oculus\BeatSaberMultiplayer.dll</HintPath>
+    </Reference>
     <Reference Include="Costura, Version=3.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.3.1.0\lib\net46\Costura.dll</HintPath>
     </Reference>
@@ -98,15 +101,19 @@
   <ItemGroup>
     <Compile Include="DiscordCommunityHelpers\Player.cs" />
     <Compile Include="Misc\Client.cs" />
+    <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\DebugTools.cs" />
+    <Compile Include="Misc\Hooks.cs" />
     <Compile Include="Misc\ParallelCoroutine.cs" />
+    <Compile Include="Misc\ReflectionUtil.cs" />
+    <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Misc\SongIdHelper.cs" />
     <Compile Include="UI\BaseUI.cs" />
     <Compile Include="UI\CommunityUI.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Misc\ReflectionUtils.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
+    <Compile Include="UI\SettingsUI.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
     <Compile Include="UI\ViewControllers\MainModNavigationController.cs" />
     <Compile Include="UI\ViewControllers\ModalViewController.cs" />
