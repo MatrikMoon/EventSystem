@@ -1,43 +1,91 @@
-﻿using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI.Components;
-using DiscordCommunityPlugin.UI.ViewControllers;
-using System;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Logger = DiscordCommunityShared.Logger;
 
 namespace DiscordCommunityPlugin.UI
 {
+    abstract class GameOption
+    {
+        public GameObject gameObject;
+        public string optionName;
+        public abstract void Instantiate();
+    }
+
+    class ToggleOption : GameOption
+    {
+        public event Action<bool> OnToggle;
+
+        public ToggleOption(string optionName)
+        {
+            this.optionName = optionName;
+        }
+
+        public override void Instantiate()
+        {
+            //We have to find our own target
+            //TODO: Clean up time complexity issue. This is called for each new option
+            StandardLevelDetailViewController _sldvc = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
+            GameplayOptionsViewController _govc = _sldvc.GetField<GameplayOptionsViewController>("_gameplayOptionsViewController");
+            RectTransform container = (RectTransform)_govc.transform.Find("Switches").Find("Container");
+
+            //TODO: Can probably slim this down a bit
+            gameObject = UnityEngine.Object.Instantiate(container.Find("NoEnergy").gameObject, container);
+            gameObject.GetComponentInChildren<TextMeshProUGUI>().text = optionName;
+            gameObject.name = optionName;
+            gameObject.layer = container.gameObject.layer;
+            gameObject.transform.parent = container;
+            gameObject.transform.localPosition = Vector3.zero;
+            gameObject.transform.localScale = Vector3.one;
+            gameObject.transform.rotation = Quaternion.identity;
+            gameObject.SetActive(false); //All options start disabled
+
+            gameObject.GetComponentInChildren<HMUI.Toggle>().didSwitchEvent += (_, e) => { OnToggle?.Invoke(e); };
+        }
+    }
+
+    class MultiSelectOption
+    {
+
+    }
+
     class GameOptionsUI
     {
-        public static IEnumerator DoMenuTesting()
+        //Holds all the 
+        private static IList<GameOption> customOptions = new List<GameOption>();
+
+        public static ToggleOption CreateToggleOption(string optionName)
         {
-            Logger.Info($"WAITING FOR VALUES");
+            ToggleOption ret = new ToggleOption(optionName);
+            customOptions.Add(ret);
+            return ret;
+        }
+
+        public static void Build()
+        {
+            //Grab necessary references
             StandardLevelDetailViewController _sldvc = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
             GameplayOptionsViewController _govc = _sldvc.GetField<GameplayOptionsViewController>("_gameplayOptionsViewController");
 
-            Logger.Info($"DOING MENU TESTING");
-
+            //Get reference to the switch container
             RectTransform container = (RectTransform)_govc.transform.Find("Switches").Find("Container");
-            container.sizeDelta = new Vector2(container.sizeDelta.x, container.sizeDelta.y + 7f);
-            //container.position = new Vector3(container.position.x, container.position.y + 0.1f, container.position.z);
+            container.sizeDelta = new Vector2(container.sizeDelta.x, container.sizeDelta.y + 7f); //Grow container so it aligns properly with text
 
+            //Get references to the original switches, so we can later duplicate then destroy them
             Transform noEnergyOriginal = container.Find("NoEnergy");
             Transform noObstaclesOriginal = container.Find("NoObstacles");
             Transform mirrorOriginal = container.Find("Mirror");
             Transform staticLightsOriginal = container.Find("StaticLights");
 
+            //Future duplicated switches
             Transform noEnergy = null;
             Transform noObstacles = null;
             Transform mirror = null;
             Transform staticLights = null;
-            
-            GameObject chromaToggle = null;
 
             //Create up button
             Button _pageUpButton = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), container);
@@ -50,7 +98,7 @@ namespace DiscordCommunityPlugin.UI
                 noObstacles.gameObject.SetActive(true);
                 mirror.gameObject.SetActive(true);
                 staticLights.gameObject.SetActive(true);
-                chromaToggle.SetActive(false);
+                customOptions.ToList().ForEach(x => x.gameObject.SetActive(false));
             });
             _pageUpButton.interactable = true;
 
@@ -60,21 +108,17 @@ namespace DiscordCommunityPlugin.UI
             mirror = UnityEngine.Object.Instantiate(mirrorOriginal, container);
             staticLights = UnityEngine.Object.Instantiate(staticLightsOriginal, container);
 
+            //Create custom options
+            foreach (GameOption option in customOptions)
+            {
+                option.Instantiate();
+            }
+
+            //Destroy original toggles
             UnityEngine.Object.DestroyImmediate(noEnergyOriginal.gameObject);
             UnityEngine.Object.DestroyImmediate(noObstaclesOriginal.gameObject);
             UnityEngine.Object.DestroyImmediate(mirrorOriginal.gameObject);
             UnityEngine.Object.DestroyImmediate(staticLightsOriginal.gameObject);
-
-            //Create test toggle
-            chromaToggle = UnityEngine.Object.Instantiate(noEnergy.gameObject);
-            chromaToggle.GetComponentInChildren<TextMeshProUGUI>().text = "ChromaToggle";
-            chromaToggle.name = "ChromaToggle";
-            chromaToggle.layer = container.gameObject.layer;
-            chromaToggle.transform.parent = container;
-            chromaToggle.transform.localPosition = Vector3.zero;
-            chromaToggle.transform.localScale = Vector3.one;
-            chromaToggle.transform.rotation = Quaternion.identity;
-            chromaToggle.SetActive(false);
 
             //Create down button
             Button _pageDownButton = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), container);
@@ -87,19 +131,9 @@ namespace DiscordCommunityPlugin.UI
                 noObstacles.gameObject.SetActive(false);
                 mirror.gameObject.SetActive(false);
                 staticLights.gameObject.SetActive(false);
-                chromaToggle.SetActive(true);
+                customOptions.ToList().ForEach(x => x.gameObject.SetActive(true));
             });
             _pageDownButton.interactable = true;
-
-            Logger.Info($"PARENT ANCHORS  : {(_pageDownButton.transform.parent as RectTransform).anchorMin.x} {(_pageDownButton.transform.parent as RectTransform).anchorMin.y} {(_pageDownButton.transform.parent as RectTransform).anchorMax.x} {(_pageDownButton.transform.parent as RectTransform).anchorMax.y}");
-            Logger.Info($"PARENT SIZES    : {(_pageDownButton.transform.parent as RectTransform).sizeDelta.x} {(_pageDownButton.transform.parent as RectTransform).sizeDelta.y} {(_pageDownButton.transform.parent as RectTransform).rect.size.x} {(_pageDownButton.transform.parent as RectTransform).rect.size.y}");
-            Logger.Info($"PARENT POSITIONS: {(_pageDownButton.transform.parent as RectTransform).position.x} {(_pageDownButton.transform.parent as RectTransform).position.y} {(_pageDownButton.transform.parent as RectTransform).anchoredPosition.x} {(_pageDownButton.transform.parent as RectTransform).anchoredPosition.y}");
-            Logger.Info($"BUTTON ANCHORS  : {(_pageDownButton.transform as RectTransform).anchorMin.x} {(_pageDownButton.transform as RectTransform).anchorMin.y} {(_pageDownButton.transform as RectTransform).anchorMax.x} {(_pageDownButton.transform as RectTransform).anchorMax.y}");
-            Logger.Info($"BUTTON SIZES    : {(_pageDownButton.transform as RectTransform).sizeDelta.x} {(_pageDownButton.transform as RectTransform).sizeDelta.y} {(_pageDownButton.transform as RectTransform).rect.size.x} {(_pageDownButton.transform as RectTransform).rect.size.y}");
-            Logger.Info($"BUTTON POSITIONS: {(_pageDownButton.transform as RectTransform).position.x} {(_pageDownButton.transform as RectTransform).position.y} {(_pageDownButton.transform as RectTransform).anchoredPosition.x} {(_pageDownButton.transform as RectTransform).anchoredPosition.y}");
-
-            Logger.Success($"DONE MENU TESTING");
-            yield return null;
         }
     }
 }
