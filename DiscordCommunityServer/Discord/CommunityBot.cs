@@ -23,7 +23,11 @@ namespace DiscordCommunityServer.Discord
         {
             if (_client.ConnectionState == ConnectionState.Connected)
             {
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber")).First();
+#if DEBUG
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
+#else
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+#endif
                 guild.TextChannels.ToList().Where(x => x.Name == "event-scores").First().SendMessageAsync(message);
             }
         }

@@ -71,10 +71,15 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             }
         }
 
-        private void SongPlayPressed(IStandardLevel level)
+        //TODO: Better structure for this concept
+        GameplayOptions options;
+        private void SongPlayPressed(IStandardLevel level, GameplayOptions options)
         {
             //We're playing from the mod's menu
             CommunityUI.instance.communitySongPlayed = level.levelID;
+
+            //Set the gameplay options
+            this.options = options;
 
             //Load audio if it's custom
             if (level is CustomLevel)
@@ -96,7 +101,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             MainGameSceneSetupData mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().FirstOrDefault();
             mainGameSceneSetupData.Init(
                 map,
-                new GameplayOptions(),
+                options,
                 mode,
                 0f);
             mainGameSceneSetupData.didFinishEvent -= SongFinished;
@@ -116,7 +121,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                     string songId = null;
 
                     //If the song is an OST, just send the hash
-                    if (DiscordCommunityShared.OstHashToSongName.IsOst(songHash))
+                    if (DiscordCommunityShared.OstHelper.IsOst(songHash))
                     {
                         songId = songHash;
                     }
@@ -145,7 +150,9 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
 
                     var gt = typeof(GameplayModeMethods);
                     var f = gt.InvokeMethod("IsSolo", g);
-                    if ((bool)f)
+                    var go = mainGameSceneSetupData.GetProperty("gameplayOptions");
+                    var v = go.GetProperty("validForScoreUse");
+                    if ((bool)f && (bool)v)
                     {
                         p.InvokeMethod("UpdateScoreData", rs, results.maxCombo, results.rank);
                         var pt = typeof(PersistentSingleton<PlatformLeaderboardsModel>);
@@ -172,7 +179,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                     PlayerLevelStatsData playerLevelStatsData = PersistentSingleton<GameDataModel>.instance.gameDynamicData.GetCurrentPlayerDynamicData().GetPlayerLevelStatsData(levelID, difficulty, _gameplayMode);
                     playerLevelStatsData.IncreaseNumberOfGameplays();
 
-                    if (GameplayModeMethods.IsSolo(_gameplayMode))
+                    if (GameplayModeMethods.IsSolo(_gameplayMode) && mainGameSceneSetupData.gameplayOptions.validForScoreUse)
                     {
                         playerLevelStatsData.UpdateScoreData(results.score, results.maxCombo, results.rank);
                         PlatformLeaderboardsModel instance = PersistentSingleton<PlatformLeaderboardsModel>.instance;

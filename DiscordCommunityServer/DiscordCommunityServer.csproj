@@ -163,6 +163,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="Database\Player.cs" />
     <Compile Include="Database\Score.cs" />
     <Compile Include="Database\Song.cs" />
@@ -171,7 +172,7 @@
     <Compile Include="Discord\OldCommunityBot.cs" />
     <Compile Include="Discord\Services\CommandHandlingService.cs" />
     <Compile Include="Discord\Services\PictureService.cs" />
-    <Compile Include="Misc\BeatSaverDownloader.cs" />
+    <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="Database\SimpleSql.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Server.cs" />

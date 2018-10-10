@@ -12,25 +12,23 @@ using System.Threading;
  * Handles the downloading and unzipping of songs from Beatsaver
  */
 
-namespace DiscordCommunityServer.Misc
+namespace DiscordCommunityServer.BeatSaver
 {
     class BeatSaverDownloader
     {
         private static string beatSaverUrl = "https://beatsaver.com";
-        private static string currentDirectory = Directory.GetCurrentDirectory();
-        private static string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
 
         public static string DownloadSong(string id)
         {
             Logger.Info($"Downloading {id} from {beatSaverUrl}");
 
             //Create DownloadedSongs if it doesn't exist
-            Directory.CreateDirectory(songDirectory);
+            Directory.CreateDirectory(Song.songDirectory);
 
             //Don't download if we already have it
-            if (Directory.GetDirectories(songDirectory).All(o => o != $"{songDirectory}{id}"))
+            if (Directory.GetDirectories(Song.songDirectory).All(o => o != $"{Song.songDirectory}{id}"))
             {
-                string zipPath = $"{songDirectory}{id}.zip";
+                string zipPath = $"{Song.songDirectory}{id}.zip";
 
                 //Download zip
                 using (var client = new WebClient())
@@ -51,19 +49,18 @@ namespace DiscordCommunityServer.Misc
                 //Unzip to folder
                 using (ZipArchive zip = ZipFile.OpenRead(zipPath))
                 {
-                    zip?.ExtractToDirectory($@"{songDirectory}{id}\");
+                    zip?.ExtractToDirectory($@"{Song.songDirectory}{id}\");
                 }
 
                 //Clean up zip
                 File.Delete(zipPath);
             }
 
-            Logger.Success($"Downloaded {Directory.GetDirectories($"{songDirectory}{id}").First()}!");
+            Logger.Success($"Downloaded {Directory.GetDirectories($"{Song.songDirectory}{id}").First()}!");
 
-            return $@"{songDirectory}{id}\";
+            return $@"{Song.songDirectory}{id}\";
         }
 
-        //TODO: Proper song info-getting from json
         public static void UpdateSongInfoThreaded(Database.Song song)
         {
             new Thread(() =>
@@ -71,7 +68,7 @@ namespace DiscordCommunityServer.Misc
                 string songDir = DownloadSong(song.GetSongId());
                 if (songDir != null)
                 {
-                    string songName = Path.GetFileName(Directory.GetDirectories(songDir).First());
+                    string songName = new Song(song.GetSongId()).SongName;
                     song.SetSongName(songName);
                 }
             })

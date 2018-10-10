@@ -25,11 +25,11 @@ namespace DiscordCommunityServer.Database
             {
                 //Add a placeholder, trigger song download from BeatSaver if it doesn't exist
                 SimpleSql.AddSong("", "", "", songId, mode);
-                if (OstHashToSongName.IsOst(songId))
+                if (OstHelper.IsOst(songId))
                 {
-                    SetSongName(OstHashToSongName.GetOstSongNameFromHash(songId));
+                    SetSongName(OstHelper.GetOstSongNameFromLevelId(songId));
                 }
-                else Misc.BeatSaverDownloader.UpdateSongInfoThreaded(this);
+                else BeatSaver.BeatSaverDownloader.UpdateSongInfoThreaded(this);
             }
         }
         

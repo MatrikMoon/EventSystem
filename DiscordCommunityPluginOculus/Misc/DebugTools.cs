@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -17,6 +18,7 @@ using Object = UnityEngine.Object;
 
 namespace DiscordCommunityPlugin.Misc
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class DebugTools
     {
         public static void PrintObjectHierarchy()
@@ -38,6 +40,24 @@ namespace DiscordCommunityPlugin.Misc
             foreach (Transform child in obj.transform)
             {
                 Traverse(child.gameObject, history + $"/{obj.name}");
+            }
+        }
+
+        public static void LogComponents(Transform t, string prefix = "=", bool includeScipts = false)
+        {
+            Console.WriteLine(prefix + ">" + t.name);
+
+            if (includeScipts)
+            {
+                foreach (var comp in t.GetComponents<MonoBehaviour>())
+                {
+                    Console.WriteLine(prefix + "-->" + comp.GetType());
+                }
+            }
+
+            foreach (Transform child in t)
+            {
+                LogComponents(child, prefix + "=", includeScipts);
             }
         }
     }

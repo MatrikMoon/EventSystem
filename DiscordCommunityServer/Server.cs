@@ -29,7 +29,12 @@ namespace DiscordCommunityServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
-                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.FullCombo, s.Score_) == s.Signed)
+                            if (//RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.FullCombo, s.Score_) == s.Signed &&
+                                Database.Song.Exists(s.SongId, s.GameplayMode) &&
+                                Database.Player.Exists(s.SteamId) &&
+                                new BeatSaver.Song(s.SongId)
+                                    .GetDifficultyForRank(
+                                        (SharedConstructs.Rank)(new Database.Player(s.SteamId).GetRank())) == (SharedConstructs.LevelDifficulty)s.DifficultyLevel) //If the score is invalid or the song doesn't exist, or the user played the wrong difficulty
                             {
                                 Logger.Info($"RECEIVED VALID SCORE: {s.Score_}");
                             }
@@ -59,7 +64,9 @@ namespace DiscordCommunityServer
                                 player.IncrementTotalScore(s.Score_ - oldScore); //Increment total score only by the amount the score has increased
 
                                 new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode).SetScore(s.Score_, s.FullCombo);
-                                Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId, s.GameplayMode).GetSongName()}!");
+                                
+                                //Only send message if player is registered
+                                if (Database.Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId, s.GameplayMode).GetSongName()}!");
                             }
 
                             return new HttpResponse()
@@ -86,9 +93,9 @@ namespace DiscordCommunityServer
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         JSONNode json = new JSONObject();
-                        List<Dictionary<string, string>> songs = Database.SimpleSql.ExecuteQuery("SELECT songId, mode FROM songTable WHERE old = 0", "songId", "mode");
+                        List<SongConstruct> songs = GetActiveSongs();
 
-                        songs.ForEach(x => json.Add(x["songId"], x["mode"]));
+                        songs.ForEach(x => json.Add(x.SongId, x.Mode));
 
                         return new HttpResponse()
                         {
@@ -119,12 +126,19 @@ namespace DiscordCommunityServer
                             };
                         }
 
-                        Database.Player player = new Database.Player(steamId);
-
                         JSONNode json = new JSONObject();
-                        json["version"] = SharedConstructs.VersionCode;
-                        json["rank"] = player.GetRank();
-                        json["tokens"] = player.GetTokens();
+
+                        if (Database.Player.Exists(steamId)) {
+                            Database.Player player = new Database.Player(steamId);
+
+                            json["version"] = SharedConstructs.VersionCode;
+                            json["rank"] = player.GetRank();
+                            json["tokens"] = player.GetTokens();
+                        }
+                        else
+                        {
+                            json["message"] = "Please register with the bot before playing. Check #plugin-information for more info. Sorry for the inconvenience.";
+                        }
 
                         return new HttpResponse()
                         {
@@ -148,6 +162,11 @@ namespace DiscordCommunityServer
                         string songId = requestData[1];
                         int rank = Convert.ToInt32(requestData[2]);
                         int mode = Convert.ToInt32(requestData[3]);
+                        SongConstruct songConstruct = new SongConstruct()
+                        {
+                            SongId = songId,
+                            Mode = requestData[3]
+                        };
 
                         if (!Database.Song.Exists(songId, Convert.ToInt32(mode)))
                         {
@@ -159,7 +178,7 @@ namespace DiscordCommunityServer
                             };
                         }
 
-                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songId, mode, rank);
+                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rank);
 
                         JSONNode json = new JSONObject();
 

@@ -24,13 +24,13 @@ namespace DiscordCommunityServer.Database
             if (!Exists())
             {
                 //Default name is the steam id
-                SimpleSql.AddPlayer(steamId, steamId, "", "", 0, 0, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", 0, 0, 0, 0, 0, 0, 0, true);
             }
         }
 
         public static Player GetByDiscord(string mention)
         {
-            var steamId = SimpleSql.ExecuteQuery($"SELECT steamId FROM playerTable WHERE discordMention = \'{mention}\'", "steamId").FirstOrDefault();
+            var steamId = ExecuteQuery($"SELECT steamId FROM playerTable WHERE discordMention = \'{mention}\'", "steamId").FirstOrDefault();
             return steamId != null ? new Player(steamId) : null;
         }
 
@@ -41,85 +41,85 @@ namespace DiscordCommunityServer.Database
 
         public string GetDiscordName()
         {
-            return SimpleSql.ExecuteQuery($"SELECT discordName FROM playerTable WHERE steamId = {steamId}", "discordName").First();
+            return ExecuteQuery($"SELECT discordName FROM playerTable WHERE steamId = {steamId}", "discordName").First();
         }
 
         public string GetDiscordExtension()
         {
-            return SimpleSql.ExecuteQuery($"SELECT discordExtension FROM playerTable WHERE steamId = {steamId}", "discordExtension").First();
+            return ExecuteQuery($"SELECT discordExtension FROM playerTable WHERE steamId = {steamId}", "discordExtension").First();
         }
 
         public string GetDiscordMention()
         {
-            return SimpleSql.ExecuteQuery($"SELECT discordMention FROM playerTable WHERE steamId = {steamId}", "discordMention").First();
+            return ExecuteQuery($"SELECT discordMention FROM playerTable WHERE steamId = {steamId}", "discordMention").First();
         }
 
         public bool SetDiscordName(string discordName)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET discordName = \'{discordName}\' WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET discordName = \'{discordName}\' WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public bool SetDiscordExtension(string discordExtension)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET discordExtension = \'{discordExtension}\' WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET discordExtension = \'{discordExtension}\' WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public bool SetDiscordMention(string discordMention)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET discordMention = \'{discordMention}\' WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET discordMention = \'{discordMention}\' WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public int GetRank()
         {
-            return Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT rank FROM playerTable WHERE steamId = \'{steamId}\'", "rank").First());
+            return Convert.ToInt32(ExecuteQuery($"SELECT rank FROM playerTable WHERE steamId = \'{steamId}\'", "rank").First());
         }
 
         public bool SetRank(int rank)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET rank = {rank} WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET rank = {rank} WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public int GetTokens()
         {
-            return Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT tokens FROM playerTable WHERE steamId = {steamId}", "tokens").First());
+            return Convert.ToInt32(ExecuteQuery($"SELECT tokens FROM playerTable WHERE steamId = {steamId}", "tokens").First());
         }
 
         public bool SetTokens(int tokens)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET tokens = {tokens} WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET tokens = {tokens} WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public int GetTotalScore()
         {
-            return Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT totalScore FROM playerTable WHERE steamId = {steamId}", "totalScore").First());
+            return Convert.ToInt32(ExecuteQuery($"SELECT totalScore FROM playerTable WHERE steamId = {steamId}", "totalScore").First());
         }
 
         public bool IncrementTotalScore(long scoreToAdd)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET totalScore = totalScore + {scoreToAdd} WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET totalScore = totalScore + {scoreToAdd} WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public bool IncrementPersonalBestsBeaten()
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET personalBestsBeaten = personalBestsBeaten + 1 WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET personalBestsBeaten = personalBestsBeaten + 1 WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public bool IncrementSongsPlayed()
         {
-            return SimpleSql.ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{steamId}\'") > 1;
         }
 
         //Returns the amount of tokens the user would get if scores were calculated now
         public int GetProjectedTokens()
         {
             int rank = GetRank();
-            if (rank != (int)SharedConstructs.Rank.Purple)
+            if (rank != (int)SharedConstructs.Rank.Master)
             {
                 int tokens = GetTokens();
 
-                IDictionary<string, ScoreConstruct> personalScores = GetScoresForPlayer(steamId);
+                IDictionary<SongConstruct, ScoreConstruct> personalScores = GetScoresForPlayer(steamId);
 
-                IDictionary<string, IDictionary<string, ScoreConstruct>> rankAboveScores = GetAllActiveScoresForRank((SharedConstructs.Rank)rank + 1);
+                IDictionary<SongConstruct, IDictionary<string, ScoreConstruct>> rankAboveScores = GetAllActiveScoresForRank((SharedConstructs.Rank)rank + 1);
 
                 personalScores.ToList().ForEach(x =>
                 {
@@ -134,7 +134,7 @@ namespace DiscordCommunityServer.Database
 
         public static List<string> GetPlayersInRank(int rank)
         {
-            return SimpleSql.ExecuteQuery($"SELECT steamId FROM playerTable WHERE rank = {rank}", "steamId");
+            return ExecuteQuery($"SELECT steamId FROM playerTable WHERE rank = {rank}", "steamId");
         }
 
         public bool Exists()
@@ -144,12 +144,12 @@ namespace DiscordCommunityServer.Database
 
         public static bool Exists(string steamId)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = {steamId}", "steamId").Any();
+            return ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = {steamId}", "steamId").Any();
         }
 
         public static bool IsRegistered(string steamId)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\'", "discordMention").Any(x => x.Length > 0);
+            return ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\'", "discordMention").Any(x => x.Length > 0);
         }
     }
 }

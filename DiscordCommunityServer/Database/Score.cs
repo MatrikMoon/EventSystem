@@ -46,7 +46,7 @@ namespace DiscordCommunityServer.Database
 
         public bool SetScore(long score, bool fullCombo)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)}, old = 0 WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}") > 1;
         }
 
         public bool Exists()

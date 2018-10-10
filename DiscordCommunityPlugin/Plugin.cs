@@ -1,4 +1,5 @@
-﻿using DiscordCommunityShared;
+﻿using DiscordCommunityPlugin.UI;
+using DiscordCommunityShared;
 using IllusionPlugin;
 using System.Collections;
 using System.Linq;
@@ -20,39 +21,6 @@ namespace DiscordCommunityPlugin
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             //SharedCoroutineStarter.instance.StartCoroutine(WaitForBuildMode());
         }
-
-        /*
-        private IEnumerator WaitForLevelSelection()
-        {
-            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any());
-            Logger.Error("FLOWCOORDINATOR CREATED, ADDING/REMOVING CALLBACKS");
-            StandardLevelSelectionFlowCoordinator slsfc = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
-            StandardLevelListViewController slsvc = slsfc.GetField<StandardLevelListViewController>("_levelListViewController");
-            StandardLevelDifficultyViewController sldvc = slsfc.GetField<StandardLevelDifficultyViewController>("_levelDifficultyViewController");
-            slsvc.didSelectLevelEvent -= slsfc.HandleLevelListViewControllerDidSelectLevel;
-            sldvc.didSelectDifficultyEvent -= slsfc.HandleDifficultyViewControllerDidSelectDifficulty;
-            slsvc.didSelectLevelEvent += HandleLevelListViewControllerDidSelectLevel;
-            sldvc.didSelectDifficultyEvent += HandleDifficultyViewControllerDidSelectDifficulty;
-        }
-
-        public void HandleLevelListViewControllerDidSelectLevel(StandardLevelListViewController viewController, IStandardLevel level)
-        {
-            Logger.Warning("LEVEL SELECTED");
-        }
-
-        public void HandleDifficultyViewControllerDidSelectDifficulty(StandardLevelDifficultyViewController viewController, IStandardLevelDifficultyBeatmap difficultyLevel)
-        {
-            Logger.Warning("DIFFICULTY SELECTED");
-        }
-
-        private IEnumerator WaitForBuildMode()
-        {
-            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<GameBuildMode>().Any());
-            Logger.Error("SETTING BUILD TO DEMO");
-            GameBuildMode buildMode = Resources.FindObjectsOfTypeAll<GameBuildMode>().First();
-            buildMode.ForceSetMode(GameBuildMode.Mode.Demo);
-        }
-        */
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
         {
