@@ -29,8 +29,9 @@ namespace DiscordCommunityServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
-                            if (//RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.FullCombo, s.Score_) == s.Signed &&
+                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.FullCombo, s.Score_) == s.Signed &&
                                 Database.Song.Exists(s.SongId, s.GameplayMode) &&
+                                !new Database.Song(s.SongId, s.GameplayMode).IsOld() &&
                                 Database.Player.Exists(s.SteamId) &&
                                 new BeatSaver.Song(s.SongId)
                                     .GetDifficultyForRank(

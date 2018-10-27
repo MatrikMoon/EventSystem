@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,9 +7,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using static DiscordCommunityShared.SharedConstructs;
-using Object = UnityEngine.Object;
-using Logger = DiscordCommunityShared.Logger;
-using DiscordCommunityPlugin.Misc;
 
 /*
  * Created by Moon on 9/22/2018
@@ -95,7 +91,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             }
         }
 
-        public void SetSong(IStandardLevelDifficultyBeatmap map)
+        public void SetSong(IStandardLevelDifficultyBeatmap map, Rank rank)
         {
             //Enable text views
             _songName.gameObject.SetActive(true);
@@ -124,7 +120,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             }
 
             //Get leaderboard data
-            Misc.Client.GetSongLeaderboard(this, Misc.SongIdHelper.GetSongIdFromLevelId(map.level.levelID), DiscordCommunityHelpers.Player.Instance.rank);
+            Misc.Client.GetSongLeaderboard(this, Misc.SongIdHelper.GetSongIdFromLevelId(map.level.levelID), rank);
         }
 
         public void SetScores(List<LeaderboardTableView.ScoreData> scores, int myScorePos)

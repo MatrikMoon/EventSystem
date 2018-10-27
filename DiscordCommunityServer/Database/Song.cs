@@ -58,6 +58,11 @@ namespace DiscordCommunityServer.Database
             return SimpleSql.ExecuteCommand($"UPDATE songTable SET mode = {mode} WHERE songId = \'{songId}\'") > 1;
         }
 
+        public bool IsOld()
+        {
+            return SimpleSql.ExecuteQuery($"SELECT old FROM songTable WHERE songId = \'{songId}\'", "old").First() == "1";
+        }
+
         public bool Exists()
         {
             return Exists(songId, (int)mode);

@@ -137,7 +137,7 @@ namespace DiscordCommunityPlugin
             */
         }
 
-        //(Created by taz?) Copies a component to a destination object, keeping all its field values
+        //(Created by taz?) Copies a component to a destination object, keeping all its field values?
         public static Behaviour CopyComponent(Behaviour original, Type originalType, Type overridingType, GameObject destination)
         {
             Behaviour copy = null;
@@ -172,7 +172,6 @@ namespace DiscordCommunityPlugin
 
             foreach (FieldInfo fi in myObjectFields)
             {
-                Logger.Info($"COPYING: {fi.Name}");
                 fi.SetValue(destination, fi.GetValue(source));
             }
         }

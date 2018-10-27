@@ -140,10 +140,6 @@ namespace DiscordCommunityPlugin
             var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
             sooperSecretSetting.GetValue += delegate { return Config.SooperSecretSetting; };
             sooperSecretSetting.SetValue += delegate (bool value) { Config.SooperSecretSetting = value; };
-
-            var ctOption = GameOptionsUI.CreateToggleOption("ChromaToggle");
-            ctOption.OnToggle += (e) => Logger.Info($"ONTOGGLE: {e}");
-            GameOptionsUI.Build();
         }
 
         //Returns to a view when the scene loads, courtesy of andruzzzhka's BeatSaberMultiplayer
