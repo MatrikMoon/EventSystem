@@ -121,7 +121,7 @@ namespace DiscordCommunityPlugin
             view.SetValues(values);
             return view;
         }
-
+        
         public T AddListSetting<T>(string name) where T : ListSettingsController
         {
             var volumeSettings = Resources.FindObjectsOfTypeAll<VolumeSettingsController>().FirstOrDefault();

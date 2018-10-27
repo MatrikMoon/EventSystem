@@ -17,34 +17,16 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
     class MainModFlowCoordinator : FlowCoordinator
     {
         public MainMenuViewController mmvc;
-
         public SongListViewController songListViewController;
 
-        private MainModNavigationController _mainModNavigationController;
-
-        LevelCollectionsForGameplayModes _levelCollections;
-
-        private SongPreviewPlayer _songPreviewPlayer;
-
-        public SongPreviewPlayer PreviewPlayer
-        {
-            get
-            {
-                if (_songPreviewPlayer == null)
-                {
-                    _songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().FirstOrDefault();
-                }
-
-                return _songPreviewPlayer;
-            }
-            private set { _songPreviewPlayer = value; }
-        }
+        private GeneralNavigationController _mainModNavigationController;
+        private LevelCollectionsForGameplayModes _levelCollections;
 
         public void PresentMainModUI(bool immediately = false, string songToSelectWhenLoaded = null)
         {
             if (_mainModNavigationController == null)
             {
-                _mainModNavigationController = BaseUI.CreateViewController<MainModNavigationController>();
+                _mainModNavigationController = BaseUI.CreateViewController<GeneralNavigationController>();
             }
 
             mmvc.PresentModalViewController(_mainModNavigationController, null);

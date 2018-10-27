@@ -63,48 +63,6 @@ namespace DiscordCommunityServer.Discord.Modules
             }
         }
 
-        [Command("testRole")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task TestRoleAsync()
-        {
-            Player player = Player.GetByDiscord(Context.User.Mention);
-            if (player != null)
-            {
-                string steamId = player.GetSteamId();
-                IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(steamId);
-                Rank currentRank = (Rank)player.GetRank();
-                Rank newRank = ++currentRank;
-                string replaySongs = string.Empty;
-
-                if (playerScores.Count >= 0)
-                {
-                    playerScores.ToList().ForEach(x =>
-                    {
-                        BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongId);
-                        if (songData.GetDifficultyForRank(newRank) != x.Value.Difficulty)
-                        {
-                            replaySongs += songData.SongName + "\n";
-                            ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId=\'{x.Key.SongId}\' AND mode=\'{x.Key.Mode}\' AND steamId=\'{steamId}\'");
-                        }
-                    });
-                }
-
-                if (replaySongs != string.Empty)
-                {
-                    string reply = $"You have been promoted to {newRank}!\n" +
-                        "You'll need to re-play the following songs:\n" +
-                        replaySongs;
-                    await ReplyAsync(reply);
-                }
-
-                else
-                {
-                    await ReplyAsync($"You have been promoted to {newRank}!");
-                }
-            }
-            else await ReplyAsync($"User {Context.User.Mention} not in database");
-        }
-
         [Command("addSong")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task AddSongAsync(string songId, string gameplayMode = null)
@@ -209,9 +167,14 @@ namespace DiscordCommunityServer.Discord.Modules
 
         //A certifiable mess.
         [Command("leaderboards")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task LeaderboardsAsync()
         {
+            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
+            if (!isAdmin) return;
+
             string finalMessage = "Weekly Leaderboard:\n\n";
             List<SongConstruct> songs = GetActiveSongs();
 
@@ -242,13 +205,28 @@ namespace DiscordCommunityServer.Discord.Modules
                     }
                 });
             }
+            
+            //Deal with long messages
+            if (finalMessage.Length > 2000)
+            {
+                for (int i = 0; finalMessage.Length > 2000; i++)
+                {
+                    await ReplyAsync(finalMessage.Substring(0, finalMessage.Length > 2000 ? 2000 : finalMessage.Length));
+                    finalMessage = finalMessage.Substring(2000);
+                }
+            }
             await ReplyAsync(finalMessage);
         }
 
         [Command("tokens")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task TokensAsync()
         {
+            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
+            if (!isAdmin) return;
+
             string finalReply = "TOKENS:\n\n";
 
             finalReply += "Blue:\n";

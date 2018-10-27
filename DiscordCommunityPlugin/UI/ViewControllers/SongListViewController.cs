@@ -188,12 +188,12 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         {
             //Change global leaderboard view
             IStandardLevelDifficultyBeatmap difficultyLevel = Player.Instance.GetMapForRank(availableSongs[row]);
-            GameplayMode gameMode = Player.Instance.desiredModes[Misc.SongIdHelper.GetSongIdFromLevelId(availableSongs[row].levelID)];
+            GameplayMode gameMode = Player.Instance.desiredModes[SongIdHelper.GetSongIdFromLevelId(availableSongs[row].levelID)];
             _globalLeaderboard.Init(difficultyLevel, gameMode);
             _globalLeaderboard.Refresh();
 
             //Change community leaderboard view
-            _communityLeaderboard.SetSong(difficultyLevel);
+            _communityLeaderboard.SetSong(difficultyLevel, Player.Instance.rank);
 
             //Do song selected action
             _communityLeaderboard.PlayPressed -= PlayPressed_Listener;

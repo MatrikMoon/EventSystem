@@ -105,13 +105,10 @@
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\Components\GameOptionSetting.cs" />
     <Compile Include="UI\Components\GameOptionToggle.cs" />
-    <Compile Include="UI\Components\NGUIUitl.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
     <Compile Include="UI\SettingsUI.cs" />
-    <Compile Include="UI\ViewControllers\CustomGameplayOptionsViewController.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
-    <Compile Include="UI\GameOptionsUI.cs" />
-    <Compile Include="UI\ViewControllers\MainModNavigationController.cs" />
+    <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\ModalViewController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
   </ItemGroup>
