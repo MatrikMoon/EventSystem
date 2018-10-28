@@ -142,11 +142,11 @@ namespace DiscordCommunityServer.Database
         }
 
         //Returns a dictionary of steamIds and scores for the designated song and rank
-        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rank)
+        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rank = -1)
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel FROM scoreTable WHERE songId = \'{s.SongId}\' AND rank = \'{rank}\' AND mode = {s.Mode} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel FROM scoreTable WHERE songId = \'{s.SongId}\' {(rank != -1 ? $"AND rank = \'{rank}\'" : null)} AND mode = {s.Mode} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {

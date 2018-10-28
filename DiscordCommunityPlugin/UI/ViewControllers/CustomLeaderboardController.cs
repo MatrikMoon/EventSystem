@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using static DiscordCommunityShared.SharedConstructs;
+using Logger = DiscordCommunityShared.Logger;
 
 /*
  * Created by Moon on 9/22/2018
@@ -21,11 +22,15 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         protected LeaderboardTableView _leaderboard;
 
         public event Action<GameplayOptions> PlayPressed;
+        public IStandardLevelDifficultyBeatmap selectedMap;
+        public int selectedRank = -1;
 
         TextMeshProUGUI _songName;
         TextMeshProUGUI _rank;
         Button _playButton;
         Button _mirrorButton;
+        Button _pageLeftButton;
+        Button _pageRightButton;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
@@ -48,12 +53,43 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _rank.color = Color.gray;
                 _rank.gameObject.SetActive(false);
 
+                _pageLeftButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
+                (_pageLeftButton.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
+                (_pageLeftButton.transform as RectTransform).anchorMax = new Vector2(0f, 0.5f);
+                (_pageLeftButton.transform as RectTransform).anchoredPosition = new Vector2(27f, -10f);
+                Quaternion currentRot = (_pageLeftButton.transform as RectTransform).rotation;
+                (_pageLeftButton.transform as RectTransform).rotation = Quaternion.Euler(currentRot.eulerAngles.x, currentRot.eulerAngles.y, currentRot.eulerAngles.z + 90);
+                _pageLeftButton.interactable = true;
+                _pageLeftButton.gameObject.SetActive(false);
+                _pageLeftButton.onClick.AddListener(() =>
+                {
+                    SetSong(selectedMap, --selectedRank);
+                    if (selectedRank <= (int)Rank.White) _pageLeftButton.interactable = false;
+                    _pageRightButton.interactable = true;
+                });
+
+                _pageRightButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
+                (_pageRightButton.transform as RectTransform).anchorMin = new Vector2(1f, 0.5f);
+                (_pageRightButton.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
+                (_pageRightButton.transform as RectTransform).anchoredPosition = new Vector2(-27f, -10f);
+                currentRot = (_pageRightButton.transform as RectTransform).rotation;
+                (_pageRightButton.transform as RectTransform).rotation = Quaternion.Euler(currentRot.eulerAngles.x, currentRot.eulerAngles.y, currentRot.eulerAngles.z + 90);
+                _pageRightButton.interactable = true;
+                _pageRightButton.gameObject.SetActive(false);
+                _pageRightButton.onClick.AddListener(() =>
+                {
+                    SetSong(selectedMap, ++selectedRank);
+                    if (selectedRank >= (int)Rank.Master + 1) _pageRightButton.interactable = false; //Master + 1 because [Master + 1] is the index of the mixed leaderboard
+                    _pageLeftButton.interactable = true;
+                });
+
                 _playButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
                 BaseUI.SetButtonText(_playButton, "Play");
                 (_playButton.transform as RectTransform).anchorMin = new Vector2(1f, 1f);
                 (_playButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
                 (_playButton.transform as RectTransform).anchoredPosition = new Vector2(-21f, -15f);
                 (_playButton.transform as RectTransform).sizeDelta = new Vector2(18f, 10f);
+                _playButton.gameObject.SetActive(false);
                 _playButton.onClick.AddListener(() =>
                 {
                     PlayPressed?.Invoke(new GameplayOptions());
@@ -65,6 +101,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_mirrorButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
                 (_mirrorButton.transform as RectTransform).anchoredPosition = new Vector2(-21f, -28f);
                 (_mirrorButton.transform as RectTransform).sizeDelta = new Vector2(18f, 10f);
+                _mirrorButton.gameObject.SetActive(false);
                 _mirrorButton.onClick.AddListener(() =>
                 {
                     GameplayOptions options = new GameplayOptions();
@@ -91,14 +128,22 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             }
         }
 
-        public void SetSong(IStandardLevelDifficultyBeatmap map, Rank rank)
+        public void SetSong(IStandardLevelDifficultyBeatmap map, int rank)
         {
-            //Enable text views
+            //Set globals
+            selectedMap = map;
+            selectedRank = rank;
+
+            //Enable relevant views
             _songName.gameObject.SetActive(true);
             _rank.gameObject.SetActive(true);
+            _playButton.gameObject.SetActive(true);
+            _mirrorButton.gameObject.SetActive(true);
+            _pageLeftButton.gameObject.SetActive(true);
+            _pageRightButton.gameObject.SetActive(true);
 
             //Set song name text and rank text (and color)
-            Rank playerRank = DiscordCommunityHelpers.Player.Instance.rank;
+            Rank playerRank = (Rank)rank;
             _songName.SetText(map.level.songName);
             _rank.SetText(playerRank.ToString());
 
@@ -117,6 +162,11 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             else if (playerRank == Rank.Master)
             {
                 _rank.color = Color.magenta;
+            }
+            else if ((int)playerRank == 6)
+            {
+                _rank.color = Color.green;
+                _rank.SetText("Mixed");
             }
 
             //Get leaderboard data

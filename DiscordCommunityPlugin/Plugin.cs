@@ -57,5 +57,19 @@ namespace DiscordCommunityPlugin
         public void OnFixedUpdate()
         {
         }
+
+        /* Trigger press detection code, for debugging UI element positioning
+        private static bool rightDown = false;
+        private static Action triggerPressed;
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.JoystickButton15) && !rightDown)
+            {
+                rightDown = true;
+                triggerPressed?.Invoke();
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton15) && rightDown) rightDown = false;
+        }
+        */
     }
 }

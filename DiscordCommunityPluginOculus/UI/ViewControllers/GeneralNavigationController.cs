@@ -11,7 +11,7 @@ using VRUI;
 namespace DiscordCommunityPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class MainModNavigationController : VRUINavigationController
+    class GeneralNavigationController : VRUINavigationController
     {
         public TextMeshProUGUI _errorText;
 

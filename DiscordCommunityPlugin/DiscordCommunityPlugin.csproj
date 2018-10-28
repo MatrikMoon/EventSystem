@@ -103,11 +103,10 @@
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
-    <Compile Include="UI\Components\GameOptionSetting.cs" />
-    <Compile Include="UI\Components\GameOptionToggle.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
     <Compile Include="UI\SettingsUI.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
+    <Compile Include="UI\ViewControllers\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\ModalViewController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
@@ -121,6 +120,7 @@
       <Name>DiscordCommunityShared</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
