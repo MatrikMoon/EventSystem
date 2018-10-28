@@ -8,8 +8,8 @@ namespace DiscordCommunityShared
     public static class SharedConstructs
     {
         public static string Name => "DiscordCommunityPlugin";
-        public static string Version => "0.0.8";
-        public static int VersionCode => 008;
+        public static string Version => "0.0.9";
+        public static int VersionCode => 009;
         public static string Changelog =
             "0.0.1: First Commit. Base Discord/Plugin/Server functional, some commands. Just added \"mode\' differentiation between songs.\n" +
             "0.0.2: Added Oculus support. Added Leaderboard views.\n" +
@@ -18,7 +18,8 @@ namespace DiscordCommunityShared
             "0.0.5: Sooper Secret Settings\n" +
             "0.0.6: First open (forced) release to the Discord server\n" +
             "0.0.7: Added Mirror mode\n" +
-            "0.0.8: Added stricter registration policy";
+            "0.0.8: Added stricter registration policy\n" +
+            "0.0.9: Added scrollable leaderboards";
 
         public enum Rank
         {

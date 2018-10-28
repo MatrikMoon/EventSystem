@@ -52,11 +52,9 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
-                _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
                 {
                     songsTableView.PageScrollUp();
-
                 });
                 _pageUpButton.interactable = false;
 
@@ -64,11 +62,9 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
-                _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
                     songsTableView.PageScrollDown();
-
                 });
                 _pageDownButton.interactable = false;
 
@@ -188,12 +184,15 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         {
             //Change global leaderboard view
             IStandardLevelDifficultyBeatmap difficultyLevel = Player.Instance.GetMapForRank(availableSongs[row]);
-            GameplayMode gameMode = Player.Instance.desiredModes[Misc.SongIdHelper.GetSongIdFromLevelId(availableSongs[row].levelID)];
+            GameplayMode gameMode = Player.Instance.desiredModes[SongIdHelper.GetSongIdFromLevelId(availableSongs[row].levelID)];
             _globalLeaderboard.Init(difficultyLevel, gameMode);
             _globalLeaderboard.Refresh();
 
             //Change community leaderboard view
-            _communityLeaderboard.SetSong(difficultyLevel);
+            //Use the currently selected rank, if it exists
+            int rankToView = _communityLeaderboard.selectedRank;
+            if (rankToView <= -1) rankToView = (int)Player.Instance.rank;
+            _communityLeaderboard.SetSong(difficultyLevel, rankToView);
 
             //Do song selected action
             _communityLeaderboard.PlayPressed -= PlayPressed_Listener;

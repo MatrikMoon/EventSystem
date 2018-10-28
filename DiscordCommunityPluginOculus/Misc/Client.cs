@@ -73,7 +73,7 @@ namespace DiscordCommunityPlugin.Misc
         }
 
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rank rank)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, int rank)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rank));
         }
@@ -135,9 +135,9 @@ namespace DiscordCommunityPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rank rank)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, int rank)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}/{(int)DiscordCommunityHelpers.Player.Instance.desiredModes[songId]}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{rank}/{(int)DiscordCommunityHelpers.Player.Instance.desiredModes[songId]}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -157,13 +157,13 @@ namespace DiscordCommunityPlugin.Misc
                         scores.Add(new LeaderboardTableView.ScoreData(
                             Convert.ToInt32(score.Value["score"].ToString()),
                             score.Value["player"],
-                            Convert.ToInt32(score.Value["rank"].ToString()),
+                            Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true"));
 
                         //If one of the scores is us, set the "special" score position to the right value
                         if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))
                         {
-                            myPos = Convert.ToInt32(score.Value["rank"] - 1);
+                            myPos = Convert.ToInt32(score.Value["place"] - 1);
                         }
                     }
                     clc.SetScores(scores, myPos);

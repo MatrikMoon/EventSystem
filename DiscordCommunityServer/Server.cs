@@ -117,7 +117,7 @@ namespace DiscordCommunityServer
 
                         string steamId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
 
-                        if (!(steamId.Length == 17 || steamId.Length == 16))
+                        if (!(steamId.Length == 17 || steamId.Length == 16 || steamId.Length == 15)) //17 = vive, 16 = oculus, 15 = sfkwww
                         {
                             Logger.Error($"Invalid id size: {steamId.Length}");
                             return new HttpResponse()
@@ -179,7 +179,12 @@ namespace DiscordCommunityServer
                             };
                         }
 
-                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rank);
+                        IDictionary<string, ScoreConstruct> scores = null;
+                        if (rank >= 0 && rank <= 5)
+                        {
+                                scores = GetScoresForSong(songConstruct, rank);
+                        }
+                        else if (rank == 6) scores = GetScoresForSong(songConstruct);
 
                         JSONNode json = new JSONObject();
 
@@ -189,9 +194,10 @@ namespace DiscordCommunityServer
                             JSONNode node = new JSONObject();
                             node["score"] = x.Value.Score;
                             node["player"] = new Database.Player(x.Key).GetDiscordName();
-                            node["rank"] = place;
+                            node["place"] = place;
                             node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
                             node["steamId"] = x.Key;
+                            node["rank"] = (int)x.Value.Rank;
                             json.Add(Convert.ToString(place++), node);
                         });
 

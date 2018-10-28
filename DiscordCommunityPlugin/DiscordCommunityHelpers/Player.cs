@@ -18,8 +18,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         public static Player Instance
         {
             get {
-                if (instance == null) return new Player();
-                else return instance;
+                return instance ?? new Player();
             }
             set {
                 instance = value;
@@ -38,29 +37,6 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         //Returns the most appropriate map for the player's rank
         public IStandardLevelDifficultyBeatmap GetMapForRank(IStandardLevel level)
         {
-            //TODO: REMOVE
-            //Special case for Flower Dance
-            if (Misc.SongIdHelper.GetSongIdFromLevelId(level.levelID) == "2322-1605")
-            {
-                IStandardLevelDifficultyBeatmap ret2 = null;
-                switch (rank)
-                {
-                    case Rank.Master:
-                    case Rank.Blue:
-                    case Rank.Gold:
-                    case Rank.Silver:
-                        ret2 = GetClosestDifficultyPreferLower(level, LevelDifficulty.Expert);
-                        break;
-                    case Rank.Bronze:
-                        ret2 = GetClosestDifficultyPreferLower(level, LevelDifficulty.Hard);
-                        break;
-                    default:
-                        ret2 = GetClosestDifficultyPreferLower(level, LevelDifficulty.Easy);
-                        break;
-                }
-                return ret2;
-            }
-
             IStandardLevelDifficultyBeatmap ret = null;
             switch (rank)
             {
