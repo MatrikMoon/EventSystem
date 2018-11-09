@@ -1,4 +1,5 @@
-﻿using DiscordCommunityPlugin.UI.ViewControllers;
+﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
+using DiscordCommunityPlugin.UI.ViewControllers;
 using DiscordCommunityShared;
 using DiscordCommunityShared.SimpleJSON;
 using SongLoaderPlugin;
@@ -72,10 +73,67 @@ namespace DiscordCommunityPlugin.Misc
             }
         }
 
-        //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, int rank)
+        public static void RequestRank(ulong steamId, Rank rank, bool isInitialAssignment, string signed)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rank));
+            //Build OST score list for blue application
+            string scoreList = "OST Scores:\n";
+            if (rank == Rank.Blue)
+            {
+                var levelCollection = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().First();
+                float roundMultiple = 100 * (float)Math.Pow(10, 2);
+
+                OstHelper.ostHashes
+                .Take(10) //Not Angel Voices
+                .ToList()
+                .ForEach(x =>
+                {
+
+                    var songName = OstHelper.GetOstSongNameFromLevelId(x);
+                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, GameplayMode.SoloStandard);
+                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, GameplayMode.SoloStandard);
+                    var noteCount = levelCollection.GetLevels(GameplayMode.SoloStandard).First(y => y.levelID == x).difficultyBeatmaps.First(y => y.difficulty == LevelDifficulty.Expert).beatmapData.notesCount;
+                    int songMaxScore = ScoreController.MaxScoreForNumberOfNotes(noteCount);
+                    var percent = Mathf.Clamp((float)Math.Floor(localScore / (float)songMaxScore * roundMultiple) / roundMultiple, 0.0f, 1.0f) * 100.0f;
+
+                    scoreList += $"{songName}: {localScore} ({localRank} - {percent}%)\n";
+                });
+            }
+
+            //Build score object
+            RankRequest s = new RankRequest
+            {
+                SteamId = steamId.ToString(),
+                RequestedRank = (int)rank,
+                IsInitialAssignment = isInitialAssignment,
+                OstScoreList = scoreList,
+                Signed = signed
+            };
+
+            byte[] rankData = ProtobufHelper.SerializeProtobuf(s);
+
+            SharedCoroutineStarter.instance.StartCoroutine(RequestRankCoroutine(rankData));
+        }
+
+        //Post a score to the server
+        private static IEnumerator RequestRankCoroutine(byte[] proto)
+        {
+            JSONObject o = new JSONObject();
+            o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
+
+            UnityWebRequest www = UnityWebRequest.Post($"{discordCommunityApi}/requestrank/", o.ToString());
+            www.timeout = 30;
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Logger.Error(www.error);
+            }
+        }
+
+        //Gets the top 10 scores for a song and posts them to the provided leaderboard
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
+        {
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rank, useRankColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
@@ -124,8 +182,18 @@ namespace DiscordCommunityPlugin.Misc
                         slvc.DownloadErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
                     }
 
-                    DiscordCommunityHelpers.Player.Instance.rank = (Rank)Convert.ToInt64(node["rank"].Value);
-                    DiscordCommunityHelpers.Player.Instance.tokens = Convert.ToInt64(node["tokens"].Value);
+                    Player.Instance.rank = (Rank)Convert.ToInt64(node["rank"].Value);
+                    Player.Instance.tokens = Convert.ToInt64(node["tokens"].Value);
+                    Player.Instance.projectedTokens = Convert.ToInt64(node["projectedTokens"].Value);
+
+                    if (Player.Instance.rank == Rank.None)
+                    {
+                        Rank suitableRank = Player.Instance.GetSuitableRank();
+                        string signed = RSA.SignRankRequest(Plugin.PlayerId, suitableRank, true);
+                        RequestRank(Plugin.PlayerId, suitableRank, true, signed);
+
+                        slvc.DownloadErrorHappened($"You have been automatically assigned a rank of {suitableRank}.\nReload the page to continue.");
+                    }
                 }
                 catch (Exception e)
                 {
@@ -135,9 +203,9 @@ namespace DiscordCommunityPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, int rank)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{rank}/{(int)DiscordCommunityHelpers.Player.Instance.desiredModes[songId]}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}/{(int)DiscordCommunityHelpers.Player.Instance.desiredModes[songId]}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -150,15 +218,16 @@ namespace DiscordCommunityPlugin.Misc
                 try
                 {
                     var node = JSON.Parse(www.downloadHandler.text);
-                    List<LeaderboardTableView.ScoreData> scores = new List<LeaderboardTableView.ScoreData>();
+                    List<CustomLeaderboardTableView.CustomScoreData> scores = new List<CustomLeaderboardTableView.CustomScoreData>();
                     int myPos = -1;
                     foreach (var score in node)
                     {
-                        scores.Add(new LeaderboardTableView.ScoreData(
+                        scores.Add(new CustomLeaderboardTableView.CustomScoreData(
                             Convert.ToInt32(score.Value["score"].ToString()),
                             score.Value["player"],
                             Convert.ToInt32(score.Value["place"].ToString()),
-                            score.Value["fullCombo"] == "true"));
+                            score.Value["fullCombo"] == "true",
+                            (Rank)Convert.ToInt32(score.Value["rank"].ToString())));
 
                         //If one of the scores is us, set the "special" score position to the right value
                         if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))
@@ -166,7 +235,7 @@ namespace DiscordCommunityPlugin.Misc
                             myPos = Convert.ToInt32(score.Value["place"] - 1);
                         }
                     }
-                    clc.SetScores(scores, myPos);
+                    clc.SetScores(scores, myPos, useRankColors);
                 }
                 catch (Exception e)
                 {

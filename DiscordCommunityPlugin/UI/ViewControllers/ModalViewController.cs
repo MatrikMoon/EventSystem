@@ -23,6 +23,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
     {
         public string Message { get; set; } = "Default Text";
         public ModalType Type { get; set; } = ModalType.None;
+        public bool DismissImmediately { get; set; } = false;
+        public bool DontDismiss { get; set; } = false;
         private Button _backButton;
         private bool _continue = false;
 
@@ -52,16 +54,10 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 });
             }
 
-            StartCoroutine(Prompt());
+            Prompt();
         }
 
-        [Obfuscation(Exclude = false, Feature = "-rename;")]
-        protected override void DidDeactivate(DeactivationType deactivationType)
-        {
-            action?.Invoke();
-        }
-
-        private IEnumerator Prompt()
+        private void Prompt()
         {
             _continue = false;
             var buttonWidth = 38f;
@@ -82,8 +78,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 BaseUI.SetButtonText(okButton, "OK");
                 okButton.onClick.AddListener(() =>
                 {
-                    _continue = true;
-                    action = OkCallback;
+                    OkCallback?.Invoke();
+                    if (!DontDismiss) DismissModalViewController(null, DismissImmediately);
                 });
                 (okButton.transform as RectTransform).sizeDelta = new Vector2(buttonWidth, buttonHeight);
                 (okButton.transform as RectTransform).anchoredPosition = new Vector2((rectTransform.rect.width / 2) - (buttonWidth / 2), 10f);
@@ -94,8 +90,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 BaseUI.SetButtonText(yesButton, "YES");
                 yesButton.onClick.AddListener(() =>
                 {
-                    _continue = true;
-                    action = YesCallback;
+                    YesCallback?.Invoke();
+                    if (!DontDismiss) DismissModalViewController(null, DismissImmediately);
                 });
                 (yesButton.transform as RectTransform).sizeDelta = new Vector2(buttonWidth, buttonHeight);
                 (yesButton.transform as RectTransform).anchoredPosition = new Vector2((rectTransform.rect.width / 4) - (buttonWidth / 2), 10f);
@@ -104,21 +100,12 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 BaseUI.SetButtonText(noButton, "NO");
                 noButton.onClick.AddListener(() =>
                 {
-                    _continue = true;
-                    action = NoCallback;
+                    NoCallback?.Invoke();
+                    if (!DontDismiss) DismissModalViewController(null, DismissImmediately);
                 });
                 (noButton.transform as RectTransform).sizeDelta = new Vector2(buttonWidth, buttonHeight);
                 (noButton.transform as RectTransform).anchoredPosition = new Vector2(((rectTransform.rect.width / 4) * 3) - (buttonWidth / 2), 10f);
             }
-
-            yield return new WaitUntil(() => _continue);
-
-            if (yesButton != null) Destroy(yesButton);
-            if (noButton != null) Destroy(noButton);
-            if (okButton != null) Destroy(okButton);
-            Destroy(promptText);
-
-            DismissModalViewController(null, false);
         }
     }
 }

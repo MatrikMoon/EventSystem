@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static DiscordCommunityServer.Database.SimpleSql;
+using static DiscordCommunityShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -24,7 +25,7 @@ namespace DiscordCommunityServer.Database
             if (!Exists())
             {
                 //Default name is the steam id
-                AddPlayer(steamId, steamId, "", "", 0, 0, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", (int)Rank.None, 0, 0, 0, 0, 0, 0, true);
             }
         }
 
@@ -113,9 +114,9 @@ namespace DiscordCommunityServer.Database
         public int GetProjectedTokens()
         {
             int rank = GetRank();
-            if (rank != (int)SharedConstructs.Rank.Master)
+            if (rank != (int)Rank.Master)
             {
-                int tokens = GetTokens();
+                int tokens = 0;
 
                 IDictionary<SongConstruct, ScoreConstruct> personalScores = GetScoresForPlayer(steamId);
 
@@ -127,7 +128,7 @@ namespace DiscordCommunityServer.Database
                     if (rankAboveForSong != null) tokens += rankAboveForSong.Where(y => y.Value.Score < x.Value.Score).Count();
                 });
 
-                return tokens;
+                return tokens > 3 ? 3 : tokens; //Cap at 3 tokens
             }
             return 0;
         }

@@ -9,11 +9,34 @@ namespace DiscordCommunityPlugin.Misc
     class Config
     {
         private static bool _sooperSecretSetting;
-        public static bool SooperSecretSetting {
+        public static bool SooperSecretSetting
+        {
             get { return _sooperSecretSetting; }
             set
             {
                 _sooperSecretSetting = value;
+                SaveConfig();
+            }
+        }
+
+        private static bool _mirrorMode;
+        public static bool MirrorMode
+        {
+            get { return _mirrorMode; }
+            set
+            {
+                _mirrorMode = value;
+                SaveConfig();
+            }
+        }
+
+        private static bool _staticLights;
+        public static bool StaticLights
+        {
+            get { return _staticLights; }
+            set
+            {
+                _staticLights = value;
                 SaveConfig();
             }
         }
@@ -34,6 +57,8 @@ namespace DiscordCommunityPlugin.Misc
         {
             JSONNode node = new JSONObject();
             node["SooperSecretSetting"] = SooperSecretSetting;
+            node["Mirror"] = SooperSecretSetting;
+            node["StaticLights"] = SooperSecretSetting;
             File.WriteAllText(ConfigLocation, node.ToString());
         }
     }

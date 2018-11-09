@@ -9,7 +9,12 @@ using Discord.WebSocket;
 namespace DiscordCommunityServer.Discord.Services
 {
     public class CommandHandlingService
+
     {
+        //TODO: This is probably not how I'm supposed to be doing this
+        public event Action<IUserMessage, SocketReaction> ReactionAdded;
+        public event Action<IUserMessage, SocketReaction> ReactionRemoved;
+
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
@@ -21,6 +26,9 @@ namespace DiscordCommunityServer.Discord.Services
             _services = services;
 
             _discord.MessageReceived += MessageReceivedAsync;
+            _discord.MessageUpdated += MessageUpdatedAsync;
+            _discord.ReactionAdded += ReactionAddedAsync;
+            _discord.ReactionRemoved += ReactionRemovedAsync;
         }
 
         public async Task InitializeAsync()
@@ -44,6 +52,24 @@ namespace DiscordCommunityServer.Discord.Services
             if (result.Error.HasValue &&
                 result.Error.Value != CommandError.UnknownCommand) // it's bad practice to send 'unknown command' errors
                 await context.Channel.SendMessageAsync(result.ToString());
+        }
+
+        private async Task MessageUpdatedAsync(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
+        {
+            var message = await before.GetOrDownloadAsync();
+            //Console.WriteLine($"{message} -> {after}");
+        }
+
+        private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            var message = await before.GetOrDownloadAsync();
+            ReactionAdded?.Invoke(message, reaction);
+        }
+
+        private async Task ReactionRemovedAsync(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel channel, SocketReaction reaction)
+        {
+            var message = await before.GetOrDownloadAsync();
+            ReactionRemoved?.Invoke(message, reaction);
         }
     }
 }

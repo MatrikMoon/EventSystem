@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using static DiscordCommunityServer.Database.SimpleSql;
+using static DiscordCommunityShared.SharedConstructs;
 
 namespace DiscordCommunityServer
 {
@@ -33,11 +34,12 @@ namespace DiscordCommunityServer
                                 Database.Song.Exists(s.SongId, s.GameplayMode) &&
                                 !new Database.Song(s.SongId, s.GameplayMode).IsOld() &&
                                 Database.Player.Exists(s.SteamId) &&
+                                Database.Player.IsRegistered(s.SteamId) &&
                                 new BeatSaver.Song(s.SongId)
                                     .GetDifficultyForRank(
-                                        (SharedConstructs.Rank)(new Database.Player(s.SteamId).GetRank())) == (SharedConstructs.LevelDifficulty)s.DifficultyLevel) //If the score is invalid or the song doesn't exist, or the user played the wrong difficulty
+                                        (Rank)(new Database.Player(s.SteamId).GetRank())) == (LevelDifficulty)s.DifficultyLevel) //If the score is invalid or the song doesn't exist, or the user played the wrong difficulty
                             {
-                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_}");
+                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
                             }
                             else
                             {
@@ -89,6 +91,67 @@ namespace DiscordCommunityServer
                      }
                 },
                 new Route {
+                    Name = "Score Receiver",
+                    UrlRegex = @"^/requestrank/$",
+                    Method = "POST",
+                    Callable = (HttpRequest request) => {
+                        try
+                        {
+                            //Get JSON object from request content
+                            JSONNode node = JSON.Parse(WebUtility.UrlDecode(request.Content));
+
+                            //Get Score object from JSON
+                            RankRequest r = RankRequest.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
+
+                            if (RSA.SignRankRequest(Convert.ToUInt64(r.SteamId), (Rank)r.RequestedRank, r.IsInitialAssignment) == r.Signed &&
+                                Database.Player.Exists(r.SteamId) &&
+                                Database.Player.IsRegistered(r.SteamId))
+                            {
+                                Logger.Info($"RECEIVED VALID RANK REQUEST: {r.RequestedRank} FOR {r.SteamId} {r.IsInitialAssignment}");
+
+                                Database.Player player = new Database.Player(r.SteamId);
+
+                                //The rank up system will ignore requets where the player doesn't have the required tokens,
+                                //or is requesting a rank higher than the one above their current rank (if it's not an inital rank assignment)
+                                if (r.IsInitialAssignment && (Rank)player.GetRank() == Rank.None) Discord.CommunityBot.ChangeRank(player, (Rank)r.RequestedRank);
+                                else if (player.GetRank() < (int)Rank.Gold) Discord.CommunityBot.ChangeRank(player, (Rank)(player.GetRank() + 1));
+                                else if (player.GetRank() == (int)Rank.Gold && player.GetTokens() >= 3) { //Player is submitting for Blue
+                                    player.SetTokens(player.GetTokens() - 3); //Take our toll ;)
+                                    Discord.CommunityBot.SubmitBlueApplication(player, r.OstScoreList);
+                                }
+                                else
+                                {
+                                    return new HttpResponse()
+                                    {
+                                        ReasonPhrase = "Bad Request",
+                                        StatusCode = "400"
+                                    };
+                                }
+
+                                return new HttpResponse()
+                                {
+                                    ReasonPhrase = "OK",
+                                    StatusCode = "200"
+                                };
+                            }
+                            else
+                            {
+                                Logger.Warning($"RECEIVED INVALID RANK REQUEST {r.RequestedRank} FROM {r.SteamId}");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error($"{e}");
+                        }
+
+                        return new HttpResponse()
+                        {
+                            ReasonPhrase = "Bad Request",
+                            StatusCode = "400"
+                        };
+                    }
+                },
+                new Route {
                     Name = "Weekly Song Getter",
                     UrlRegex = @"^/getweeklysongs/$",
                     Method = "GET",
@@ -113,8 +176,6 @@ namespace DiscordCommunityServer
                     UrlRegex = @"^/getplayerstats/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
-                        Logger.Success($"Request path: {request.Path}");
-
                         string steamId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
 
                         if (!(steamId.Length == 17 || steamId.Length == 16 || steamId.Length == 15)) //17 = vive, 16 = oculus, 15 = sfkwww
@@ -132,9 +193,10 @@ namespace DiscordCommunityServer
                         if (Database.Player.Exists(steamId)) {
                             Database.Player player = new Database.Player(steamId);
 
-                            json["version"] = SharedConstructs.VersionCode;
+                            json["version"] = VersionCode;
                             json["rank"] = player.GetRank();
                             json["tokens"] = player.GetTokens();
+                            json["projectedTokens"] = player.GetProjectedTokens();
                         }
                         else
                         {
@@ -154,11 +216,7 @@ namespace DiscordCommunityServer
                     UrlRegex = @"^/getsongleaderboards/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
-                        Logger.Success($"Leaderboard request path: {request.Path}");
-
                         string[] requestData = request.Path.Substring(1).Split('/');
-
-                        Logger.Info($"{requestData[1]} {requestData[2]} {requestData[3]}");
 
                         string songId = requestData[1];
                         int rank = Convert.ToInt32(requestData[2]);
@@ -179,17 +237,11 @@ namespace DiscordCommunityServer
                             };
                         }
 
-                        IDictionary<string, ScoreConstruct> scores = null;
-                        if (rank >= 0 && rank <= 5)
-                        {
-                                scores = GetScoresForSong(songConstruct, rank);
-                        }
-                        else if (rank == 6) scores = GetScoresForSong(songConstruct);
-
+                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rank);
                         JSONNode json = new JSONObject();
 
                         int place = 1;
-                        scores.ToList().ForEach(x =>
+                        scores.Take(10).ToList().ForEach(x =>
                         {
                             JSONNode node = new JSONObject();
                             node["score"] = x.Value.Score;

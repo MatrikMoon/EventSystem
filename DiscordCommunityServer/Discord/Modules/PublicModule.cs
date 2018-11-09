@@ -20,11 +20,6 @@ namespace DiscordCommunityServer.Discord.Modules
         // Dependency Injection will fill this value in for us
         public PictureService PictureService { get; set; }
 
-        private static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
-        private static string[] _saberRoles = { "white", "bronze", "silver", "gold", "blue", "master" };
-        Rank[] _ranksToList = { Rank.Master, Rank.Blue, Rank.Gold,
-                                            Rank.Silver, Rank.Bronze };
-
         [Command("register")]
         public async Task RegisterAsync([Remainder] string steamId)
         {
@@ -41,7 +36,7 @@ namespace DiscordCommunityServer.Discord.Modules
                 var guildRoles = Context.Guild.Roles.ToList();
 
                 ulong[] discordRoleIds = guildRoles
-                    .Where(x => _saberRoles.Contains(x.Name.ToLower()))
+                    .Where(x => CommunityBot._saberRoles.Contains(x.Name.ToLower()))
                     .Select(x => x.Id)
                     .ToArray();
 
@@ -49,12 +44,12 @@ namespace DiscordCommunityServer.Discord.Modules
                 string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
                 if (saberRole > 0)
                 {
-                    player.SetRank(_saberRankValues[_saberRoles.ToList().IndexOf(userRoleText)]);
+                    player.SetRank(CommunityBot._saberRankValues[CommunityBot._saberRoles.ToList().IndexOf(userRoleText)]);
                 }
 
                 string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}`";
                 if (saberRole > 0) reply += $" with role `{userRoleText}`";
-                else reply += ". Please set your rank to Bronze or Silver using the `@Weekly Event Bot role [bronze/silver]` command, or have an admin set it higher.";
+                //else reply += ". Please set your rank to Bronze or Silver using the `@Weekly Event Bot role [bronze/silver]` command, or have an admin set it higher.";
                 await ReplyAsync(reply);
             }
             else
@@ -94,8 +89,21 @@ namespace DiscordCommunityServer.Discord.Modules
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task EndEventAsync()
         {
+            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Blue))
+            {
+                Player player = new Player(steamId);
+                int newTokens = player.GetProjectedTokens() + player.GetTokens();
+                player.SetTokens(newTokens > 9 ? 9 : newTokens);
+            }
+
+            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Gold))
+            {
+                Player player = new Player(steamId);
+                int newTokens = player.GetProjectedTokens() + player.GetTokens();
+                player.SetTokens(newTokens > 9 ? 9 : newTokens);
+            }
             MarkAllOld();
-            await ReplyAsync("All songs and scores are marked as Old. You may now add new songs.");
+            await ReplyAsync("All songs and scores are marked as Old. Player tokens stored. You may now add new songs.");
         }
 
         [Command("role")]
@@ -112,55 +120,12 @@ namespace DiscordCommunityServer.Discord.Modules
 
             string[] rolesToRestrict = { "gold", "blue", "purple" };
 
-            if ((isAdmin || !rolesToRestrict.Contains(role)) && _saberRoles.Contains(role))
+            if ((isAdmin || !rolesToRestrict.Contains(role)) && CommunityBot._saberRoles.Contains(role))
             {
                 Player player = Player.GetByDiscord(user.Mention);
-                if (player == null)
-                {
-                    await ReplyAsync("That user has not registered with the bot yet");
-                }
-                else
-                {
-                    Rank newRank = (Rank)_saberRankValues[_saberRoles.ToList().IndexOf(role)];
-                    player.SetRank((int)newRank);
-                    await user.RemoveRolesAsync(Context.Guild.Roles.Where(x => _saberRoles.Contains(x.Name.ToLower())));
-                    await user.AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == role));
-
-                    //Sort out existing scores
-                    string steamId = player.GetSteamId();
-                    IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(steamId);
-                    string replaySongs = string.Empty;
-
-                    if (playerScores.Count >= 0)
-                    {
-                        playerScores.ToList().ForEach(x =>
-                        {
-                            BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongId);
-                            if (songData.GetDifficultyForRank(newRank) != x.Value.Difficulty)
-                            {
-                                replaySongs += songData.SongName + "\n";
-                                ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId=\'{x.Key.SongId}\' AND mode=\'{x.Key.Mode}\' AND steamId=\'{steamId}\'");
-                            }
-                            else
-                            {
-                                ExecuteCommand($"UPDATE scoreTable SET rank = {(int)newRank} WHERE songId=\'{x.Key.SongId}\' AND mode=\'{x.Key.Mode}\' AND steamId=\'{steamId}\'");
-                            }
-                        });
-                    }
-
-                    if (replaySongs != string.Empty)
-                    {
-                        string reply = $"You have been promoted to {newRank}!\n" +
-                            "You'll need to re-play the following songs:\n" +
-                            replaySongs;
-                        await ReplyAsync(reply);
-                    }
-
-                    else
-                    {
-                        await ReplyAsync($"You have been promoted to {newRank}!");
-                    }
-                }
+                if (player == null) await ReplyAsync("That user has not registered with the bot yet");
+                else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Rank rank)) CommunityBot.ChangeRank(player, rank);
+                else await ReplyAsync("Role parse failed");
             }
             else await ReplyAsync("You are not authorized to assign that role");
         }
@@ -178,7 +143,7 @@ namespace DiscordCommunityServer.Discord.Modules
             string finalMessage = "Weekly Leaderboard:\n\n";
             List<SongConstruct> songs = GetActiveSongs();
 
-            foreach (Rank r in _ranksToList)
+            foreach (Rank r in CommunityBot._ranksToList)
             {
                 Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
                 songs.ForEach(x => {

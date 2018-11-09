@@ -140,6 +140,14 @@ namespace DiscordCommunityPlugin
             var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
             sooperSecretSetting.GetValue += delegate { return Config.SooperSecretSetting; };
             sooperSecretSetting.SetValue += delegate (bool value) { Config.SooperSecretSetting = value; };
+
+            var mirrorSetting = subMenu.AddBool("Mirror Mode");
+            mirrorSetting.GetValue += () => Config.MirrorMode;
+            mirrorSetting.SetValue += (b) => Config.MirrorMode = b;
+
+            var staticSetting = subMenu.AddBool("Static Lights");
+            mirrorSetting.GetValue += () => Config.StaticLights;
+            mirrorSetting.SetValue += (b) => Config.StaticLights = b;
         }
 
         //Returns to a view when the scene loads, courtesy of andruzzzhka's BeatSaberMultiplayer

@@ -142,11 +142,11 @@ namespace DiscordCommunityServer.Database
         }
 
         //Returns a dictionary of steamIds and scores for the designated song and rank
-        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rank = -1)
+        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rank)
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel FROM scoreTable WHERE songId = \'{s.SongId}\' {(rank != -1 ? $"AND rank = \'{rank}\'" : null)} AND mode = {s.Mode} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel, rank FROM scoreTable WHERE songId = \'{s.SongId}\' {((Rank)rank != Rank.All ? $"AND rank = \'{rank}\'" : null)} AND mode = {s.Mode} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -158,7 +158,7 @@ namespace DiscordCommunityServer.Database
                             {
                                 Score = Convert.ToInt64(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
-                                Rank = (Rank)rank,
+                                Rank = (Rank)Convert.ToInt64(reader["rank"].ToString()),
                                 Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
                             });
                     }
