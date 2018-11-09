@@ -169,7 +169,6 @@
     <Compile Include="Database\Song.cs" />
     <Compile Include="Discord\CommunityBot.cs" />
     <Compile Include="Discord\Modules\PublicModule.cs" />
-    <Compile Include="Discord\OldCommunityBot.cs" />
     <Compile Include="Discord\Services\CommandHandlingService.cs" />
     <Compile Include="Discord\Services\PictureService.cs" />
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />

@@ -48,9 +48,19 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                 _mainModNavigationController.PushViewController(songListViewController);
 
                 songListViewController.SelectWhenLoaded(songToSelectWhenLoaded);
-                Misc.Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
+                songListViewController.ReloadPressed += () =>
+                {
+                    _mainModNavigationController.DismissModalViewController(null);
+                };
+                ReloadServerData();
+
                 songListViewController.SongPlayPressed += SongPlayPressed;
             }
+        }
+
+        private void ReloadServerData()
+        {
+            Misc.Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
         }
 
         //TODO: Better structure for this concept

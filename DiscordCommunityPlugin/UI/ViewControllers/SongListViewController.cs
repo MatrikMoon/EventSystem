@@ -10,6 +10,7 @@ using VRUI;
 using DiscordCommunityPlugin.DiscordCommunityHelpers;
 using Logger = DiscordCommunityShared.Logger;
 using DiscordCommunityPlugin.Misc;
+using static DiscordCommunityShared.SharedConstructs;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -22,11 +23,13 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
     class SongListViewController : VRUIViewController, TableView.IDataSource
     {
         public event Action<IStandardLevel, GameplayOptions> SongPlayPressed;
+        public event Action ReloadPressed;
         public event Action SongsDownloaded;
         public bool errorHappened = false;
 
         private Button _pageUpButton;
         private Button _pageDownButton;
+        private Button _downloadErrorReloadButton;
         private int _currentRow;
         private string selectWhenLoaded;
 
@@ -91,6 +94,26 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _downloadErrorText.alignment = TextAlignmentOptions.Center;
                 _downloadErrorText.rectTransform.sizeDelta = new Vector2(120f, 6f);
 
+                _downloadErrorReloadButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
+                BaseUI.SetButtonText(_downloadErrorReloadButton, "Reload");
+                (_downloadErrorReloadButton.transform as RectTransform).sizeDelta = new Vector2(38, 10);
+                (_downloadErrorReloadButton.transform as RectTransform).anchoredPosition = new Vector2((rectTransform.rect.width / 2) - (38 / 2), 10f);
+                _downloadErrorReloadButton.onClick.AddListener(() =>
+                {
+                    songsTableView.gameObject.SetActive(false);
+                    _pageUpButton.gameObject.SetActive(false);
+                    _pageDownButton.gameObject.SetActive(false);
+                    _downloadErrorText.gameObject.SetActive(false);
+                    _songsDownloadingText.gameObject.SetActive(true);
+                    _downloadErrorReloadButton.gameObject.SetActive(false);
+
+                    _downloadErrorText.SetText("Generic Error");
+                    errorHappened = false;
+
+                    ReloadPressed?.Invoke();
+                });
+                _downloadErrorReloadButton.gameObject.SetActive(false);
+
                 songsTableView.SetField("_pageUpButton", _pageUpButton);
                 songsTableView.SetField("_pageDownButton", _pageDownButton);
 
@@ -118,6 +141,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             if (_communityLeaderboard == null)
             {
                 _communityLeaderboard = BaseUI.CreateViewController<CustomLeaderboardController>();
+                _communityLeaderboard.RequestRankPressed += () => ReloadPressed?.Invoke();
             }
             if (_globalLeaderboard == null)
             {
@@ -174,6 +198,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             _pageUpButton.gameObject.SetActive(false);
             _pageDownButton.gameObject.SetActive(false);
             _downloadErrorText.gameObject.SetActive(true);
+            _downloadErrorReloadButton.gameObject.SetActive(true);
             _songsDownloadingText.gameObject.SetActive(false);
 
             _downloadErrorText.SetText(error);
@@ -190,8 +215,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
             //Change community leaderboard view
             //Use the currently selected rank, if it exists
-            int rankToView = _communityLeaderboard.selectedRank;
-            if (rankToView <= -1) rankToView = (int)Player.Instance.rank;
+            Rank rankToView = _communityLeaderboard.selectedRank;
+            if (rankToView <= Rank.None) rankToView = Player.Instance.rank;
             _communityLeaderboard.SetSong(difficultyLevel, rankToView);
 
             //Do song selected action
