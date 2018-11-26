@@ -49,16 +49,24 @@ namespace DiscordCommunityPlugin.Misc
             {
                 JSONNode node = JSON.Parse(File.ReadAllText(ConfigLocation));
                 SooperSecretSetting = Convert.ToBoolean(node["SooperSecretSetting"].Value);
+                MirrorMode = Convert.ToBoolean(node["Mirror"].Value);
+                StaticLights = Convert.ToBoolean(node["StaticLights"].Value);
             }
-            else SooperSecretSetting = false;
+            else
+            {
+                //TODO: Do we even need these?
+                SooperSecretSetting = false;
+                MirrorMode = false;
+                StaticLights = false;
+            }
         }
 
         public static void SaveConfig()
         {
             JSONNode node = new JSONObject();
             node["SooperSecretSetting"] = SooperSecretSetting;
-            node["Mirror"] = SooperSecretSetting;
-            node["StaticLights"] = SooperSecretSetting;
+            node["Mirror"] = MirrorMode;
+            node["StaticLights"] = StaticLights;
             File.WriteAllText(ConfigLocation, node.ToString());
         }
     }

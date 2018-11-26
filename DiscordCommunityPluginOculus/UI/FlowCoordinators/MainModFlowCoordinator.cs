@@ -1,4 +1,5 @@
-﻿using DiscordCommunityPlugin.UI.ViewControllers;
+﻿using DiscordCommunityPlugin.Misc;
+using DiscordCommunityPlugin.UI.ViewControllers;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -60,18 +61,35 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
 
         private void ReloadServerData()
         {
-            Misc.Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
+            Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
         }
 
-        //TODO: Better structure for this concept
-        GameplayOptions options;
         private void SongPlayPressed(IStandardLevel level, GameplayOptions options)
         {
             //We're playing from the mod's menu
             CommunityUI.instance.communitySongPlayed = level.levelID;
 
-            //Set the gameplay options
-            this.options = options;
+            //TODO: temporary. We're technically just ignoring the passed-in options
+            options.mirror = Config.MirrorMode;
+            options.staticLights = Config.StaticLights;
+
+            //Callback for when the song is ready to be played
+            Action<IStandardLevel> SongLoaded = (loadedLevel) =>
+            {
+                //Get the difficulty we should be playing on
+                IStandardLevelDifficultyBeatmap map = DiscordCommunityHelpers.Player.Instance.GetMapForRank(loadedLevel);
+                GameplayMode mode = DiscordCommunityHelpers.Player.Instance.desiredModes[Misc.SongIdHelper.GetSongIdFromLevelId(loadedLevel.levelID)];
+
+                MainGameSceneSetupData mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().FirstOrDefault();
+                mainGameSceneSetupData.Init(
+                    map,
+                    options,
+                    mode,
+                    0f);
+                mainGameSceneSetupData.didFinishEvent -= SongFinished;
+                mainGameSceneSetupData.didFinishEvent += SongFinished;
+                mainGameSceneSetupData.TransitionToScene(0.7f);
+            };
 
             //Load audio if it's custom
             if (level is CustomLevel)
@@ -82,23 +100,6 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             {
                 SongLoaded(level);
             }
-        }
-
-        private void SongLoaded(IStandardLevel level)
-        {
-            //Get the difficulty we should be playing on
-            IStandardLevelDifficultyBeatmap map = DiscordCommunityHelpers.Player.Instance.GetMapForRank(level);
-            GameplayMode mode = DiscordCommunityHelpers.Player.Instance.desiredModes[Misc.SongIdHelper.GetSongIdFromLevelId(level.levelID)];
-
-            MainGameSceneSetupData mainGameSceneSetupData = Resources.FindObjectsOfTypeAll<MainGameSceneSetupData>().FirstOrDefault();
-            mainGameSceneSetupData.Init(
-                map,
-                options,
-                mode,
-                0f);
-            mainGameSceneSetupData.didFinishEvent -= SongFinished;
-            mainGameSceneSetupData.didFinishEvent += SongFinished;
-            mainGameSceneSetupData.TransitionToScene(0.7f);
         }
 
         private void SongFinished(MainGameSceneSetupData mainGameSceneSetupData, LevelCompletionResults results)

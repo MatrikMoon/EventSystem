@@ -243,7 +243,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             try
             {
                 Logger.Info($"SHOWING {levels.Count} songs");
-                levels.ForEach(x => Logger.Info($"SHOWING: {x.songName}"));
+                levels.ForEach(x => Logger.Info($"SHOWING: {x.songName} {x.levelID}"));
                 Logger.Info("CONTINUING TO SHOW");
             }
             catch (Exception e)

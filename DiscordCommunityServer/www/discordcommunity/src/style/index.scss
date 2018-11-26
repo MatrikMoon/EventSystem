@@ -12,4 +12,15 @@ code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
         monospace;
 }
-    
+
+.transition-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+.transition-wrapper .transition-item {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+}

@@ -17,6 +17,9 @@ namespace DiscordCommunityServer.BeatSaver
     class BeatSaverDownloader
     {
         private static string beatSaverUrl = "https://beatsaver.com";
+        //private static string beatSaverUrl = "http://bsaber.com";
+        private static string beatSaverDownloadUrl = $"{beatSaverUrl}/download/";
+        //private static string beatSaverDownloadUrl = $"{beatSaverUrl}/dlsongs/";
 
         public static string DownloadSong(string id)
         {
@@ -37,7 +40,7 @@ namespace DiscordCommunityServer.BeatSaver
 
                     try
                     {
-                        client.DownloadFile($"{beatSaverUrl}/download/{id}", zipPath);
+                        client.DownloadFile($"{beatSaverDownloadUrl}{id}", zipPath);
                     }
                     catch (Exception e)
                     {

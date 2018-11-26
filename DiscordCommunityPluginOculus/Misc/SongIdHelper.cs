@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 /*
  * Created by Moon on 9/12/2018
@@ -23,13 +22,17 @@ namespace DiscordCommunityPlugin.Misc
 
             //Hacky way of getting the song id, through getting the file path from SongLoader
             string songPath = SongLoader.CustomLevels.Find(x => x.levelID == levelId).customSongInfo.path;
-            return Directory.GetParent(songPath).Name;
+
+            //Yet another hacky fix for when songs are improperly uploaded, with no internal directory, only ID > files
+            var name = Directory.GetParent(songPath).Name;
+            if (name == "CustomSongs") name = new DirectoryInfo(songPath).Name;
+            return name;
         }
         
         //Assuming the id exists, returns the IStandardLevel of the level corresponding to the id
         public static IStandardLevel GetLevelFromSongId(string songId)
         {
-            return SongLoader.CustomLevels.Find(x => songId == Directory.GetParent(x.customSongInfo.path).Name);
+            return SongLoader.CustomLevels.Find(x => songId == Directory.GetParent(x.customSongInfo.path).Name || songId == new DirectoryInfo(x.customSongInfo.path).Name); //Note: VERY RARELY a song will not have an internal directory
         }
 
         public static bool GetSongExistsBySongId(string songId)

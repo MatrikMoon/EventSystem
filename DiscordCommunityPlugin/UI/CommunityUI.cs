@@ -84,10 +84,19 @@ namespace DiscordCommunityPlugin
 
         private void CreateCommunitiyButton()
         {
+            //Get BeatSaber's settings model
+            //Ideally this would prevent the plugin from being used if there's a beat saber update, but who
+            //knows if this'll actually work
+            var settingsModel = Resources.FindObjectsOfTypeAll<MainSettingsModel>().FirstOrDefault();
+            if (settingsModel == null || settingsModel.GetField<string>("kCurrentVersion") != "1.2.0")
+            {
+                return;
+            }
+
             CreateSettingsMenu();
 
             //Multiplayer score hook
-            if (Config.SooperSecretSetting)
+            if (Config.SooperSecretSetting && !(settingsModel == null || settingsModel.GetField<string>("kCurrentVersion") != "1.2.0"))
             {
                 StartCoroutine(Hooks.WaitForMultiplayerLevelComplete());
             }
@@ -118,6 +127,13 @@ namespace DiscordCommunityPlugin
                         _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
                         "SongLoaderPlugin\n\n" +
                         "DiscordCommunityPlugin will not function.";
+                        _requiredModsModal.Type = ModalViewController.ModalType.Ok;
+                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, _mainMenuViewController.isRebuildingHierarchy);
+                    }
+                    else if (settingsModel == null || settingsModel.GetField<string>("kCurrentVersion") != "1.2.0")
+                    {
+                        _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
+                        _requiredModsModal.Message = "Beat Saber has updated! Uninstall this and tell Moon to make a patch.";
                         _requiredModsModal.Type = ModalViewController.ModalType.Ok;
                         _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, _mainMenuViewController.isRebuildingHierarchy);
                     }
