@@ -8,8 +8,8 @@ namespace DiscordCommunityShared
     public static class SharedConstructs
     {
         public static string Name => "DiscordCommunityPlugin";
-        public static string Version => "0.1.2";
-        public static int VersionCode => 012;
+        public static string Version => "0.1.5";
+        public static int VersionCode => 015;
         public static string Changelog =
             "0.0.1: First Commit. Base Discord/Plugin/Server functional, some commands. Just added \"mode\' differentiation between songs.\n" +
             "0.0.2: Added Oculus support. Added Leaderboard views.\n" +
@@ -22,7 +22,12 @@ namespace DiscordCommunityShared
             "0.0.9: Added scrollable leaderboards\n" +
             "0.1.0: Bugfixes with switchable leaderboard view\n" +
             "0.1.1: Colored leaderboards and projected token view!\n" +
-            "0.1.2: Token/Rank system implemented! Mirror/Static lights moved to settings";
+            "0.1.2: Token/Rank system implemented! Mirror/Static lights moved to settings\n" +
+            "0.1.3: BSMG Event! (Required update, event songs aren't on beatsaver yet)\n" +
+            "0.1.4: Static Lights / Mirror fix\n" +
+            "0.1.5: Non-BSMG Update (Required), added SongName to weeklysongs api for leaderboard site\n" +
+            "0.1.6: Ninja update! Should *really* fix the game options now\n" +
+            "0.1.7: Ninja update II! Fixed Bad Company / songs with improper directory structure\n";
 
         public enum Rank
         {

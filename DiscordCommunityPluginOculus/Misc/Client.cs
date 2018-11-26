@@ -32,6 +32,7 @@ namespace DiscordCommunityPlugin.Misc
         private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
+        //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
         public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, int gameplayMode, bool fullCombo, int score, string signed)
@@ -205,7 +206,7 @@ namespace DiscordCommunityPlugin.Misc
 
         private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}/{(int)DiscordCommunityHelpers.Player.Instance.desiredModes[songId]}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}/{(int)Player.Instance.desiredModes[songId]}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -264,11 +265,11 @@ namespace DiscordCommunityPlugin.Misc
                 {
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
-                    DiscordCommunityHelpers.Player.Instance.desiredModes = new Dictionary<string, GameplayMode>();
+                    Player.Instance.desiredModes = new Dictionary<string, GameplayMode>();
                     foreach (var id in node)
                     {
                         songIds.Add(id.Key);
-                        DiscordCommunityHelpers.Player.Instance.desiredModes.Add(id.Key, (GameplayMode)Convert.ToInt32(id.Value.Value));
+                        Player.Instance.desiredModes.Add(id.Key, (GameplayMode)Convert.ToInt32(id.Value["mode"].Value));
                     }
                 }
                 catch (Exception e)

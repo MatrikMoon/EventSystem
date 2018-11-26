@@ -91,7 +91,7 @@ namespace DiscordCommunityServer
                      }
                 },
                 new Route {
-                    Name = "Score Receiver",
+                    Name = "Rank Receiver",
                     UrlRegex = @"^/requestrank/$",
                     Method = "POST",
                     Callable = (HttpRequest request) => {
@@ -159,7 +159,13 @@ namespace DiscordCommunityServer
                         JSONNode json = new JSONObject();
                         List<SongConstruct> songs = GetActiveSongs();
 
-                        songs.ForEach(x => json.Add(x.SongId, x.Mode));
+                        songs.ForEach(x => {
+                            var item = new JSONObject();
+                            item["songName"] = x.Name;
+                            item["songId"] = x.SongId;
+                            item["mode"] = x.Mode;
+                            json.Add(x.SongId, item);
+                        });
 
                         return new HttpResponse()
                         {

@@ -103,7 +103,7 @@ namespace DiscordCommunityServer.Database
         {
             List<SongConstruct> ret = new List<SongConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, mode FROM songTable WHERE NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, mode, songName FROM songTable WHERE NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -112,7 +112,8 @@ namespace DiscordCommunityServer.Database
                         SongConstruct item = new SongConstruct()
                         {
                             SongId = reader["songId"].ToString(),
-                            Mode = reader["mode"].ToString()
+                            Mode = reader["mode"].ToString(),
+                            Name = reader["songName"].ToString()
                         };
                         ret.Add(item);
                     }
@@ -215,6 +216,7 @@ namespace DiscordCommunityServer.Database
         {
             public string SongId { get; set; }
             public string Mode { get; set; }
+            public string Name { get; set; }
 
             //Necessary overrides for being used as a key in a Dictionary
             public static bool operator ==(SongConstruct a, SongConstruct b)
