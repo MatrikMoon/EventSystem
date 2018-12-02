@@ -32,7 +32,6 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         public Rank rank;
         public long tokens;
         public long projectedTokens;
-        public Dictionary<string, GameplayMode> desiredModes;
 
         //Constructor
         public Player()
@@ -42,46 +41,46 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
 
         private class OSTScoreRequirement
         {
-            public LevelCompletionResults.Rank Rank { get; set; }
+            public RankModel.Rank Rank { get; set; }
             public LevelDifficulty Difficulty { get; set; }
         }
 
         private static readonly OSTScoreRequirement[] bronzeRequirements = {
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.SS,
+                Rank = RankModel.Rank.SS,
                 Difficulty = LevelDifficulty.Normal
             },
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.A,
+                Rank = RankModel.Rank.A,
                 Difficulty = LevelDifficulty.Hard
             }
         };
 
         private static readonly OSTScoreRequirement[] silverRequirements = {
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.S,
+                Rank = RankModel.Rank.S,
                 Difficulty = LevelDifficulty.Hard
             },
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.A,
+                Rank = RankModel.Rank.A,
                 Difficulty = LevelDifficulty.Expert
             }
         };
 
         private static readonly OSTScoreRequirement[] goldRequirements = {
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.SS,
+                Rank = RankModel.Rank.SS,
                 Difficulty = LevelDifficulty.Hard
             },
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.S,
+                Rank = RankModel.Rank.S,
                 Difficulty = LevelDifficulty.Expert
             }
         };
 
         private static readonly OSTScoreRequirement[] blueRequirements = {
             new OSTScoreRequirement {
-                Rank = LevelCompletionResults.Rank.SS,
+                Rank = RankModel.Rank.SS,
                 Difficulty = LevelDifficulty.Expert
             }
         };
@@ -153,15 +152,23 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         //Gets a the player's locally stored score for a map
         public int GetLocalScore(string levelId, LevelDifficulty difficulty, GameplayMode mode)
         {
+            //TODO:: Update
+            /*
             var playerLevelStatsData = PersistentSingleton<GameDataModel>.instance.gameDynamicData.GetCurrentPlayerDynamicData().GetPlayerLevelStatsData(levelId, difficulty, mode);
             return playerLevelStatsData.validScore ? playerLevelStatsData.highScore : 0;
+            */
+            return 0;
         }
 
         //Gets a the player's locally stored rank for a map
-        public LevelCompletionResults.Rank GetLocalRank(string levelId, LevelDifficulty difficulty, GameplayMode mode)
+        public RankModel.Rank GetLocalRank(string levelId, LevelDifficulty difficulty, GameplayMode mode)
         {
+            //TODO:: Update
+            /*
             var playerLevelStatsData = PersistentSingleton<GameDataModel>.instance.gameDynamicData.GetCurrentPlayerDynamicData().GetPlayerLevelStatsData(levelId, difficulty, mode);
-            return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : LevelCompletionResults.Rank.E;
+            return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
+            */
+            return RankModel.Rank.E;
         }
 
         //Returns the appropriate color for a rank
@@ -184,33 +191,33 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         }
 
         //Returns the most appropriate map for the player's rank
-        public IStandardLevelDifficultyBeatmap GetMapForRank(IStandardLevel level)
+        public IDifficultyBeatmap GetMapForRank(IBeatmapLevel level)
         {
-            IStandardLevelDifficultyBeatmap ret = null;
+            IDifficultyBeatmap ret = null;
             switch (rank)
             {
                 case Rank.Master:
                 case Rank.Blue:
-                    ret = GetClosestDifficultyPreferLower(level, LevelDifficulty.ExpertPlus);
+                    ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.ExpertPlus);
                     break;
                 case Rank.Gold:
                 case Rank.Silver:
-                    ret = GetClosestDifficultyPreferLower(level, LevelDifficulty.Expert);
+                    ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.Expert);
                     break;
                 case Rank.Bronze:
-                    ret = GetClosestDifficultyPreferLower(level, LevelDifficulty.Hard);
+                    ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.Hard);
                     break;
                 default:
-                    ret = GetClosestDifficultyPreferLower(level, LevelDifficulty.Easy);
+                    ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.Easy);
                     break;
             }
             return ret;
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        private IStandardLevelDifficultyBeatmap GetClosestDifficultyPreferLower(IStandardLevel level, LevelDifficulty difficulty)
+        private IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty)
         {
-            IStandardLevelDifficultyBeatmap ret = level.GetDifficultyLevel(difficulty);
+            IDifficultyBeatmap ret = level.GetDifficultyBeatmap(difficulty);
             if (ret == null)
             {
                 ret = GetLowerDifficulty(level, difficulty);
@@ -223,16 +230,16 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         }
 
         //Returns the next-lowest difficulty to the one provided
-        private IStandardLevelDifficultyBeatmap GetLowerDifficulty(IStandardLevel level, LevelDifficulty difficulty)
+        private IDifficultyBeatmap GetLowerDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty)
         {
-            IStandardLevelDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
+            IDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
         }
 
         //Returns the next-highest difficulty to the one provided
-        private IStandardLevelDifficultyBeatmap GetHigherDifficulty(IStandardLevel level, LevelDifficulty difficulty)
+        private IDifficultyBeatmap GetHigherDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty)
         {
-            IStandardLevelDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
+            IDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
         }
     }

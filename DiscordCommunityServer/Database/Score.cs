@@ -17,14 +17,14 @@ namespace DiscordCommunityServer.Database
         private Player player;
         private int _difficultyLevel;
 
-        public Score(string songId, string steamId, int difficultyLevel, int gameplayMode)
+        public Score(string songId, string steamId, int difficultyLevel)
         {
-            song = new Song(songId, gameplayMode);
+            song = new Song(songId);
             player = new Player(steamId);
             _difficultyLevel = difficultyLevel;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, gameplayMode, false, 0);
+                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, false, 0);
             }
         }
 

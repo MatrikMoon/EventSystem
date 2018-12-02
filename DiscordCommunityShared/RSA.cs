@@ -31,7 +31,7 @@ namespace DiscordCommunityShared
                 ***REMOVED***
             ***REMOVED***
 
-        public static string SignScore(ulong userId, string songId, int difficultyLevel, int gameplayMode, bool fullCombo, int score)
+        public static string SignScore(ulong userId, string songId, int difficultyLevel, bool fullCombo, int score)
         {
             var sr = new StringReader(pubKey);
             var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
@@ -43,7 +43,7 @@ namespace DiscordCommunityShared
             var csp = new RSACryptoServiceProvider();
             csp.ImportParameters(privkey);
 
-            var plainTextData = userId + songId + difficultyLevel + gameplayMode + fullCombo + score + "<3";
+            var plainTextData = userId + songId + difficultyLevel + fullCombo + score + "<3";
             var bytesPlainTextData = System.Text.Encoding.Unicode.GetBytes(plainTextData);
 
             var bytesSignedText = csp.SignData(bytesPlainTextData, CryptoConfig.MapNameToOID("SHA512"));

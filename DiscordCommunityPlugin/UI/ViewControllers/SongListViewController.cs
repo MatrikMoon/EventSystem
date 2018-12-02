@@ -11,6 +11,7 @@ using DiscordCommunityPlugin.DiscordCommunityHelpers;
 using Logger = DiscordCommunityShared.Logger;
 using DiscordCommunityPlugin.Misc;
 using static DiscordCommunityShared.SharedConstructs;
+using CustomUI.BeatSaber;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -22,7 +23,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource
     {
-        public event Action<IStandardLevel, GameplayOptions> SongPlayPressed;
+        public event Action<IBeatmapLevel> SongListRowSelected;
         public event Action ReloadPressed;
         public event Action SongsDownloaded;
         public bool errorHappened = false;
@@ -30,26 +31,21 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         private Button _pageUpButton;
         private Button _pageDownButton;
         private Button _downloadErrorReloadButton;
-        private int _currentRow;
         private string selectWhenLoaded;
 
         public TableView songsTableView;
-        StandardLevelListTableCell _songTableCellInstance;
+        LevelListTableCell _songTableCellInstance;
         TextMeshProUGUI _songsDownloadingText;
         TextMeshProUGUI _downloadErrorText;
 
-        List<IStandardLevel> availableSongs = new List<IStandardLevel>();
-
-        protected PlatformLeaderboardViewController _globalLeaderboard;
-
-        protected CustomLeaderboardController _communityLeaderboard;
+        List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
-                _songTableCellInstance = Resources.FindObjectsOfTypeAll<StandardLevelListTableCell>().First(x => (x.name == "StandardLevelListTableCell"));
+                _songTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
@@ -73,31 +69,38 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
                 songsTableView = new GameObject().AddComponent<TableView>();
                 songsTableView.transform.SetParent(rectTransform, false);
+                songsTableView.SetField("_isInitialized", false);
+                songsTableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
+                songsTableView.Init();
 
-                Mask viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<Mask>().First(), songsTableView.transform, false);
+                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), songsTableView.transform, false);
                 viewportMask.transform.DetachChildren();
                 songsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
 
                 (songsTableView.transform as RectTransform).anchorMin = new Vector2(0.3f, 0.5f);
                 (songsTableView.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);
                 (songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
-                (songsTableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
-                (songsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
 
-                _songsDownloadingText = BaseUI.CreateText(rectTransform, "Downloading weekly songs...", new Vector2(0f, -25f));
+                _songsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading weekly songs...", new Vector2(0f, -25f));
                 _songsDownloadingText.fontSize = 8f;
                 _songsDownloadingText.alignment = TextAlignmentOptions.Center;
+                _songsDownloadingText.rectTransform.anchorMin = new Vector2(.5f, .7f);
+                _songsDownloadingText.rectTransform.anchorMax = new Vector2(.5f, .7f);
                 _songsDownloadingText.rectTransform.sizeDelta = new Vector2(120f, 6f);
 
-                _downloadErrorText = BaseUI.CreateText(rectTransform, "Generic Error", new Vector2(0f, -25f));
+                _downloadErrorText = BeatSaberUI.CreateText(rectTransform, "Generic Error", new Vector2(0f, 0f));
                 _downloadErrorText.fontSize = 8f;
                 _downloadErrorText.alignment = TextAlignmentOptions.Center;
+                _downloadErrorText.rectTransform.anchorMin = new Vector2(.5f, .5f);
+                _downloadErrorText.rectTransform.anchorMax = new Vector2(.5f, .5f);
                 _downloadErrorText.rectTransform.sizeDelta = new Vector2(120f, 6f);
 
-                _downloadErrorReloadButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
-                BaseUI.SetButtonText(_downloadErrorReloadButton, "Reload");
+                _downloadErrorReloadButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                _downloadErrorReloadButton.SetButtonText("Reload");
+                (_downloadErrorReloadButton.transform as RectTransform).anchorMin = new Vector2(.5f, 0);
+                (_downloadErrorReloadButton.transform as RectTransform).anchorMax = new Vector2(.5f, 0);
                 (_downloadErrorReloadButton.transform as RectTransform).sizeDelta = new Vector2(38, 10);
-                (_downloadErrorReloadButton.transform as RectTransform).anchoredPosition = new Vector2((rectTransform.rect.width / 2) - (38 / 2), 10f);
+                (_downloadErrorReloadButton.transform as RectTransform).anchoredPosition = new Vector2(0, 10f);
                 _downloadErrorReloadButton.onClick.AddListener(() =>
                 {
                     songsTableView.gameObject.SetActive(false);
@@ -126,70 +129,11 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _pageDownButton.gameObject.SetActive(false);
                 _downloadErrorText.gameObject.SetActive(false);
                 _songsDownloadingText.gameObject.SetActive(true);
-
-                //Currently selected row
-                _currentRow = -1;
             }
             else
             {
                 songsTableView.ReloadData();
             }
-        }
-
-        protected override void LeftAndRightScreenViewControllers(out VRUIViewController leftScreenViewController, out VRUIViewController rightScreenViewController)
-        {
-            if (_communityLeaderboard == null)
-            {
-                _communityLeaderboard = BaseUI.CreateViewController<CustomLeaderboardController>();
-                _communityLeaderboard.RequestRankPressed += () => ReloadPressed?.Invoke();
-            }
-            if (_globalLeaderboard == null)
-            {
-                _globalLeaderboard = Instantiate(Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First());
-                _globalLeaderboard.name = "Community Global Leaderboard";
-                CleanPlatformLeaderboard(_globalLeaderboard);
-            }
-            
-            leftScreenViewController = _communityLeaderboard;
-            rightScreenViewController = _globalLeaderboard;
-        }
-
-        //Cleans the extra cloned junk out of a leaderboard
-        private static void CleanPlatformLeaderboard(PlatformLeaderboardViewController plvc)
-        {
-            //Clean out leaderboard table view
-            LeaderboardTableView ltv = plvc.GetField<LeaderboardTableView>("_leaderboardTableView");
-            if (ltv == null) return;
-
-            Transform transform = ltv.transform;
-            var container = transform.Find("Viewport").Find("Content");
-
-            //An instance of the clones we want to destroy
-            var cellClone = container.Find("LeaderboardTableCell(Clone)");
-
-            //Loop through all the clones and destroy all their children
-            while (cellClone != null)
-            {
-                DestroyImmediate(cellClone.gameObject);
-                cellClone = container.Find("LeaderboardTableCell(Clone)");
-            }
-
-            //Clean out scope selection view
-            SimpleSegmentedControl ssc = plvc.GetField<SimpleSegmentedControl>("_scopeSegmentedControl");
-            if (ssc == null) return;
-
-            //Transform of the scope selection
-            transform = ssc.transform;
-
-            //Clones we want to destroy
-            var first = transform.Find("FirstTextSegmentedControlCell(Clone)");
-            var middle = transform.Find("MiddleTextSegmentedControlCell(Clone)");
-            var last = transform.Find("LastTextSegmentedControlCell(Clone)");
-
-            //Destroy them
-            if (first != null) DestroyImmediate(first.gameObject);
-            if (middle != null) DestroyImmediate(middle.gameObject);
-            if (last != null) DestroyImmediate(last.gameObject);
         }
 
         public void DownloadErrorHappened(string error)
@@ -207,30 +151,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
         private void SongsTableView_DidSelectRow(TableView sender, int row)
         {
-            //Change global leaderboard view
-            IStandardLevelDifficultyBeatmap difficultyLevel = Player.Instance.GetMapForRank(availableSongs[row]);
-            GameplayMode gameMode = Player.Instance.desiredModes[SongIdHelper.GetSongIdFromLevelId(availableSongs[row].levelID)];
-            _globalLeaderboard.Init(difficultyLevel, gameMode);
-            _globalLeaderboard.Refresh();
-
-            //Change community leaderboard view
-            //Use the currently selected rank, if it exists
-            Rank rankToView = _communityLeaderboard.selectedRank;
-            if (rankToView <= Rank.None) rankToView = Player.Instance.rank;
-            _communityLeaderboard.SetSong(difficultyLevel, rankToView);
-
-            //Do song selected action
-            _communityLeaderboard.PlayPressed -= PlayPressed_Listener;
-            _communityLeaderboard.PlayPressed += PlayPressed_Listener;
-
-
-            //Set current row
-            _currentRow = row;
-        }
-
-        private void PlayPressed_Listener(GameplayOptions options)
-        {
-            SongPlayPressed?.Invoke(availableSongs[_currentRow], options);
+            SongListRowSelected?.Invoke(availableSongs[row]);
         }
 
         public void SelectWhenLoaded(string levelId)
@@ -238,20 +159,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             selectWhenLoaded = levelId;
         }
 
-        public void SetSongs(List<IStandardLevel> levels)
+        public void SetSongs(List<IBeatmapLevel> levels)
         {
-            try
-            {
-                Logger.Info($"SHOWING {levels.Count} songs");
-                levels.ForEach(x => Logger.Info($"SHOWING: {x.songName} {x.levelID}"));
-                Logger.Info("CONTINUING TO SHOW");
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"ERROR ADDING SONGS: {e}");
-                DownloadErrorHappened($"ERROR ADDING SONGS: {e}");
-            }
-
             //Now that songs are being set, hide the "downloading" text
             if (_downloadErrorText.gameObject.activeSelf) return; //If there was an error earlier, don't continue
             songsTableView.gameObject.SetActive(true);
@@ -286,9 +195,9 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
         public TableCell CellForRow(int row)
         {
-            StandardLevelListTableCell cell = Instantiate(_songTableCellInstance);
+            LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
-            IStandardLevel song = availableSongs[row];
+            IBeatmapLevel song = availableSongs[row];
 
             cell.coverImage = song.coverImage;
             cell.songName = $"{song.songName}\n<size=80%>{song.songSubName}</size>";

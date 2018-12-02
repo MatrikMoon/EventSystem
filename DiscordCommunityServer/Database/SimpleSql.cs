@@ -33,8 +33,8 @@ namespace DiscordCommunityServer.Database
                 dbc.Open();
 
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', rank INTEGER DEFAULT 0, tokens INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rank INTEGER DEFAULT 0, difficultyLevel INTEGER DEFAULT 0, mode INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', mode INTEGER DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rank INTEGER DEFAULT 0, difficultyLevel INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', old BIT DEFAULT 0)");
             }
             else
             {
@@ -79,14 +79,14 @@ namespace DiscordCommunityServer.Database
             return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', {rank}, {tokens}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
         }
 
-        public static bool AddScore(string songId, string steamId, int rank, int difficultyLevel, int mode, bool fullCombo, long score)
+        public static bool AddScore(string songId, string steamId, int rank, int difficultyLevel, bool fullCombo, long score)
         {
-            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songId}\', \'{steamId}\', {rank}, {difficultyLevel}, {mode}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songId}\', \'{steamId}\', {rank}, {difficultyLevel}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
         }
 
-        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songId, int mode)
+        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songId)
         {
-            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', \'{mode}\', 0)") > 0;
+            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', 0)") > 0;
         }
 
         //This marks all songs and scores as "old"
@@ -103,7 +103,7 @@ namespace DiscordCommunityServer.Database
         {
             List<SongConstruct> ret = new List<SongConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, mode, songName FROM songTable WHERE NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, songName FROM songTable WHERE NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -112,7 +112,6 @@ namespace DiscordCommunityServer.Database
                         SongConstruct item = new SongConstruct()
                         {
                             SongId = reader["songId"].ToString(),
-                            Mode = reader["mode"].ToString(),
                             Name = reader["songName"].ToString()
                         };
                         ret.Add(item);
@@ -135,7 +134,6 @@ namespace DiscordCommunityServer.Database
             Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
             songs.ForEach(x => {
                 string songId = x.SongId;
-                int mode = Convert.ToInt32(x.Mode);
                 scores.Add(x, GetScoresForSong(x, (long)r));
             });
 
@@ -147,7 +145,7 @@ namespace DiscordCommunityServer.Database
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel, rank FROM scoreTable WHERE songId = \'{s.SongId}\' {((Rank)rank != Rank.All ? $"AND rank = \'{rank}\'" : null)} AND mode = {s.Mode} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel, rank FROM scoreTable WHERE songId = \'{s.SongId}\' {((Rank)rank != Rank.All ? $"AND rank = \'{rank}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -176,7 +174,7 @@ namespace DiscordCommunityServer.Database
         {
             Dictionary<SongConstruct, ScoreConstruct> ret = new Dictionary<SongConstruct, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, mode, songId, rank, difficultyLevel, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songId, rank, difficultyLevel, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -186,7 +184,6 @@ namespace DiscordCommunityServer.Database
                             new SongConstruct()
                             {
                                 SongId = reader["songId"].ToString(),
-                                Mode = reader["mode"].ToString()
                             },
                             new ScoreConstruct {
                                 Score = Convert.ToInt64(reader["score"].ToString()),
@@ -215,7 +212,6 @@ namespace DiscordCommunityServer.Database
         public class SongConstruct
         {
             public string SongId { get; set; }
-            public string Mode { get; set; }
             public string Name { get; set; }
 
             //Necessary overrides for being used as a key in a Dictionary
@@ -242,7 +238,6 @@ namespace DiscordCommunityServer.Database
             {
                 int hash = 13;
                 hash = (hash * 7) + SongId.GetHashCode();
-                hash = (hash * 7) + Mode.GetHashCode();
                 return hash;
             }
             //End necessary overrides

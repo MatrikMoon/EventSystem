@@ -1,4 +1,7 @@
-﻿using DiscordCommunityPlugin.Misc;
+﻿using CustomUI.BeatSaber;
+using CustomUI.MenuButton;
+using CustomUI.Settings;
+using DiscordCommunityPlugin.Misc;
 using DiscordCommunityPlugin.UI;
 using DiscordCommunityPlugin.UI.FlowCoordinators;
 using DiscordCommunityPlugin.UI.ViewControllers;
@@ -29,11 +32,12 @@ namespace DiscordCommunityPlugin
         public static CommunityUI instance;
         public string communitySongPlayed;
 
-        private MainModFlowCoordinator _mainFlowCooridnator;
+        private MainModFlowCoordinator _mainModFlowCoordinator;
         private RectTransform _mainMenuRectTransform;
+        private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
         private ModalViewController _requiredModsModal;
-        private Button _communityButton;
+        private Button _communityButton; //TODO: Find a way to grab the button instance so we can disable it
 
         //Called on Menu scene load (only once in lifetime)
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -58,13 +62,13 @@ namespace DiscordCommunityPlugin
 
                 Plugin.PlayerId = Steamworks.SteamUser.GetSteamID().m_SteamID;
 
-                SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
+                SceneManager.sceneLoaded += SceneManager_sceneLoaded;
                 SongLoader.SongsLoadedEvent += SongsLoaded;
-                CreateCommunitiyButton();
+                CreateCommunitiyButton(); //sceneLoaded won't be called the first time
             }
         }
 
-        private void SceneManager_activeSceneChanged(Scene prev, Scene next)
+        private void SceneManager_sceneLoaded(Scene next, LoadSceneMode mode)
         {
             if (next.name == "Menu")
             {
@@ -84,62 +88,40 @@ namespace DiscordCommunityPlugin
 
         private void CreateCommunitiyButton()
         {
-            //Get BeatSaber's settings model
-            //Ideally this would prevent the plugin from being used if there's a beat saber update, but who
-            //knows if this'll actually work
-            var settingsModel = Resources.FindObjectsOfTypeAll<MainSettingsModel>().FirstOrDefault();
-            if (settingsModel == null || settingsModel.GetField<string>("kCurrentVersion") != "1.2.0")
-            {
-                return;
-            }
-
             CreateSettingsMenu();
 
             //Multiplayer score hook
-            if (Config.SooperSecretSetting && !(settingsModel == null || settingsModel.GetField<string>("kCurrentVersion") != "1.2.0"))
+            if (Config.SooperSecretSetting)
             {
-                StartCoroutine(Hooks.WaitForMultiplayerLevelComplete());
+                //StartCoroutine(Hooks.WaitForMultiplayerLevelComplete());
             }
 
+            _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
-            if (_mainFlowCooridnator == null)
+            if (_mainModFlowCoordinator == null)
             {
-                _mainFlowCooridnator = new GameObject("MainModFlow").AddComponent<MainModFlowCoordinator>();
-                _mainFlowCooridnator.mmvc = _mainMenuViewController;
+                _mainModFlowCoordinator = new GameObject("MainModFlow").AddComponent<MainModFlowCoordinator>();
+                _mainModFlowCoordinator.mfc = _mainFlowCoordinator;
+                _mainModFlowCoordinator.mmvc = _mainMenuViewController;
             }
-
-            _communityButton = BaseUI.CreateUIButton(_mainMenuRectTransform, "QuitButton");
 
             try
             {
-                (_communityButton.transform as RectTransform).anchoredPosition = new Vector2(61f, 5f);
-                (_communityButton.transform as RectTransform).sizeDelta = new Vector2(38f, 10f);
-                _communityButton.interactable = SongLoader.AreSongsLoaded;
-
-                BaseUI.SetButtonText(_communityButton, "DiscordCommunity");
-
-                _communityButton.onClick.AddListener(() => {
+                MenuButtonUI.AddButton("DiscordCommunity", () => {
                     //If the user doesn't have the songloader plugin installed, we definitely can't continue
                     if (!ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                     {
-                        _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
+                        _requiredModsModal = BeatSaberUI.CreateViewController<ModalViewController>();
                         _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
                         "SongLoaderPlugin\n\n" +
                         "DiscordCommunityPlugin will not function.";
                         _requiredModsModal.Type = ModalViewController.ModalType.Ok;
-                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, _mainMenuViewController.isRebuildingHierarchy);
-                    }
-                    else if (settingsModel == null || settingsModel.GetField<string>("kCurrentVersion") != "1.2.0")
-                    {
-                        _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
-                        _requiredModsModal.Message = "Beat Saber has updated! Uninstall this and tell Moon to make a patch.";
-                        _requiredModsModal.Type = ModalViewController.ModalType.Ok;
-                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, _mainMenuViewController.isRebuildingHierarchy);
+                        _mainMenuViewController.__PresentViewController(_requiredModsModal, null); //TODO: C'mon moon, do it right
                     }
                     else
                     {
-                        _mainFlowCooridnator.PresentMainModUI();
+                        _mainModFlowCoordinator.PresentMainModUI();
                     }
                 });
             }
@@ -164,6 +146,11 @@ namespace DiscordCommunityPlugin
             var staticSetting = subMenu.AddBool("Static Lights");
             mirrorSetting.GetValue += () => Config.StaticLights;
             mirrorSetting.SetValue += (b) => Config.StaticLights = b;
+
+            var gameOption = CustomUI.GameplaySettings.GameplaySettingsUI.CreateListOption("MoonsList");
+            gameOption.AddOption(0, "Test");
+            gameOption.AddOption(1, "Butt");
+            gameOption.AddOption(2, "Boob");
         }
 
         //Returns to a view when the scene loads, courtesy of andruzzzhka's BeatSaberMultiplayer
@@ -196,13 +183,14 @@ namespace DiscordCommunityPlugin
                 children.Remove(root);
                 children.ForEach(x => {
                     Logger.Info($"Dismissing {x.name}...");
-                    x.DismissModalViewController(null, true);
+                    x.__DismissViewController(null, true); //TODO: C'mon moon... Do it right. Really
                 });
 
-                //Re-add the button and move to the song list
+                //Re-add the button and the flow coordinator
                 CreateCommunitiyButton();
-                _mainFlowCooridnator.mmvc = _mainMenuViewController;
-                _mainFlowCooridnator.PresentMainModUI(true, selectedLevelId);
+                _mainModFlowCoordinator.mfc = _mainFlowCoordinator;
+                _mainModFlowCoordinator.mmvc = _mainMenuViewController;
+                _mainModFlowCoordinator.PresentMainModUI();
             }
             catch (Exception e)
             {

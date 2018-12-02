@@ -1,4 +1,5 @@
-﻿using DiscordCommunityPlugin.UI;
+﻿using CustomUI.BeatSaber;
+using DiscordCommunityPlugin.UI;
 using DiscordCommunityShared;
 using IllusionPlugin;
 using System.Collections;
@@ -30,7 +31,6 @@ namespace DiscordCommunityPlugin
         {
             if (scene.name == "Menu")
             {
-                BaseUI.OnLoad();
                 CommunityUI.OnLoad();
             }
         }

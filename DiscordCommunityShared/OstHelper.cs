@@ -10,8 +10,8 @@ namespace DiscordCommunityShared
 {
     public class OstHelper
     {
-        public static readonly string[] ostHashes = { "Level1", "Level2", "Level3", "Level4", "Level5", "Level6",
-                                "Level7", "Level8", "Level9", "Level10", "Level11"};
+        public static readonly string[] ostHashes = { "BeatSaber", "Escape", "LvlInsane", "100Bills", "CountryRounds", "Breezer",
+                                "TurnMeOn", "BalearicPumping", "Legend", "CommercialPumping", "AngelVoices"};
 
         public static readonly string[] ostNames = { "Beat Saber", "Escape", "Lvl Insane", "$100 Bills", "Country Rounds", "Breezer",
                                 "Turn Me On", "Balearic Pumping", "Legend", "Commercial Pumping", "Angel Voices"};
@@ -32,7 +32,7 @@ namespace DiscordCommunityShared
             if (IsOst(levelId))
             {
                 if (levelId.Contains("OneSaber")) return oneSaberDifficulties.Select(x => (LevelDifficulty)x).ToArray();
-                else if (levelId != "Level11") return mainDifficulties.Select(x => (LevelDifficulty)x).ToArray();
+                else if (levelId != "AngelVoices") return mainDifficulties.Select(x => (LevelDifficulty)x).ToArray();
                 else return angelDifficulties.Select(x => (LevelDifficulty)x).ToArray();
             }
             return null;
@@ -40,7 +40,7 @@ namespace DiscordCommunityShared
 
         public static bool IsOst(string songId)
         {
-            return ostHashes.ToList().Any(x => x == songId || $"{x}OneSaber" == songId);
+            return ostHashes.ToList().Any(x => x == songId || $"{x}OneSaber" == songId || $"{x}NoArrows" == songId);
         }
     }
 }

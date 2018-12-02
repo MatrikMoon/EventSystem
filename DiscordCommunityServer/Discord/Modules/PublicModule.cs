@@ -60,14 +60,13 @@ namespace DiscordCommunityServer.Discord.Modules
 
         [Command("addSong")]
         [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task AddSongAsync(string songId, string gameplayMode = null)
+        public async Task AddSongAsync(string songId)
         {
-            int mode = gameplayMode == null ? (int)GameplayMode.SoloStandard : Convert.ToInt32(gameplayMode);
-            if (!Song.Exists(songId, mode))
+            if (!Song.Exists(songId))
             {
                 if (OstHelper.IsOst(songId))
                 {
-                    await ReplyAsync($"Added: {new Song(songId, mode).GetSongName()}");
+                    await ReplyAsync($"Added: {new Song(songId).GetSongName()}");
                 }
                 else
                 {
@@ -76,7 +75,7 @@ namespace DiscordCommunityServer.Discord.Modules
                     if (songPath != null)
                     {
                         string songName = new BeatSaver.Song(songId).SongName;
-                        new Song(songId, mode);
+                        new Song(songId);
                         await ReplyAsync($"{songName} downloaded and added to song list!");
                     }
                     else await ReplyAsync("Could not download song.");
@@ -148,7 +147,6 @@ namespace DiscordCommunityServer.Discord.Modules
                 Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
                 songs.ForEach(x => {
                     string songId = x.SongId;
-                    int mode = Convert.ToInt32(x.Mode);
                     scores.Add(x, GetScoresForSong(x, (long)r));
                 });
 
@@ -156,11 +154,10 @@ namespace DiscordCommunityServer.Discord.Modules
                 songs.ForEach(x =>
                 {
                     string songId = x.SongId;
-                    int mode = Convert.ToInt32(x.Mode);
 
                     if (scores[x].Count > 0) //Don't print if no one submitted scores
                     {
-                        finalMessage += new Song(songId, mode).GetSongName() + (mode != 0 ? " " + ((GameplayMode)mode).ToString() + ":\n" : ":\n");
+                        finalMessage += new Song(songId).GetSongName() + ":\n";
 
                         foreach (KeyValuePair<string, ScoreConstruct> item in scores[x])
                         {
