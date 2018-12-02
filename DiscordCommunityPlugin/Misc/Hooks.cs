@@ -9,12 +9,13 @@ using Logger = DiscordCommunityShared.Logger;
  * Created by Moon on 9/23/2018
  * Handles interactions with other mods. Such as multiplayer.
  */
-
+ 
 namespace DiscordCommunityPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Hooks
     {
+        /*
         private static Redirection _currentRedirect;
         private static object _currentOnlineControllerObject;
         private static int _lastScoreSubmitted;
@@ -42,7 +43,7 @@ namespace DiscordCommunityPlugin.Misc
                 if (e.score == _lastScoreSubmitted) return; //Hacky fix to a callback bug in Multiplayer (SongFinished is called multiple times)
                 _lastScoreSubmitted = e.score;
 
-                IStandardLevel level = b.difficultyLevel.level;
+                IBeatmapLevel level = b.difficultyLevel.level;
                 string songHash = level.levelID.Substring(0, Math.Min(32, level.levelID.Length));
                 string songId = null;
 
@@ -109,12 +110,12 @@ namespace DiscordCommunityPlugin.Misc
             sldvc.didSelectDifficultyEvent += HandleDifficultyViewControllerDidSelectDifficulty;
         }
 
-        public void HandleLevelListViewControllerDidSelectLevel(StandardLevelListViewController viewController, IStandardLevel level)
+        public void HandleLevelListViewControllerDidSelectLevel(StandardLevelListViewController viewController, IBeatmapLevel level)
         {
             Logger.Warning("LEVEL SELECTED");
         }
 
-        public void HandleDifficultyViewControllerDidSelectDifficulty(StandardLevelDifficultyViewController viewController, IStandardLevelDifficultyBeatmap difficultyLevel)
+        public void HandleDifficultyViewControllerDidSelectDifficulty(StandardLevelDifficultyViewController viewController, IDifficultyBeatmap difficultyLevel)
         {
             Logger.Warning("DIFFICULTY SELECTED");
         }

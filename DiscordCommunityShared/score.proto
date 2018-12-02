@@ -5,7 +5,6 @@ message Score {
   string song_id = 2;
   int32 score = 3;
   int32 difficulty_level = 4;
-  int32 gameplay_mode = 5;
-  bool full_combo = 6;
-  string signed = 7;
+  bool full_combo = 5;
+  string signed = 6;
 }

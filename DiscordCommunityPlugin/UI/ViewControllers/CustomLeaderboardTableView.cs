@@ -1,15 +1,11 @@
 ﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
 using HMUI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
 
 /*
  * Created by Moon on 10/28/2018 at 2:18am
@@ -35,15 +31,19 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         {
             _tableView = new GameObject().AddComponent<TableView>();
             _tableView.transform.SetParent(transform, false);
+            _tableView.SetField("_isInitialized", false);
+            _tableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
+            _tableView.Init();
 
             var currentView = Resources.FindObjectsOfTypeAll<LeaderboardTableView>().First();
             var currentTransform = (currentView.transform as RectTransform);
             var newTransform = (_tableView.transform as RectTransform);
 
+            //TODO: Wouldn't it be easier to set anchors to .5 across the board, then work from there?
             newTransform.anchorMin = new Vector2(currentTransform.anchorMin.x, currentTransform.anchorMin.y);
             newTransform.anchorMax = new Vector2(currentTransform.anchorMax.x, currentTransform.anchorMax.y);
-            newTransform.anchoredPosition = new Vector2(currentTransform.anchoredPosition.x, currentTransform.anchoredPosition.y);
-            newTransform.sizeDelta = new Vector2(currentTransform.sizeDelta.x - 40, currentTransform.sizeDelta.y);
+            newTransform.anchoredPosition = new Vector2(currentTransform.anchoredPosition.x, currentTransform.anchoredPosition.y - 15); //In 0.12.0, the table was moved slightly to the right. Here I'm moving it back. Oh, and down.
+            newTransform.sizeDelta = new Vector2(currentTransform.sizeDelta.x - 66, currentTransform.sizeDelta.y - 18);
 
             _cellInstance = Resources.FindObjectsOfTypeAll<LeaderboardTableCell>().First(x => x.name == "LeaderboardTableCell");
         }

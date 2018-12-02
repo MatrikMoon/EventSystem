@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CustomUI.BeatSaber;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,14 +27,12 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         public bool DismissImmediately { get; set; } = false;
         public bool DontDismiss { get; set; } = false;
         private Button _backButton;
-        private bool _continue = false;
 
         public SimpleCallback YesCallback { get; set; } = () => { };
         public SimpleCallback NoCallback { get; set; } = () => { };
         public SimpleCallback OkCallback { get; set; } = () => { };
 
         public delegate void SimpleCallback();
-        private SimpleCallback action;
 
         public enum ModalType
         {
@@ -47,10 +46,10 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         {
             if (_backButton == null)
             {
-                _backButton = BaseUI.CreateBackButton(rectTransform);
+                _backButton = BeatSaberUI.CreateBackButton(rectTransform);
                 _backButton.onClick.AddListener(() =>
                 {
-                    DismissModalViewController(null, false);
+                    __DismissViewController(null, false); //TODO: Moon... Don't use deprecated things
                 });
             }
 
@@ -59,14 +58,13 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
         private void Prompt()
         {
-            _continue = false;
             var buttonWidth = 38f;
             var buttonHeight = 10f;
             Button yesButton = null;
             Button noButton = null;
             Button okButton = null;
 
-            TextMeshProUGUI promptText = BaseUI.CreateText(rectTransform,
+            TextMeshProUGUI promptText = BeatSaberUI.CreateText(rectTransform,
                 Message,
                 new Vector2(0f, -30f));
             promptText.alignment = TextAlignmentOptions.Center;
@@ -74,34 +72,34 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
             if (Type == ModalType.Ok)
             {
-                okButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
-                BaseUI.SetButtonText(okButton, "OK");
+                okButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                okButton.SetButtonText("OK");
                 okButton.onClick.AddListener(() =>
                 {
                     OkCallback?.Invoke();
-                    if (!DontDismiss) DismissModalViewController(null, DismissImmediately);
+                    if (!DontDismiss) __DismissViewController(null, DismissImmediately); //TODO: Moon... Don't use deprecated things
                 });
                 (okButton.transform as RectTransform).sizeDelta = new Vector2(buttonWidth, buttonHeight);
                 (okButton.transform as RectTransform).anchoredPosition = new Vector2((rectTransform.rect.width / 2) - (buttonWidth / 2), 10f);
             }
             else if (Type == ModalType.YesNo)
             {
-                yesButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
-                BaseUI.SetButtonText(yesButton, "YES");
+                yesButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                yesButton.SetButtonText("YES");
                 yesButton.onClick.AddListener(() =>
                 {
                     YesCallback?.Invoke();
-                    if (!DontDismiss) DismissModalViewController(null, DismissImmediately);
+                    if (!DontDismiss) __DismissViewController(null, DismissImmediately); //TODO: Moon... Don't use deprecated things
                 });
                 (yesButton.transform as RectTransform).sizeDelta = new Vector2(buttonWidth, buttonHeight);
                 (yesButton.transform as RectTransform).anchoredPosition = new Vector2((rectTransform.rect.width / 4) - (buttonWidth / 2), 10f);
 
-                noButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
-                BaseUI.SetButtonText(noButton, "NO");
+                noButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                noButton.SetButtonText("NO");
                 noButton.onClick.AddListener(() =>
                 {
                     NoCallback?.Invoke();
-                    if (!DontDismiss) DismissModalViewController(null, DismissImmediately);
+                    if (!DontDismiss) __DismissViewController(null, DismissImmediately); //TODO: Moon... Don't use deprecated things
                 });
                 (noButton.transform as RectTransform).sizeDelta = new Vector2(buttonWidth, buttonHeight);
                 (noButton.transform as RectTransform).anchoredPosition = new Vector2(((rectTransform.rect.width / 4) * 3) - (buttonWidth / 2), 10f);

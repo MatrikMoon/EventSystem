@@ -74,11 +74,11 @@ namespace DiscordCommunityServer.Discord
                     if (songData.GetDifficultyForRank(rank) != x.Value.Difficulty)
                     {
                         replaySongs += songData.SongName + "\n";
-                        ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId=\'{x.Key.SongId}\' AND mode=\'{x.Key.Mode}\' AND steamId=\'{steamId}\'");
+                        ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
                     }
                     else
                     {
-                        ExecuteCommand($"UPDATE scoreTable SET rank = {(int)rank} WHERE songId=\'{x.Key.SongId}\' AND mode=\'{x.Key.Mode}\' AND steamId=\'{steamId}\'");
+                        ExecuteCommand($"UPDATE scoreTable SET rank = {(int)rank} WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
                     }
                 });
             }

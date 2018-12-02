@@ -15,16 +15,14 @@ namespace DiscordCommunityServer.Database
     class Song
     {
         private string songId;
-        private SharedConstructs.GameplayMode mode;
 
-        public Song(string songId, int mode)
+        public Song(string songId)
         {
             this.songId = songId;
-            this.mode = (SharedConstructs.GameplayMode)mode;
             if (!Exists())
             {
                 //Add a placeholder, trigger song download from BeatSaver if it doesn't exist
-                SimpleSql.AddSong("", "", "", songId, mode);
+                SimpleSql.AddSong("", "", "", songId);
                 if (OstHelper.IsOst(songId))
                 {
                     SetSongName(OstHelper.GetOstSongNameFromLevelId(songId));
@@ -48,16 +46,6 @@ namespace DiscordCommunityServer.Database
             return SimpleSql.ExecuteCommand($"UPDATE songTable SET songName = \'{name}\' WHERE songId = \'{songId}\'") > 1;
         }
 
-        public SharedConstructs.GameplayMode GetSongMode()
-        {
-            return (SharedConstructs.GameplayMode)Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT mode FROM songTable WHERE songId = \'{songId}\'", "mode").First());
-        }
-
-        public bool SetSongMode(int mode)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET mode = {mode} WHERE songId = \'{songId}\'") > 1;
-        }
-
         public bool IsOld()
         {
             return SimpleSql.ExecuteQuery($"SELECT old FROM songTable WHERE songId = \'{songId}\'", "old").First() == "1";
@@ -65,12 +53,12 @@ namespace DiscordCommunityServer.Database
 
         public bool Exists()
         {
-            return Exists(songId, (int)mode);
+            return Exists(songId);
         }
 
-        public static bool Exists(string songId, int mode)
+        public static bool Exists(string songId)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND mode = {mode}", "songId").Any();
+            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\'", "songId").Any();
         }
     }
 }

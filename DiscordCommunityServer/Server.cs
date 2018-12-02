@@ -30,9 +30,9 @@ namespace DiscordCommunityServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
-                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.GameplayMode, s.FullCombo, s.Score_) == s.Signed &&
-                                Database.Song.Exists(s.SongId, s.GameplayMode) &&
-                                !new Database.Song(s.SongId, s.GameplayMode).IsOld() &&
+                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_) == s.Signed &&
+                                Database.Song.Exists(s.SongId) &&
+                                !new Database.Song(s.SongId).IsOld() &&
                                 Database.Player.Exists(s.SteamId) &&
                                 Database.Player.IsRegistered(s.SteamId) &&
                                 new BeatSaver.Song(s.SongId)
@@ -54,7 +54,7 @@ namespace DiscordCommunityServer
                             long oldScore = 0;
                             if (Database.Score.Exists(s.SongId, s.SteamId, s.DifficultyLevel))
                             {
-                                oldScore = new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode).GetScore();
+                                oldScore = new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel).GetScore();
                             }
 
                             if (s.Score_ > oldScore)
@@ -66,10 +66,10 @@ namespace DiscordCommunityServer
                                 else player.IncrementSongsPlayed();
                                 player.IncrementTotalScore(s.Score_ - oldScore); //Increment total score only by the amount the score has increased
 
-                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel, s.GameplayMode).SetScore(s.Score_, s.FullCombo);
+                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel).SetScore(s.Score_, s.FullCombo);
                                 
                                 //Only send message if player is registered
-                                if (Database.Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId, s.GameplayMode).GetSongName()}!");
+                                if (Database.Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId).GetSongName()}!");
                             }
 
                             return new HttpResponse()
@@ -163,7 +163,6 @@ namespace DiscordCommunityServer
                             var item = new JSONObject();
                             item["songName"] = x.Name;
                             item["songId"] = x.SongId;
-                            item["mode"] = x.Mode;
                             json.Add(x.SongId, item);
                         });
 
@@ -226,16 +225,14 @@ namespace DiscordCommunityServer
 
                         string songId = requestData[1];
                         int rank = Convert.ToInt32(requestData[2]);
-                        int mode = Convert.ToInt32(requestData[3]);
                         SongConstruct songConstruct = new SongConstruct()
                         {
                             SongId = songId,
-                            Mode = requestData[3]
                         };
 
-                        if (!Database.Song.Exists(songId, Convert.ToInt32(mode)))
+                        if (!Database.Song.Exists(songId))
                         {
-                            Logger.Error($"Song doesn't exist for leaderboards: {songId} {mode}");
+                            Logger.Error($"Song doesn't exist for leaderboards: {songId}");
                             return new HttpResponse()
                             {
                                 ReasonPhrase = "Bad Request",

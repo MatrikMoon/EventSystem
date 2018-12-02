@@ -1,4 +1,5 @@
-﻿using SongLoaderPlugin;
+﻿using DiscordCommunityShared;
+using SongLoaderPlugin;
 using System;
 using System.IO;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace DiscordCommunityPlugin.Misc
     {
         public static string GetSongIdFromLevelId(string levelId)
         {
-            if (levelId.StartsWith("Level")) return levelId;
+            if (OstHelper.IsOst(levelId)) return levelId;
 
             //Hacky way of getting the song id, through getting the file path from SongLoader
             string songPath = SongLoader.CustomLevels.Find(x => x.levelID == levelId).customSongInfo.path;
@@ -29,8 +30,8 @@ namespace DiscordCommunityPlugin.Misc
             return name;
         }
         
-        //Assuming the id exists, returns the IStandardLevel of the level corresponding to the id
-        public static IStandardLevel GetLevelFromSongId(string songId)
+        //Assuming the id exists, returns the IBeatmapLevel of the level corresponding to the id
+        public static IBeatmapLevel GetLevelFromSongId(string songId)
         {
             return SongLoader.CustomLevels.Find(x => songId == Directory.GetParent(x.customSongInfo.path).Name || songId == new DirectoryInfo(x.customSongInfo.path).Name); //Note: VERY RARELY a song will not have an internal directory
         }
