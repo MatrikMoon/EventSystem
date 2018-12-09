@@ -1,4 +1,7 @@
-﻿using DiscordCommunityPlugin.Misc;
+﻿using CustomUI.BeatSaber;
+using CustomUI.MenuButton;
+using CustomUI.Settings;
+using DiscordCommunityPlugin.Misc;
 using DiscordCommunityPlugin.UI;
 using DiscordCommunityPlugin.UI.FlowCoordinators;
 using DiscordCommunityPlugin.UI.ViewControllers;
@@ -29,13 +32,13 @@ namespace DiscordCommunityPlugin
     class CommunityUI : MonoBehaviour
     {
         public static CommunityUI instance;
-        public string communitySongPlayed;
+        public string communitySongPlayed; //TODO: Obselete? It's no longer used because ReturnToUI is gone
 
-        private MainModFlowCoordinator _mainFlowCooridnator;
+        private MainModFlowCoordinator _mainModFlowCoordinator;
         private RectTransform _mainMenuRectTransform;
+        private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
-        private ModalViewController _requiredModsModal;
-        private Button _communityButton;
+        private Button _communityButton; //TODO: Find a way to grab the button instance so we can disable it
 
         //Called on Menu scene load (only once in lifetime)
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -58,28 +61,20 @@ namespace DiscordCommunityPlugin
                 DontDestroyOnLoad(this);
                 Config.LoadConfig();
 
-                Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
+				Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
                 {
                     Plugin.PlayerId = msg.Data.ID;
                 });
 
-                SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
+                SceneManager.sceneLoaded += SceneManager_sceneLoaded;
                 SongLoader.SongsLoadedEvent += SongsLoaded;
-                CreateCommunitiyButton();
+                CreateCommunitiyButton(); //sceneLoaded won't be called the first time
             }
         }
 
-        private void SceneManager_activeSceneChanged(Scene prev, Scene next)
+        private void SceneManager_sceneLoaded(Scene next, LoadSceneMode mode)
         {
-            if (next.name == "Menu")
-            {
-                if (communitySongPlayed != null)
-                {
-                    StartCoroutine(ReturnToCommunityUI(communitySongPlayed));
-                    communitySongPlayed = null;
-                }
-                else CreateCommunitiyButton();
-            }
+            if (next.name == "Menu") CreateCommunitiyButton();
         }
 
         private void SongsLoaded(SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs)
@@ -91,46 +86,23 @@ namespace DiscordCommunityPlugin
         {
             CreateSettingsMenu();
 
-            //Multiplayer score hook
-            if (Config.SooperSecretSetting)
-            {
-                StartCoroutine(Hooks.WaitForMultiplayerLevelComplete());
-            }
-
+            _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
-            if (_mainFlowCooridnator == null)
+            if (_mainModFlowCoordinator == null)
             {
-                _mainFlowCooridnator = new GameObject("MainModFlow").AddComponent<MainModFlowCoordinator>();
-                _mainFlowCooridnator.mmvc = _mainMenuViewController;
+                _mainModFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<MainModFlowCoordinator>();
+                _mainModFlowCoordinator.mfc = _mainFlowCoordinator;
+                _mainModFlowCoordinator.mmvc = _mainMenuViewController;
             }
-
-            _communityButton = BaseUI.CreateUIButton(_mainMenuRectTransform, "QuitButton");
 
             try
             {
-                (_communityButton.transform as RectTransform).anchoredPosition = new Vector2(61f, 5f);
-                (_communityButton.transform as RectTransform).sizeDelta = new Vector2(38f, 10f);
-                _communityButton.interactable = SongLoader.AreSongsLoaded;
-
-                BaseUI.SetButtonText(_communityButton, "DiscordCommunity");
-
-                _communityButton.onClick.AddListener(() => {
-                    //If the user doesn't have the songloader plugin installed, we definitely can't continue
-                    if (!ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
-                    {
-                        _requiredModsModal = BaseUI.CreateViewController<ModalViewController>();
-                        _requiredModsModal.Message = "You do not have the following required mods installed:\n" +
-                        "SongLoaderPlugin\n\n" +
-                        "DiscordCommunityPlugin will not function.";
-                        _requiredModsModal.Type = ModalViewController.ModalType.Ok;
-                        _mainMenuViewController.PresentModalViewController(_requiredModsModal, null, _mainMenuViewController.isRebuildingHierarchy);
-                    }
-                    else
-                    {
-                        _mainFlowCooridnator.PresentMainModUI();
-                    }
-                });
+                if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
+                {
+                    MenuButtonUI.AddButton("DiscordCommunity", () => _mainModFlowCoordinator.PresentMainModUI());
+                }
+                else Logger.Error("MISSING SONG LOADER PLUGIN");
             }
             catch (Exception e)
             {
@@ -143,8 +115,8 @@ namespace DiscordCommunityPlugin
         {
             var subMenu = SettingsUI.CreateSubMenu("Community Plugin");
             var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
-            sooperSecretSetting.GetValue += delegate { return Config.SooperSecretSetting; };
-            sooperSecretSetting.SetValue += delegate (bool value) { Config.SooperSecretSetting = value; };
+            sooperSecretSetting.GetValue += () => Config.SooperSecretSetting;
+            sooperSecretSetting.SetValue += (value) => Config.SooperSecretSetting = value;
 
             var mirrorSetting = subMenu.AddBool("Mirror Mode");
             mirrorSetting.GetValue += () => Config.MirrorMode;
@@ -153,50 +125,6 @@ namespace DiscordCommunityPlugin
             var staticSetting = subMenu.AddBool("Static Lights");
             mirrorSetting.GetValue += () => Config.StaticLights;
             mirrorSetting.SetValue += (b) => Config.StaticLights = b;
-        }
-
-        //Returns to a view when the scene loads, courtesy of andruzzzhka's BeatSaberMultiplayer
-        IEnumerator ReturnToCommunityUI(string selectedLevelId = null)
-        {
-            //Wait for screen system to load completely
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<VRUIScreenSystem>().Any(); });
-            VRUIScreenSystem screenSystem = Resources.FindObjectsOfTypeAll<VRUIScreenSystem>().First();
-
-            yield return new WaitWhile(delegate () { return screenSystem.mainScreen == null; });
-            yield return new WaitWhile(delegate () { return screenSystem.mainScreen.rootViewController == null; });
-
-            try
-            {
-                //What the hell andruzzzhka
-                //I'm pretty sure this dismisses all viewcontrollers from the bottom
-                //of the tree up to root, not including root. Not sure what that means though.
-                VRUIViewController root = screenSystem.mainScreen.rootViewController;
-
-                List<VRUIViewController> children = new List<VRUIViewController>();
-
-                children.Add(root);
-
-                while (children.Last().childViewController != null)
-                {
-                    children.Add(children.Last().childViewController);
-                }
-
-                children.Reverse();
-                children.Remove(root);
-                children.ForEach(x => {
-                    Logger.Info($"Dismissing {x.name}...");
-                    x.DismissModalViewController(null, true);
-                });
-
-                //Re-add the button and move to the song list
-                CreateCommunitiyButton();
-                _mainFlowCooridnator.mmvc = _mainMenuViewController;
-                _mainFlowCooridnator.PresentMainModUI(true, selectedLevelId);
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"MENU EXCEPTION: {e}");
-            }
         }
     }
 }

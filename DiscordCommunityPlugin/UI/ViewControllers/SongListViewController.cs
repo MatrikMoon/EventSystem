@@ -50,7 +50,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
                 _pageUpButton.onClick.AddListener(delegate ()
                 {
                     songsTableView.PageScrollUp();
@@ -60,7 +60,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
                     songsTableView.PageScrollDown();
@@ -202,7 +202,6 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             cell.coverImage = song.coverImage;
             cell.songName = $"{song.songName}\n<size=80%>{song.songSubName}</size>";
             cell.author = song.songAuthorName;
-
             cell.reuseIdentifier = "SongCell";
 
             return cell;

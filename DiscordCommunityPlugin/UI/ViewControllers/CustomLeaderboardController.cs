@@ -1,6 +1,7 @@
 ﻿using CustomUI.BeatSaber;
 using DiscordCommunityPlugin.DiscordCommunityHelpers;
 using DiscordCommunityPlugin.Misc;
+using DiscordCommunityPlugin.UI.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,51 +75,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_rankUpButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
                 (_rankUpButton.transform as RectTransform).anchoredPosition = new Vector2(-17f, -21f);
                 (_rankUpButton.transform as RectTransform).sizeDelta = new Vector2(28f, 10f);
-                _rankUpButton.onClick.AddListener(() => {
-                    var rankUpModal = BeatSaberUI.CreateViewController<ModalViewController>();
-                    if (Player.Instance.CanRankUp())
-                    {
-                        if (Player.Instance.rank < Rank.Gold)
-                        {
-                            rankUpModal.Message =
-                                $"You are about to rank up from {Player.Instance.rank} to {Player.Instance.rank + 1}.\n" +
-                                "Are you sure you want to perform this action?";
-                        }
-                        else if (Player.Instance.rank == Rank.Gold)
-                        {
-                            rankUpModal.Message =
-                            "You are about to spend 3 tokens and apply to rank up to Blue.\n" +
-                            "Your Scoresaber profile will be submitted to the Blues, where it will then be voted on.\n" +
-                            "Are you sure you want to perform this action?";
-                        }
-                        rankUpModal.Type = ModalViewController.ModalType.YesNo;
-                        rankUpModal.YesCallback = () =>
-                        {
-                            string signed = DiscordCommunityShared.RSA.SignRankRequest(Plugin.PlayerId, Player.Instance.rank + 1, false);
-                            Misc.Client.RequestRank(Plugin.PlayerId, Player.Instance.rank + 1, false, signed);
-
-                            //Force the player back to the main menu so that their rank is refreshed for the next load
-                            rankUpModal.__DismissViewController(null, true); //TODO: Can we comply with the new way of doing things please
-                            rankUpModal.DontDismiss = true;
-                            RequestRankPressed?.Invoke();
-                        };
-                    }
-                    else if (Player.Instance.rank >= Rank.Gold && Player.Instance.tokens < 3)
-                    {
-                        rankUpModal.Message =
-                            "You do not have enough tokens to rank up.\n" +
-                            "3 tokens are required.";
-                        rankUpModal.Type = ModalViewController.ModalType.Ok;
-                    }
-                    else
-                    {
-                        rankUpModal.Message = "You must improve your scores on the following songs\n" +
-                        "(check #rules-and-info for the difficulty you need to play on):\n";
-                        Player.Instance.GetSongsToImproveBeforeRankUp().ForEach(x => rankUpModal.Message += $"{DiscordCommunityShared.OstHelper.GetOstSongNameFromLevelId(x)}\n");
-                    }
-
-                    __PresentViewController(rankUpModal, null); //TODO: Can we comply with the new way of doing things please
-                });
+                _rankUpButton.onClick.AddListener(() => RequestRankPressed?.Invoke());
 
                 _pageLeftButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageLeftButton.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
@@ -189,7 +146,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             _pageLeftButton.gameObject.SetActive(true);
             _pageRightButton.gameObject.SetActive(true);
             _projectedTokens.gameObject.SetActive(Player.Instance.rank >= Rank.Gold && Player.Instance.rank <= Rank.Blue);
-            _rankUpButton.gameObject.SetActive(false);// Player.Instance.rank < Rank.Blue); TEMPORARILY DISABLED
+            _rankUpButton.gameObject.SetActive(Player.Instance.rank < Rank.Blue);
 
             //Set song name text and rank text (and color)
             _songName.SetText(map.level.songName);
@@ -205,6 +162,11 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
             //Get leaderboard data
             Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), rank, rank == Rank.All);
+        }
+
+        public void Refresh()
+        {
+            if (selectedMap != null && selectedRank != Rank.None) SetSong(selectedMap, selectedRank);
         }
 
         public void SetScores(List<CustomLeaderboardTableView.CustomScoreData> scores, int myScorePos, bool useRankColors = false)

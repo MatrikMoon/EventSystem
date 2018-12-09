@@ -48,29 +48,6 @@ namespace DiscordCommunityServer.BeatSaver
         //Returns the most appropriate LevelDifficulty for the player's rank
         public LevelDifficulty GetDifficultyForRank(Rank rank)
         {
-            //TODO: REMOVE
-            //Special case for Flower Dance
-            if (SongId == "2322-1605")
-            {
-                LevelDifficulty ret2;
-                switch (rank)
-                {
-                    case Rank.Master:
-                    case Rank.Blue:
-                    case Rank.Gold:
-                    case Rank.Silver:
-                        ret2 = GetClosestDifficultyPreferLower(LevelDifficulty.Expert);
-                        break;
-                    case Rank.Bronze:
-                        ret2 = GetClosestDifficultyPreferLower(LevelDifficulty.Hard);
-                        break;
-                    default:
-                        ret2 = GetClosestDifficultyPreferLower(LevelDifficulty.Easy);
-                        break;
-                }
-                return ret2;
-            }
-
             LevelDifficulty ret;
             switch (rank)
             {

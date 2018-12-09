@@ -1,5 +1,7 @@
-﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using DiscordCommunityPlugin.UI.FlowCoordinators;
+﻿using CustomUI.BeatSaber;
+using DiscordCommunityPlugin.DiscordCommunityHelpers;
+using DiscordCommunityPlugin.Misc;
+using DiscordCommunityPlugin.UI.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,9 +25,9 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
     {
         protected CustomLeaderboardTableView _leaderboard;
 
-        public event Action<GameplayOptions> PlayPressed;
+        public event Action<IDifficultyBeatmap> PlayPressed;
         public event Action RequestRankPressed;
-        public IStandardLevelDifficultyBeatmap selectedMap;
+        public IDifficultyBeatmap selectedMap;
         public Rank selectedRank = Rank.None;
 
         TextMeshProUGUI _songName;
@@ -45,77 +47,35 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _leaderboard.transform.SetParent(rectTransform, false);
                 _leaderboard.name = "Community Leaderboard";
 
-                _songName = BaseUI.CreateText(rectTransform, "Song", new Vector2(0f, -10f));
+                _songName = BeatSaberUI.CreateText(rectTransform, "Song", new Vector2());
                 _songName.fontSize = 8f;
                 _songName.alignment = TextAlignmentOptions.Center;
-                _songName.gameObject.SetActive(false);
+                (_songName.transform as RectTransform).anchorMin = new Vector2(.5f, 1f);
+                (_songName.transform as RectTransform).anchorMax = new Vector2(.5f, 1f);
+                (_songName.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
 
-                _rank = BaseUI.CreateText(rectTransform, "Rank", new Vector2(0f, -15f));
+                _rank = BeatSaberUI.CreateText(rectTransform, "Rank", new Vector2());
                 _rank.fontSize = 4f;
                 _rank.alignment = TextAlignmentOptions.Center;
                 _rank.color = Color.gray;
-                _rank.gameObject.SetActive(false);
+                (_rank.transform as RectTransform).anchorMin = new Vector2(.5f, 1f);
+                (_rank.transform as RectTransform).anchorMax = new Vector2(.5f, 1f);
+                (_rank.transform as RectTransform).anchoredPosition = new Vector2(0f, -15f);
 
-                _projectedTokens = BaseUI.CreateText(rectTransform, "Tokens", new Vector2());
+                _projectedTokens = BeatSaberUI.CreateText(rectTransform, "Tokens", new Vector2());
                 (_projectedTokens.transform as RectTransform).anchorMin = new Vector2(0f, 1f);
                 (_projectedTokens.transform as RectTransform).anchorMax = new Vector2(0f, 1f);
                 (_projectedTokens.transform as RectTransform).anchoredPosition = new Vector2(15f, -19f); //new Vector2(21f, -15f);
                 _projectedTokens.fontSize = 6f;
                 _projectedTokens.alignment = TextAlignmentOptions.Center;
-                _projectedTokens.gameObject.SetActive(false);
 
-                _rankUpButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
-                BaseUI.SetButtonText(_rankUpButton, "Rank Up");
+                _rankUpButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                _rankUpButton.SetButtonText("Rank Up");
                 (_rankUpButton.transform as RectTransform).anchorMin = new Vector2(1f, 1f);
                 (_rankUpButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
-                (_rankUpButton.transform as RectTransform).anchoredPosition = new Vector2(-21f, -28f);
-                (_rankUpButton.transform as RectTransform).sizeDelta = new Vector2(18f, 10f);
-                _rankUpButton.gameObject.SetActive(false);
-                _rankUpButton.onClick.AddListener(() => {
-                    var rankUpModal = BaseUI.CreateViewController<ModalViewController>();
-                    if (Player.Instance.CanRankUp())
-                    {
-                        if (Player.Instance.rank < Rank.Gold)
-                        {
-                            rankUpModal.Message =
-                                $"You are about to rank up from {Player.Instance.rank} to {Player.Instance.rank + 1}.\n" +
-                                "Are you sure you want to perform this action?";
-                        }
-                        else if (Player.Instance.rank == Rank.Gold)
-                        {
-                            rankUpModal.Message =
-                            "You are about to spend 3 tokens and apply to rank up to Blue.\n" +
-                            "Your Scoresaber profile will be submitted to the Blues, where it will then be voted on.\n" +
-                            "Are you sure you want to perform this action?";
-                        }
-                        rankUpModal.Type = ModalViewController.ModalType.YesNo;
-                        rankUpModal.YesCallback = () =>
-                        {
-                            string signed = DiscordCommunityShared.RSA.SignRankRequest(Plugin.PlayerId, Player.Instance.rank + 1, false);
-                            Misc.Client.RequestRank(Plugin.PlayerId, Player.Instance.rank + 1, false, signed);
-
-                            //Force the player back to the main menu so that their rank is refreshed for the next load
-                            rankUpModal.DismissModalViewController(null, true);
-                            rankUpModal.DontDismiss = true;
-                            RequestRankPressed?.Invoke();
-                        };
-                    }
-                    else if (Player.Instance.rank >= Rank.Gold && Player.Instance.tokens < 3)
-                    {
-                        rankUpModal.Message =
-                            "You do not have enough tokens to rank up.\n" +
-                            "3 tokens are required.";
-                        rankUpModal.Type = ModalViewController.ModalType.Ok;
-                    }
-                    else
-                    {
-                        rankUpModal.Message = "You must improve your scores on the following songs\n" +
-                        "(check #rules-and-info for the difficulty you need to play on):\n";
-                        Player.Instance.GetSongsToImproveBeforeRankUp().ForEach(x => rankUpModal.Message += $"{DiscordCommunityShared.OstHelper.GetOstSongNameFromLevelId(x)}\n");
-                    }
-
-                    PresentModalViewController(rankUpModal, null);
-                });
+                (_rankUpButton.transform as RectTransform).anchoredPosition = new Vector2(-17f, -21f);
+                (_rankUpButton.transform as RectTransform).sizeDelta = new Vector2(28f, 10f);
+                _rankUpButton.onClick.AddListener(() => RequestRankPressed?.Invoke());
 
                 _pageLeftButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageLeftButton.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
@@ -124,7 +84,6 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 Quaternion currentRot = (_pageLeftButton.transform as RectTransform).rotation;
                 (_pageLeftButton.transform as RectTransform).rotation = Quaternion.Euler(currentRot.eulerAngles.x, currentRot.eulerAngles.y, currentRot.eulerAngles.z + 90);
                 _pageLeftButton.interactable = true;
-                _pageLeftButton.gameObject.SetActive(false);
                 _pageLeftButton.onClick.AddListener(() =>
                 {
                     SetSong(selectedMap, --selectedRank);
@@ -139,24 +98,22 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 currentRot = (_pageRightButton.transform as RectTransform).rotation;
                 (_pageRightButton.transform as RectTransform).rotation = Quaternion.Euler(currentRot.eulerAngles.x, currentRot.eulerAngles.y, currentRot.eulerAngles.z + 90);
                 _pageRightButton.interactable = true;
-                _pageRightButton.gameObject.SetActive(false);
                 _pageRightButton.onClick.AddListener(() =>
                 {
                     SetSong(selectedMap, ++selectedRank);
-                    if (selectedRank >= Rank.All) _pageRightButton.interactable = false; //Master + 1 because [Master + 1] is the index of the mixed leaderboard
+                    if (selectedRank >= Rank.All) _pageRightButton.interactable = false;
                     _pageLeftButton.interactable = true;
                 });
 
-                _playButton = BaseUI.CreateUIButton(rectTransform, "QuitButton");
-                BaseUI.SetButtonText(_playButton, "Play");
+                _playButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                _playButton.SetButtonText("Play");
                 (_playButton.transform as RectTransform).anchorMin = new Vector2(1f, 1f);
                 (_playButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
-                (_playButton.transform as RectTransform).anchoredPosition = new Vector2(-21f, -15f);
-                (_playButton.transform as RectTransform).sizeDelta = new Vector2(18f, 10f);
-                _playButton.gameObject.SetActive(false);
+                (_playButton.transform as RectTransform).anchoredPosition = new Vector2(-17f, -8f);
+                (_playButton.transform as RectTransform).sizeDelta = new Vector2(28f, 10f);
                 _playButton.onClick.AddListener(() =>
                 {
-                    PlayPressed?.Invoke(new GameplayOptions());
+                    PlayPressed?.Invoke(selectedMap);
                 });
             }
             else if (!firstActivation && type == ActivationType.AddedToHierarchy)
@@ -175,24 +132,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             }
         }
 
-        //When cloning existing objects, we can sometimes clone things we don't want
-        //Here, we clean out cloned junk items from a leaderboard
-        private static void CleanLeaderboards(Transform transform)
-        {
-            var container = transform.Find("Viewport").Find("Content");
-
-            //An instance of the clones we want to destroy
-            var cellClone = container.Find("LeaderboardTableCell(Clone)");
-
-            //Loop through all the clones and destroy all their children
-            while (cellClone != null)
-            {
-                DestroyImmediate(cellClone.gameObject);
-                cellClone = container.Find("LeaderboardTableCell(Clone)");
-            }
-        }
-
-        public void SetSong(IStandardLevelDifficultyBeatmap map, Rank rank)
+        public void SetSong(IDifficultyBeatmap map, Rank rank)
         {
             //Set globals
             selectedMap = map;
@@ -221,7 +161,12 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             }
 
             //Get leaderboard data
-            Misc.Client.GetSongLeaderboard(this, Misc.SongIdHelper.GetSongIdFromLevelId(map.level.levelID), rank, rank == Rank.All);
+            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), rank, rank == Rank.All);
+        }
+
+        public void Refresh()
+        {
+            if (selectedMap != null && selectedRank != Rank.None) SetSong(selectedMap, selectedRank);
         }
 
         public void SetScores(List<CustomLeaderboardTableView.CustomScoreData> scores, int myScorePos, bool useRankColors = false)

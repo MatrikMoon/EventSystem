@@ -17,13 +17,15 @@ namespace DiscordCommunityShared
                                 "Turn Me On", "Balearic Pumping", "Legend", "Commercial Pumping", "Angel Voices"};
 
         //C# doesn't seem to want me to use an array of a non-primitive here.
-        private static readonly int[] mainDifficulties = { (int)LevelDifficulty.Easy, (int)LevelDifficulty.Normal, (int)LevelDifficulty.Hard, (int)LevelDifficulty.Expert };
+        private static readonly int[] mainDifficulties = { (int)LevelDifficulty.Easy, (int)LevelDifficulty.Normal, (int)LevelDifficulty.Hard, (int)LevelDifficulty.Expert, (int)LevelDifficulty.ExpertPlus };
         private static readonly int[] angelDifficulties = { (int)LevelDifficulty.Hard, (int)LevelDifficulty.Expert };
         private static readonly int[] oneSaberDifficulties = { (int)LevelDifficulty.Expert };
+        private static readonly int[] noArrowsDifficulties = { (int)LevelDifficulty.Expert };
 
         public static string GetOstSongNameFromLevelId(string levelId)
         {
             levelId = levelId.EndsWith("OneSaber") ? levelId.Substring(0, levelId.IndexOf("OneSaber")) : levelId;
+            levelId = levelId.EndsWith("NoArrows") ? levelId.Substring(0, levelId.IndexOf("NoArrows")) : levelId;
             return ostNames[ostHashes.ToList().IndexOf(levelId)];
         }
 
@@ -32,6 +34,7 @@ namespace DiscordCommunityShared
             if (IsOst(levelId))
             {
                 if (levelId.Contains("OneSaber")) return oneSaberDifficulties.Select(x => (LevelDifficulty)x).ToArray();
+                else if (levelId.Contains("NoArrows")) return noArrowsDifficulties.Select(x => (LevelDifficulty)x).ToArray();
                 else if (levelId != "AngelVoices") return mainDifficulties.Select(x => (LevelDifficulty)x).ToArray();
                 else return angelDifficulties.Select(x => (LevelDifficulty)x).ToArray();
             }

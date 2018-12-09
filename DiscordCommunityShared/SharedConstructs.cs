@@ -8,8 +8,8 @@ namespace DiscordCommunityShared
     public static class SharedConstructs
     {
         public static string Name => "DiscordCommunityPlugin";
-        public static string Version => "0.1.5";
-        public static int VersionCode => 015;
+        public static string Version => "0.2.1";
+        public static int VersionCode => 021;
         public static string Changelog =
             "0.0.1: First Commit. Base Discord/Plugin/Server functional, some commands. Just added \"mode\' differentiation between songs.\n" +
             "0.0.2: Added Oculus support. Added Leaderboard views.\n" +
@@ -27,7 +27,9 @@ namespace DiscordCommunityShared
             "0.1.4: Static Lights / Mirror fix\n" +
             "0.1.5: Non-BSMG Update (Required), added SongName to weeklysongs api for leaderboard site\n" +
             "0.1.6: Ninja update! Should *really* fix the game options now\n" +
-            "0.1.7: Ninja update II! Fixed Bad Company / songs with improper directory structure\n";
+            "0.1.7: Ninja update II! Fixed Bad Company / songs with improper directory structure\n" +
+            "0.2.0: Updated for 0.12.0!\n" +
+            "0.2.1: Fixed various issues from previous version (reload score after song, fixed restart button, re-added scoresaber submission)\n";
 
         public enum Rank
         {
@@ -48,14 +50,6 @@ namespace DiscordCommunityShared
             Hard = 2,
             Expert = 3,
             ExpertPlus = 4
-        }
-
-        public enum GameplayMode
-        {
-            SoloStandard = 0,
-            SoloOneSaber = 1,
-            SoloNoArrows = 2,
-            PartyStandard = 3
         }
     }
 }
