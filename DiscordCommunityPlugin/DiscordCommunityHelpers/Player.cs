@@ -109,6 +109,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         public List<string> GetSongsToImproveBeforeRankUp(Rank currentRank)
         {
             List<string> ret = new List<string>();
+            var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First(); //No safety check intentional. If there's an issue here it needs to be noticed
 
             //Get the current applicable requirement set
             OSTScoreRequirement[] requirements = null;
@@ -141,7 +142,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
                 bool passedOne = false;
                 requirements.ToList().ForEach(y =>
                 {
-                    if (GetLocalRank(x, y.Difficulty, GameplayMode.SoloStandard) >= y.Rank) passedOne = true;
+                    if (GetLocalRank(x, y.Difficulty, playerDataModel) >= y.Rank) passedOne = true;
                 });
                 if (!passedOne) ret.Add(x);
             });
@@ -150,25 +151,19 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         }
 
         //Gets a the player's locally stored score for a map
-        public int GetLocalScore(string levelId, LevelDifficulty difficulty, GameplayMode mode)
+        public int GetLocalScore(string levelId, LevelDifficulty difficulty, PlayerDataModelSO dataModel = null)
         {
-            //TODO:: Update
-            /*
-            var playerLevelStatsData = PersistentSingleton<GameDataModel>.instance.gameDynamicData.GetCurrentPlayerDynamicData().GetPlayerLevelStatsData(levelId, difficulty, mode);
+            dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(levelId, (BeatmapDifficulty)difficulty);
             return playerLevelStatsData.validScore ? playerLevelStatsData.highScore : 0;
-            */
-            return 0;
         }
 
         //Gets a the player's locally stored rank for a map
-        public RankModel.Rank GetLocalRank(string levelId, LevelDifficulty difficulty, GameplayMode mode)
+        public RankModel.Rank GetLocalRank(string levelId, LevelDifficulty difficulty, PlayerDataModelSO dataModel = null)
         {
-            //TODO:: Update
-            /*
-            var playerLevelStatsData = PersistentSingleton<GameDataModel>.instance.gameDynamicData.GetCurrentPlayerDynamicData().GetPlayerLevelStatsData(levelId, difficulty, mode);
+            dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(levelId, (BeatmapDifficulty)difficulty);
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
-            */
-            return RankModel.Rank.E;
         }
 
         //Returns the appropriate color for a rank

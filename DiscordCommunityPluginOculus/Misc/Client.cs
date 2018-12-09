@@ -1,5 +1,6 @@
 ﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
 using DiscordCommunityPlugin.UI.ViewControllers;
+using DiscordCommunityPlugin.UI.Views;
 using DiscordCommunityShared;
 using DiscordCommunityShared.SimpleJSON;
 using SongLoaderPlugin;
@@ -35,7 +36,7 @@ namespace DiscordCommunityPlugin.Misc
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, int gameplayMode, bool fullCombo, int score, string signed)
+        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, Action<bool> scoreUploadedCallback = null)
         {
             //Build score object
             Score s = new Score
@@ -44,18 +45,17 @@ namespace DiscordCommunityPlugin.Misc
                 SongId = songId,
                 Score_ = score,
                 DifficultyLevel = difficultyLevel,
-                GameplayMode = gameplayMode,
                 FullCombo = fullCombo,
                 Signed = signed
             };
 
             byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);
 
-            SharedCoroutineStarter.instance.StartCoroutine(SubmitScoreCoroutine(scoreData));
+            SharedCoroutineStarter.instance.StartCoroutine(SubmitScoreCoroutine(scoreData, scoreUploadedCallback));
         }
 
         //Post a score to the server
-        private static IEnumerator SubmitScoreCoroutine(byte[] proto)
+        private static IEnumerator SubmitScoreCoroutine(byte[] proto, Action<bool> scoreUploadedCallback = null)
         {
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
@@ -67,20 +67,24 @@ namespace DiscordCommunityPlugin.Misc
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error(www.error);
+                scoreUploadedCallback?.Invoke(false);
             }
             else
             {
                 Logger.Success("Score upload complete!");
+                scoreUploadedCallback?.Invoke(true);
             }
         }
 
         public static void RequestRank(ulong steamId, Rank rank, bool isInitialAssignment, string signed)
         {
+            var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First(); //No safety check intentional. If there's an issue here it needs to be noticed
+
             //Build OST score list for blue application
             string scoreList = "OST Scores:\n";
             if (rank == Rank.Blue)
             {
-                var levelCollection = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().First();
+                var levelCollection = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().First();
                 float roundMultiple = 100 * (float)Math.Pow(10, 2);
 
                 OstHelper.ostHashes
@@ -90,9 +94,9 @@ namespace DiscordCommunityPlugin.Misc
                 {
 
                     var songName = OstHelper.GetOstSongNameFromLevelId(x);
-                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, GameplayMode.SoloStandard);
-                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, GameplayMode.SoloStandard);
-                    var noteCount = levelCollection.GetLevels(GameplayMode.SoloStandard).First(y => y.levelID == x).difficultyBeatmaps.First(y => y.difficulty == LevelDifficulty.Expert).beatmapData.notesCount;
+                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, playerDataModel);
+                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, playerDataModel);
+                    var noteCount = levelCollection.levels.First(y => y.levelID == x).difficultyBeatmaps.First(y => (int)y.difficulty == (int)LevelDifficulty.Expert).beatmapData.notesCount;
                     int songMaxScore = ScoreController.MaxScoreForNumberOfNotes(noteCount);
                     var percent = Mathf.Clamp((float)Math.Floor(localScore / (float)songMaxScore * roundMultiple) / roundMultiple, 0.0f, 1.0f) * 100.0f;
 
@@ -138,7 +142,7 @@ namespace DiscordCommunityPlugin.Misc
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetDataForDiscordCommunityPlugin(LevelCollectionsForGameplayModes lcfgm, SongListViewController slvc, string steamId)
+        public static void GetDataForDiscordCommunityPlugin(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId));
         }
@@ -146,7 +150,7 @@ namespace DiscordCommunityPlugin.Misc
         //Gets all relevant data for the mod to work
         //TODO: If I can parallelize this with song downloading AND get the songs not to try to display when getting
         //profile data fails, that'd be nice.
-        private static IEnumerator GetAllData(LevelCollectionsForGameplayModes lcfgm, SongListViewController slvc, string steamId)
+        private static IEnumerator GetAllData(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
             if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetWeeklySongs(lcfgm, slvc));
@@ -156,6 +160,9 @@ namespace DiscordCommunityPlugin.Misc
         private static IEnumerator GetUserData(SongListViewController slvc, string steamId)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getplayerstats/{steamId}");
+#if DEBUG
+            Logger.Info($"GETTING PLAYER DATA: {discordCommunityApi}/getplayerstats/{steamId}");
+#endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -206,7 +213,7 @@ namespace DiscordCommunityPlugin.Misc
 
         private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}/{(int)Player.Instance.desiredModes[songId]}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -247,9 +254,12 @@ namespace DiscordCommunityPlugin.Misc
 
         //GET the weekly songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetWeeklySongs(LevelCollectionsForGameplayModes lcfgm, SongListViewController slvc)
+        private static IEnumerator GetWeeklySongs(LevelCollectionSO lcfgm, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
+#if DEBUG
+            Logger.Info($"REQUESTING WEEKLY SONGS: {discordCommunityApi}/getweeklysongs/");
+#endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -265,11 +275,9 @@ namespace DiscordCommunityPlugin.Misc
                 {
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
-                    Player.Instance.desiredModes = new Dictionary<string, GameplayMode>();
                     foreach (var id in node)
                     {
                         songIds.Add(id.Key);
-                        Player.Instance.desiredModes.Add(id.Key, (GameplayMode)Convert.ToInt32(id.Value["mode"].Value));
                     }
                 }
                 catch (Exception e)
@@ -280,10 +288,10 @@ namespace DiscordCommunityPlugin.Misc
                 }
 
                 //If we got songs, filter them as neccessary then download any we don't have
-                List<IStandardLevel> availableSongs = new List<IStandardLevel>();
+                List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
 
                 //Filter out songs we already have and OSTS
-                IEnumerable<string> osts = songIds.Where(x => x.StartsWith("Level"));
+                IEnumerable<string> osts = songIds.Where(x => OstHelper.IsOst(x));
                 IEnumerable<string> alreadyHave = songIds.Where(x => SongIdHelper.GetSongExistsBySongId(x));
 
                 //Of what we already have, add the Levels to the availableSongs list
@@ -302,7 +310,7 @@ namespace DiscordCommunityPlugin.Misc
                 //If there's an error at this point, one of the levels failed to load. Do not continue.
                 if (slvc.errorHappened) yield break;
 
-                osts.ToList().ForEach(x => availableSongs.Add(lcfgm.GetLevels(DiscordCommunityHelpers.Player.Instance.desiredModes[x]).Where(y => y.levelID == x).First()));
+                osts.ToList().ForEach(x => availableSongs.Add(lcfgm.levels.Where(y => y.levelID == x).First()));
 
                 //Remove the id's of what we already have
                 songIds.RemoveAll(x => alreadyHave.Contains(x) || osts.Contains(x)); //Don't redownload
@@ -340,7 +348,7 @@ namespace DiscordCommunityPlugin.Misc
         }
 
         //Download songs. Taken from BeatSaberMultiplayer
-        //availableSongs: List of IStandardLevel which may hold levels already approved for display
+        //availableSongs: List of IBeatmapLevel which may hold levels already approved for display
         //downloadQueue: List of beatsaver ids representing songs left to download
         //completedDownloads: List of beatsaver ids representing songs that have successfully downloaded
         //songId: The song this instance of the Coroutine is supposed to download
@@ -348,7 +356,9 @@ namespace DiscordCommunityPlugin.Misc
         private static IEnumerator DownloadWeeklySongs(string songId, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
-
+#if DEBUG
+            Logger.Info($"DOWNLOADING: {beatSaverDownloadUrl}{songId}");
+#endif
             bool timeout = false;
             float time = 0f;
 
@@ -369,8 +379,8 @@ namespace DiscordCommunityPlugin.Misc
 
             if (www.isNetworkError || www.isHttpError || timeout)
             {
-                Logger.Error($"Downloading error: {www.error}");
-                slvc.DownloadErrorHappened($"Downloading error: {www.error}");
+                Logger.Error($"Error downloading song {songId}: {www.error}");
+                slvc.DownloadErrorHappened($"Error downloading song {songId}: {www.error}");
             }
             else
             {

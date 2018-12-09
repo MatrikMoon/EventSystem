@@ -1,6 +1,13 @@
-﻿using DiscordCommunityShared;
+﻿using CustomUI.BeatSaber;
+using DiscordCommunityPlugin.Misc;
+using DiscordCommunityPlugin.UI;
+using DiscordCommunityShared;
 using IllusionPlugin;
+using System.Collections;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = DiscordCommunityShared.Logger;
 
 namespace DiscordCommunityPlugin
 {
@@ -14,42 +21,8 @@ namespace DiscordCommunityPlugin
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-            //DiscordCommunityShared.Logger.Error("STARTING COROUTINE");
-            //SharedCoroutineStarter.instance.StartCoroutine(WaitForLevelSelection());
+            //SharedCoroutineStarter.instance.StartCoroutine(WaitForBuildMode());
         }
-
-        /*
-        private IEnumerator WaitForLevelSelection()
-        {
-            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any());
-            DiscordCommunityShared.Logger.Error("FLOWCOORDINATOR CREATED, ADDING/REMOVING CALLBACKS");
-            StandardLevelSelectionFlowCoordinator slsfc = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
-            StandardLevelListViewController slsvc = slsfc.GetField<StandardLevelListViewController>("_levelListViewController");
-            StandardLevelDifficultyViewController sldvc = slsfc.GetField<StandardLevelDifficultyViewController>("_levelDifficultyViewController");
-            slsvc.didSelectLevelEvent -= slsfc.HandleLevelListViewControllerDidSelectLevel;
-            sldvc.didSelectDifficultyEvent -= slsfc.HandleDifficultyViewControllerDidSelectDifficulty;
-            slsvc.didSelectLevelEvent += HandleLevelListViewControllerDidSelectLevel;
-            sldvc.didSelectDifficultyEvent += HandleDifficultyViewControllerDidSelectDifficulty;
-        }
-
-        public void HandleLevelListViewControllerDidSelectLevel(StandardLevelListViewController viewController, IStandardLevel level)
-        {
-            DiscordCommunityShared.Logger.Warning("LEVEL SELECTED");
-        }
-
-        public void HandleDifficultyViewControllerDidSelectDifficulty(StandardLevelDifficultyViewController viewController, IStandardLevelDifficultyBeatmap difficultyLevel)
-        {
-            DiscordCommunityShared.Logger.Warning("DIFFICULTY SELECTED");
-        }
-
-        private IEnumerator WaitForBuildMode()
-        {
-            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<GameBuildMode>().Any());
-            DiscordCommunityShared.Logger.Error("SETTING BUILD TO DEMO");
-            GameBuildMode buildMode = Resources.FindObjectsOfTypeAll<GameBuildMode>().First();
-            buildMode.ForceSetMode(GameBuildMode.Mode.Arcade);
-        }
-        */
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
         {
@@ -59,7 +32,6 @@ namespace DiscordCommunityPlugin
         {
             if (scene.name == "Menu")
             {
-                BaseUI.OnLoad();
                 CommunityUI.OnLoad();
             }
         }
@@ -86,5 +58,19 @@ namespace DiscordCommunityPlugin
         public void OnFixedUpdate()
         {
         }
+
+        /* Trigger press detection code, for debugging UI element positioning
+        private static bool rightDown = false;
+        private static Action triggerPressed;
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.JoystickButton15) && !rightDown)
+            {
+                rightDown = true;
+                triggerPressed?.Invoke();
+            }
+            if (Input.GetKeyUp(KeyCode.JoystickButton15) && rightDown) rightDown = false;
+        }
+        */
     }
 }

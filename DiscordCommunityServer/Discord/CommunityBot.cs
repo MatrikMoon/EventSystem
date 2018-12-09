@@ -126,7 +126,11 @@ namespace DiscordCommunityServer.Discord
             {
                 if (m.Id == message.Id && r.Emote.Name == "accepted")
                 {
+#if DEBUG
+                    if (++votes >= 1)
+#else
                     if (++votes >= 8)
+#endif
                     {
                         ChangeRank(player, Rank.Blue);
                         commandHandlingService.ReactionAdded -= reactionAdded;

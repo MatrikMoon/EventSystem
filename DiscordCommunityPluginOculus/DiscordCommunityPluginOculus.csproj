@@ -45,8 +45,8 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\Beat Saber_Data\Managed_Oculus\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
-    <Reference Include="BeatSaberMultiplayer">
-      <HintPath>..\..\Plugins_Oculus\BeatSaberMultiplayer.dll</HintPath>
+    <Reference Include="BeatSaberCustomUI">
+      <HintPath>..\..\Plugins\BeatSaberCustomUI.dll</HintPath>
     </Reference>
     <Reference Include="Costura, Version=3.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.3.1.0\lib\net46\Costura.dll</HintPath>
@@ -108,16 +108,13 @@
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Misc\SongIdHelper.cs" />
-    <Compile Include="UI\BaseUI.cs" />
     <Compile Include="UI\CommunityUI.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
-    <Compile Include="UI\SettingsUI.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
-    <Compile Include="UI\ViewControllers\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
-    <Compile Include="UI\ViewControllers\ModalViewController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
   </ItemGroup>
   <ItemGroup>

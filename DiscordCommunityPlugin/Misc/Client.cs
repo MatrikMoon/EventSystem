@@ -1,5 +1,6 @@
 ﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
 using DiscordCommunityPlugin.UI.ViewControllers;
+using DiscordCommunityPlugin.UI.Views;
 using DiscordCommunityShared;
 using DiscordCommunityShared.SimpleJSON;
 using SongLoaderPlugin;
@@ -35,7 +36,7 @@ namespace DiscordCommunityPlugin.Misc
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed)
+        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, Action<bool> scoreUploadedCallback = null)
         {
             //Build score object
             Score s = new Score
@@ -50,11 +51,11 @@ namespace DiscordCommunityPlugin.Misc
 
             byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);
 
-            SharedCoroutineStarter.instance.StartCoroutine(SubmitScoreCoroutine(scoreData));
+            SharedCoroutineStarter.instance.StartCoroutine(SubmitScoreCoroutine(scoreData, scoreUploadedCallback));
         }
 
         //Post a score to the server
-        private static IEnumerator SubmitScoreCoroutine(byte[] proto)
+        private static IEnumerator SubmitScoreCoroutine(byte[] proto, Action<bool> scoreUploadedCallback = null)
         {
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
@@ -66,15 +67,19 @@ namespace DiscordCommunityPlugin.Misc
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error(www.error);
+                scoreUploadedCallback?.Invoke(false);
             }
             else
             {
                 Logger.Success("Score upload complete!");
+                scoreUploadedCallback?.Invoke(true);
             }
         }
 
         public static void RequestRank(ulong steamId, Rank rank, bool isInitialAssignment, string signed)
         {
+            var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First(); //No safety check intentional. If there's an issue here it needs to be noticed
+
             //Build OST score list for blue application
             string scoreList = "OST Scores:\n";
             if (rank == Rank.Blue)
@@ -89,8 +94,8 @@ namespace DiscordCommunityPlugin.Misc
                 {
 
                     var songName = OstHelper.GetOstSongNameFromLevelId(x);
-                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, GameplayMode.SoloStandard);
-                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, GameplayMode.SoloStandard);
+                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, playerDataModel);
+                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, playerDataModel);
                     var noteCount = levelCollection.levels.First(y => y.levelID == x).difficultyBeatmaps.First(y => (int)y.difficulty == (int)LevelDifficulty.Expert).beatmapData.notesCount;
                     int songMaxScore = ScoreController.MaxScoreForNumberOfNotes(noteCount);
                     var percent = Mathf.Clamp((float)Math.Floor(localScore / (float)songMaxScore * roundMultiple) / roundMultiple, 0.0f, 1.0f) * 100.0f;
@@ -155,6 +160,9 @@ namespace DiscordCommunityPlugin.Misc
         private static IEnumerator GetUserData(SongListViewController slvc, string steamId)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getplayerstats/{steamId}");
+#if DEBUG
+            Logger.Info($"GETTING PLAYER DATA: {discordCommunityApi}/getplayerstats/{steamId}");
+#endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -249,6 +257,9 @@ namespace DiscordCommunityPlugin.Misc
         private static IEnumerator GetWeeklySongs(LevelCollectionSO lcfgm, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
+#if DEBUG
+            Logger.Info($"REQUESTING WEEKLY SONGS: {discordCommunityApi}/getweeklysongs/");
+#endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -345,7 +356,9 @@ namespace DiscordCommunityPlugin.Misc
         private static IEnumerator DownloadWeeklySongs(string songId, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
-
+#if DEBUG
+            Logger.Info($"DOWNLOADING: {beatSaverDownloadUrl}{songId}");
+#endif
             bool timeout = false;
             float time = 0f;
 
@@ -366,8 +379,8 @@ namespace DiscordCommunityPlugin.Misc
 
             if (www.isNetworkError || www.isHttpError || timeout)
             {
-                Logger.Error($"Downloading error: {www.error}");
-                slvc.DownloadErrorHappened($"Downloading error: {www.error}");
+                Logger.Error($"Error downloading song {songId}: {www.error}");
+                slvc.DownloadErrorHappened($"Error downloading song {songId}: {www.error}");
             }
             else
             {

@@ -104,9 +104,8 @@
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
-    <Compile Include="UI\ViewControllers\CustomLeaderboardTableView.cs" />
+    <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
-    <Compile Include="UI\ViewControllers\ModalViewController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
   </ItemGroup>
   <ItemGroup>

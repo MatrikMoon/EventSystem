@@ -25,7 +25,6 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
 
         public virtual void DismissButtonWasPressed()
         {
-            Logger.Warning("DISMISS WAS PRESSED");
             didFinishEvent?.Invoke(this);
         }
     }
