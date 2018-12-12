@@ -10,7 +10,7 @@ using UnityEngine;
  * it will continue when all the provided coroutines have finished
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace ChristmasVotePlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     public class ParallelCoroutine

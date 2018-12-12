@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using CustomUI.BeatSaber;
+using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,18 +8,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using Logger = DiscordCommunityShared.Logger;
-using DiscordCommunityPlugin.Misc;
-using static DiscordCommunityShared.SharedConstructs;
-using CustomUI.BeatSaber;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
  * modified for the DiscordCommunityPlugin
  */
 
-namespace DiscordCommunityPlugin.UI.ViewControllers
+namespace ChristmasVotePlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource

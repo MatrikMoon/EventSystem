@@ -90,13 +90,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DiscordCommunityHelpers\Player.cs" />
     <Compile Include="Misc\Client.cs" />
-    <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\DebugTools.cs" />
-    <Compile Include="Misc\Hooks.cs" />
     <Compile Include="Misc\ParallelCoroutine.cs" />
-    <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Misc\SongIdHelper.cs" />
     <Compile Include="UI\CommunityUI.cs" />
     <Compile Include="Plugin.cs" />
@@ -104,7 +100,6 @@
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
-    <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
   </ItemGroup>

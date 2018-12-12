@@ -21,7 +21,6 @@ namespace DiscordCommunityServer.BeatSaver
         public static readonly string currentDirectory = Directory.GetCurrentDirectory();
         public static readonly string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
 
-        public LevelDifficulty[] difficulties;
         public string SongName { get; }
 
         string SongId { get; set; }
@@ -32,41 +31,8 @@ namespace DiscordCommunityServer.BeatSaver
         {
             SongId = songId;
 
-            if (!OstHelper.IsOst(SongId))
-            {
-                _infoPath = GetInfoPath();
-                difficulties = GetLevelDifficulties();
-                SongName = GetSongName();
-            }
-            else
-            {
-                SongName = OstHelper.GetOstSongNameFromLevelId(SongId);
-                difficulties = OstHelper.GetDifficultiesFromLevelId(songId);
-            }
-        }
-
-        //Returns the most appropriate LevelDifficulty for the player's rank
-        public LevelDifficulty GetDifficultyForRank(Rank rank)
-        {
-            LevelDifficulty ret;
-            switch (rank)
-            {
-                case Rank.Master:
-                case Rank.Blue:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.ExpertPlus);
-                    break;
-                case Rank.Gold:
-                case Rank.Silver:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.Expert);
-                    break;
-                case Rank.Bronze:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.Hard);
-                    break;
-                default:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.Easy);
-                    break;
-            }
-            return ret;
+            _infoPath = GetInfoPath();
+            SongName = GetSongName();
         }
 
         //Looks at info.json and gets the song name
@@ -75,50 +41,6 @@ namespace DiscordCommunityServer.BeatSaver
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
             return node["songName"];
-        }
-
-        private LevelDifficulty[] GetLevelDifficulties()
-        {
-            List<LevelDifficulty> difficulties = new List<LevelDifficulty>();
-            var infoText = File.ReadAllText(_infoPath);
-            JSONNode node = JSON.Parse(infoText);
-            JSONArray difficultyLevels = node["difficultyLevels"].AsArray;
-            foreach (var item in difficultyLevels)
-            {
-                //We can't use DifficultyRank as it uses the same enum value for Expert and E+
-                Enum.TryParse(item.Value["difficulty"], out LevelDifficulty difficulty);
-                difficulties.Add(difficulty);
-            }
-            return difficulties.OrderBy(x => x).ToArray();
-        }
-
-        //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        private LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty)
-        {
-            if (difficulties.Contains(difficulty)) return difficulty;
-
-            int ret = -1;
-            if (ret == -1)
-            {
-                ret = GetLowerDifficulty(difficulty);
-            }
-            if (ret == -1)
-            {
-                ret = GetHigherDifficulty(difficulty);
-            }
-            return (LevelDifficulty)ret;
-        }
-
-        //Returns the next-lowest difficulty to the one provided
-        private int GetLowerDifficulty(LevelDifficulty difficulty)
-        {
-            return difficulties.Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
-        }
-
-        //Returns the next-highest difficulty to the one provided
-        private int GetHigherDifficulty(LevelDifficulty difficulty)
-        {
-            return difficulties.Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
         }
 
         private string GetInfoPath()

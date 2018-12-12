@@ -165,8 +165,8 @@
   <ItemGroup>
     <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="Database\Player.cs" />
-    <Compile Include="Database\Score.cs" />
-    <Compile Include="Database\Song.cs" />
+    <Compile Include="Database\Item.cs" />
+    <Compile Include="Database\Vote.cs" />
     <Compile Include="Discord\CommunityBot.cs" />
     <Compile Include="Discord\Modules\PublicModule.cs" />
     <Compile Include="Discord\Services\CommandHandlingService.cs" />

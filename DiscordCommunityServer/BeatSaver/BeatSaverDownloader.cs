@@ -64,15 +64,15 @@ namespace DiscordCommunityServer.BeatSaver
             return $@"{Song.songDirectory}{id}\";
         }
 
-        public static void UpdateSongInfoThreaded(Database.Song song)
+        public static void UpdateSongInfoThreaded(Database.Item song)
         {
             new Thread(() =>
             {
-                string songDir = DownloadSong(song.GetSongId());
+                string songDir = DownloadSong(song.ItemId);
                 if (songDir != null)
                 {
-                    string songName = new Song(song.GetSongId()).SongName;
-                    song.SetSongName(songName);
+                    string songName = new Song(song.ItemId).SongName;
+                    song.SetItemName(songName);
                 }
             })
             .Start();

@@ -16,7 +16,7 @@ using Object = UnityEngine.Object;
  * to find the views which are necessary to destroy for the Leaderboards
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace ChristmasVotePlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class DebugTools

@@ -1,10 +1,10 @@
 ﻿using CustomUI.BeatSaber;
 using CustomUI.MenuButton;
 using CustomUI.Settings;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI;
-using DiscordCommunityPlugin.UI.FlowCoordinators;
-using DiscordCommunityPlugin.UI.ViewControllers;
+using ChristmasVotePlugin.Misc;
+using ChristmasVotePlugin.UI;
+using ChristmasVotePlugin.UI.FlowCoordinators;
+using ChristmasVotePlugin.UI.ViewControllers;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -24,7 +24,7 @@ using Logger = DiscordCommunityShared.Logger;
  * (https://github.com/andruzzzhka/BeatSaverDownloader/)
  */
 
-namespace DiscordCommunityPlugin
+namespace ChristmasVotePlugin
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CommunityUI : MonoBehaviour

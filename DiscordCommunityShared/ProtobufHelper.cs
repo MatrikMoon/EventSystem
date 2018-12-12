@@ -7,7 +7,7 @@ namespace DiscordCommunityShared
     {
         public static byte[] SerializeProtobuf(object proto)
         {
-            if (proto is Score || proto is RankRequest)
+            if (proto is Vote)
             {
                 return ((IMessage)proto).ToByteArray();
             }

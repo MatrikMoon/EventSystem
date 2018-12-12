@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-message RankRequest {
-  string steam_id = 1;
-  int32 requestedRank = 2;
-  bool is_initial_assignment = 3;
-  string ost_score_list = 4;
-  string signed = 5;
-}

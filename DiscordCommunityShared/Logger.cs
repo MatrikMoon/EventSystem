@@ -4,7 +4,7 @@ namespace DiscordCommunityShared
 {
     public class Logger
     {
-        private const string prefix = "[DiscordCommunityPlugin]: ";
+        private const string prefix = "[ChristmasVotingPlugin]: ";
 
         public static void Error(string message)
         {

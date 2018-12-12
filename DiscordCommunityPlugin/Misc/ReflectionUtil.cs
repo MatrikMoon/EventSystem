@@ -11,7 +11,7 @@ using Logger = DiscordCommunityShared.Logger;
  * (https://github.com/xyonico/BeatSaberSongLoader/blob/master/SongLoaderPlugin/ReflectionUtil.cs)
  */
 
-namespace DiscordCommunityPlugin
+namespace ChristmasVotePlugin
 {
     public static class ReflectionUtil
     {
