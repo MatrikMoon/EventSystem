@@ -1,4 +1,5 @@
-﻿using CustomUI.BeatSaber;
+﻿using ChristmasVotePlugin.Misc;
+using CustomUI.BeatSaber;
 using HMUI;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
+using static DiscordCommunityShared.SharedConstructs;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -17,31 +19,87 @@ using VRUI;
 namespace ChristmasVotePlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class SongListViewController : VRUIViewController, TableView.IDataSource
+    class ItemListViewController : VRUIViewController, TableView.IDataSource
     {
-        public event Action<IBeatmapLevel> SongListRowSelected;
+        //TODO: Move this to sharedconstructs
+        public class TableItem
+        {
+            public string Name { get; set; }
+            public string Author { get; set; }
+            public string SubName { get; set; }
+            public Category Category { get; set; }
+            public string ItemId { get; set; }
+        }
+
+        public event Action<TableItem> ItemSelected;
         public event Action ReloadPressed;
-        public event Action SongsDownloaded;
+        public event Action EventInfoDownloaded;
         public bool errorHappened = false;
+        public Category SelectedCategory { get; private set; } = Category.Map;
+        public List<TableItem> VotedOn { get; set; } = new List<TableItem>();
 
         private Button _pageUpButton;
         private Button _pageDownButton;
         private Button _downloadErrorReloadButton;
-        private string selectWhenLoaded;
+        private Button _mapButton;
+        private Button _saberButton;
+        private Button _avatarButton;
+        private Button _platformButton;
+        private Action<Category> _categoryChanged;
 
-        public TableView songsTableView;
-        LevelListTableCell _songTableCellInstance;
-        TextMeshProUGUI _songsDownloadingText;
+        public TableView itemsTableView;
+        LevelListTableCell _itemTableCellInstance;
+        TextMeshProUGUI _itemsDownloadingText;
         TextMeshProUGUI _downloadErrorText;
 
-        List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
+        List<TableItem> items = new List<TableItem>();
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
-                _songTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
+                _itemTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
+
+                _mapButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                (_mapButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
+                (_mapButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
+                (_mapButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _mapButton.onClick.AddListener(() =>
+                {
+                    SelectedCategory = Category.Map;
+                    _categoryChanged?.Invoke(SelectedCategory);
+                });
+
+                _saberButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                (_saberButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
+                (_saberButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
+                (_saberButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _saberButton.onClick.AddListener(() =>
+                {
+                    SelectedCategory = Category.Saber;
+                    _categoryChanged?.Invoke(SelectedCategory);
+                });
+
+                _avatarButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                (_avatarButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
+                (_avatarButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
+                (_avatarButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _avatarButton.onClick.AddListener(() =>
+                {
+                    SelectedCategory = Category.Avatar;
+                    _categoryChanged?.Invoke(SelectedCategory);
+                });
+
+                _platformButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
+                (_platformButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
+                (_platformButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
+                (_platformButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _platformButton.onClick.AddListener(() =>
+                {
+                    SelectedCategory = Category.Platform;
+                    _categoryChanged?.Invoke(SelectedCategory);
+                });
 
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
@@ -49,7 +107,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
                 _pageUpButton.onClick.AddListener(delegate ()
                 {
-                    songsTableView.PageScrollUp();
+                    itemsTableView.PageScrollUp();
                 });
                 _pageUpButton.interactable = false;
 
@@ -59,30 +117,30 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
-                    songsTableView.PageScrollDown();
+                    itemsTableView.PageScrollDown();
                 });
                 _pageDownButton.interactable = false;
 
-                songsTableView = new GameObject().AddComponent<TableView>();
-                songsTableView.transform.SetParent(rectTransform, false);
-                songsTableView.SetField("_isInitialized", false);
-                songsTableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
-                songsTableView.Init();
+                itemsTableView = new GameObject().AddComponent<TableView>();
+                itemsTableView.transform.SetParent(rectTransform, false);
+                itemsTableView.SetField("_isInitialized", false);
+                itemsTableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
+                itemsTableView.Init();
 
-                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), songsTableView.transform, false);
+                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), itemsTableView.transform, false);
                 viewportMask.transform.DetachChildren();
-                songsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
+                itemsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
 
-                (songsTableView.transform as RectTransform).anchorMin = new Vector2(0.3f, 0.5f);
-                (songsTableView.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);
-                (songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
+                (itemsTableView.transform as RectTransform).anchorMin = new Vector2(0.3f, 0.5f);
+                (itemsTableView.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);
+                (itemsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
 
-                _songsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading weekly songs...", new Vector2(0f, -25f));
-                _songsDownloadingText.fontSize = 8f;
-                _songsDownloadingText.alignment = TextAlignmentOptions.Center;
-                _songsDownloadingText.rectTransform.anchorMin = new Vector2(.5f, .7f);
-                _songsDownloadingText.rectTransform.anchorMax = new Vector2(.5f, .7f);
-                _songsDownloadingText.rectTransform.sizeDelta = new Vector2(120f, 6f);
+                _itemsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading event info...", new Vector2(0f, -25f));
+                _itemsDownloadingText.fontSize = 8f;
+                _itemsDownloadingText.alignment = TextAlignmentOptions.Center;
+                _itemsDownloadingText.rectTransform.anchorMin = new Vector2(.5f, .7f);
+                _itemsDownloadingText.rectTransform.anchorMax = new Vector2(.5f, .7f);
+                _itemsDownloadingText.rectTransform.sizeDelta = new Vector2(120f, 6f);
 
                 _downloadErrorText = BeatSaberUI.CreateText(rectTransform, "Generic Error", new Vector2(0f, 0f));
                 _downloadErrorText.fontSize = 8f;
@@ -99,47 +157,59 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 (_downloadErrorReloadButton.transform as RectTransform).anchoredPosition = new Vector2(0, 10f);
                 _downloadErrorReloadButton.onClick.AddListener(() =>
                 {
-                    songsTableView.gameObject.SetActive(false);
+                    itemsTableView.gameObject.SetActive(false);
                     _pageUpButton.gameObject.SetActive(false);
                     _pageDownButton.gameObject.SetActive(false);
                     _downloadErrorText.gameObject.SetActive(false);
-                    _songsDownloadingText.gameObject.SetActive(true);
+                    _itemsDownloadingText.gameObject.SetActive(true);
                     _downloadErrorReloadButton.gameObject.SetActive(false);
+                    _mapButton.gameObject.SetActive(false);
+                    _saberButton.gameObject.SetActive(false);
+                    _avatarButton.gameObject.SetActive(false);
+                    _platformButton.gameObject.SetActive(false);
 
                     _downloadErrorText.SetText("Generic Error");
                     errorHappened = false;
 
                     ReloadPressed?.Invoke();
                 });
-                _downloadErrorReloadButton.gameObject.SetActive(false);
 
-                songsTableView.SetField("_pageUpButton", _pageUpButton);
-                songsTableView.SetField("_pageDownButton", _pageDownButton);
+                itemsTableView.SetField("_pageUpButton", _pageUpButton);
+                itemsTableView.SetField("_pageDownButton", _pageDownButton);
 
-                songsTableView.didSelectRowEvent += SongsTableView_DidSelectRow;
-                songsTableView.dataSource = this;
+                itemsTableView.didSelectRowEvent += SongsTableView_DidSelectRow;
+                itemsTableView.dataSource = this;
 
-                //Set to view "Downloading weekly songs..." until the songs are set
-                songsTableView.gameObject.SetActive(false);
+                //Set to view "Downloading event info..." until the songs are set
+                itemsTableView.gameObject.SetActive(false);
                 _pageUpButton.gameObject.SetActive(false);
                 _pageDownButton.gameObject.SetActive(false);
                 _downloadErrorText.gameObject.SetActive(false);
-                _songsDownloadingText.gameObject.SetActive(true);
+                _itemsDownloadingText.gameObject.SetActive(true);
+                _downloadErrorReloadButton.gameObject.SetActive(false);
+                _mapButton.gameObject.SetActive(false);
+                _saberButton.gameObject.SetActive(false);
+                _avatarButton.gameObject.SetActive(false);
+                _platformButton.gameObject.SetActive(false);
             }
             else
             {
-                songsTableView.ReloadData();
+                itemsTableView.ReloadData();
             }
         }
 
         public void DownloadErrorHappened(string error)
         {
-            songsTableView.gameObject.SetActive(false);
+            itemsTableView.gameObject.SetActive(false);
             _pageUpButton.gameObject.SetActive(false);
             _pageDownButton.gameObject.SetActive(false);
             _downloadErrorText.gameObject.SetActive(true);
             _downloadErrorReloadButton.gameObject.SetActive(true);
-            _songsDownloadingText.gameObject.SetActive(false);
+            _itemsDownloadingText.gameObject.SetActive(false);
+            _mapButton.gameObject.SetActive(false);
+            _saberButton.gameObject.SetActive(false);
+            _avatarButton.gameObject.SetActive(false);
+            _platformButton.gameObject.SetActive(false);
 
             _downloadErrorText.SetText(error);
             errorHappened = true;
@@ -147,57 +217,55 @@ namespace ChristmasVotePlugin.UI.ViewControllers
 
         private void SongsTableView_DidSelectRow(TableView sender, int row)
         {
-            SongListRowSelected?.Invoke(availableSongs[row]);
+            ItemSelected?.Invoke(items[row]);
         }
 
-        public void SelectWhenLoaded(string levelId)
-        {
-            selectWhenLoaded = levelId;
-        }
-
-        public void SetSongs(List<IBeatmapLevel> levels)
+        public void SetItems(List<TableItem> items)
         {
             //Now that songs are being set, hide the "downloading" text
             if (_downloadErrorText.gameObject.activeSelf) return; //If there was an error earlier, don't continue
-            songsTableView.gameObject.SetActive(true);
+            itemsTableView.gameObject.SetActive(true);
             _pageUpButton.gameObject.SetActive(true);
             _pageDownButton.gameObject.SetActive(true);
-            _songsDownloadingText.gameObject.SetActive(false);
+            _itemsDownloadingText.gameObject.SetActive(false);
 
-            availableSongs = levels;
+            this.items = items;
 
-            if (songsTableView.dataSource != (TableView.IDataSource)this)
+            if (itemsTableView.dataSource != (TableView.IDataSource)this)
             {
-                songsTableView.dataSource = this;
+                itemsTableView.dataSource = this;
             }
             else
             {
-                songsTableView.ReloadData();
+                itemsTableView.ReloadData();
             }
 
-            songsTableView.ScrollToRow(0, false);
-            if (selectWhenLoaded != null)
-            {
-                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.levelID == selectWhenLoaded).First());
-                songsTableView.SelectRow(songIndex, true);
-            }
-            SongsDownloaded?.Invoke();
+            itemsTableView.ScrollToRow(0, false);
+            EventInfoDownloaded?.Invoke();
         }
 
         public bool HasSongs()
         {
-            return availableSongs.Count > 0;
+            return items.Count > 0;
         }
 
         public TableCell CellForRow(int row)
         {
-            LevelListTableCell cell = Instantiate(_songTableCellInstance);
+            LevelListTableCell cell = Instantiate(_itemTableCellInstance);
 
-            IBeatmapLevel song = availableSongs[row];
+            TableItem item = items[row];
 
-            cell.coverImage = song.coverImage;
-            cell.songName = $"{song.songName}\n<size=80%>{song.songSubName}</size>";
-            cell.author = song.songAuthorName;
+            if (item.Category == Category.Map)
+            {
+                try
+                {
+                    cell.coverImage = SongIdHelper.GetLevelFromSongId(item.ItemId).coverImage;
+                }
+                catch { }
+            }
+
+            cell.songName = $"{item.Name}\n<size=80%>{item.SubName}</size>";
+            cell.author = item.Author;
             cell.reuseIdentifier = "SongCell";
 
             return cell;
@@ -205,7 +273,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
 
         public int NumberOfRows()
         {
-            return availableSongs.Count;
+            return items.Count;
         }
 
         public float RowHeight()

@@ -7,8 +7,8 @@
     <ProjectGuid>{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DiscordCommunityPlugin</RootNamespace>
-    <AssemblyName>DiscordCommunityPlugin</AssemblyName>
+    <RootNamespace>ChristmasVotePlugin</RootNamespace>
+    <AssemblyName>ChristmasVotePlugin</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -99,7 +99,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
-    <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
+    <Compile Include="UI\ViewControllers\CustomLeftViewController.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
   </ItemGroup>

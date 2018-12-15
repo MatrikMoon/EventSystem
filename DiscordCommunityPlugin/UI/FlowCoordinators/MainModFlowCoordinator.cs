@@ -1,16 +1,12 @@
 ﻿using ChristmasVotePlugin.Misc;
 using ChristmasVotePlugin.UI.ViewControllers;
 using CustomUI.BeatSaber;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using VRUI;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static ChristmasVotePlugin.UI.ViewControllers.ItemListViewController;
 
 namespace ChristmasVotePlugin.UI.FlowCoordinators
 {
@@ -19,7 +15,7 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
     {
         public MainFlowCoordinator mfc;
         public MainMenuViewController mmvc;
-        public SongListViewController songListViewController;
+        public ItemListViewController itemListViewController;
 
         private GeneralNavigationController _mainModNavigationController;
         private LevelCollectionSO _levelCollections;
@@ -43,7 +39,7 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
                 {
                     _rankUpViewController = Instantiate(Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First());
                 }
-                _rankUpViewController.didFinishEvent += HandleRankPromptViewControllerDidFinish;
+                _rankUpViewController.didFinishEvent += HandleVotePromptViewControllerDidFinish;
 
                 ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
@@ -55,7 +51,7 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
         {
             if (deactivationType == DeactivationType.RemovedFromHierarchy)
             {
-                _rankUpViewController.didFinishEvent -= HandleRankPromptViewControllerDidFinish;
+                _rankUpViewController.didFinishEvent -= HandleVotePromptViewControllerDidFinish;
             }
         }
 
@@ -66,21 +62,20 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
 
         public void OpenSongsList(string songToSelectWhenLoaded = null)
         {
-            if (songListViewController == null)
+            if (itemListViewController == null)
             {
-                songListViewController = BeatSaberUI.CreateViewController<SongListViewController>();
+                itemListViewController = BeatSaberUI.CreateViewController<ItemListViewController>();
             }
             if (_levelCollections == null)
             {
                 _levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().First();
             }
-            if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
+            if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(itemListViewController) < 0)
             {
-                SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
+                SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { itemListViewController });
 
-                songListViewController.SelectWhenLoaded(songToSelectWhenLoaded);
-                songListViewController.SongListRowSelected += SongListRowSelected;
-                songListViewController.ReloadPressed += () =>
+                itemListViewController.ItemSelected += ItemListItemSelected;
+                itemListViewController.ReloadPressed += () =>
                 {
                     mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
                 };
@@ -88,58 +83,52 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
             }
         }
 
-        private void SongListRowSelected(IBeatmapLevel level)
+        private void ItemListItemSelected(TableItem item)
         {
             //Open up the custom/global leaderboard pane when we need to
             if (_communityLeaderboard == null)
             {
                 _communityLeaderboard = BeatSaberUI.CreateViewController<CustomLeftViewController>();
-                _communityLeaderboard.VotePressed += (item, category) =>
+                _communityLeaderboard.VotePressed += (selectedItem) =>
                 {
                     SetLeftScreenViewController(null);
                     SetRightScreenViewController(null);
 
-                    var message = $"Are you sure you want to vote for this {}\n" +
-                            "(check #rules-and-info for the difficulty you need to play on):\n";
-                    Player.Instance.GetSongsToImproveBeforeRankUp().ForEach(x => message += $"{DiscordCommunityShared.OstHelper.GetOstSongNameFromLevelId(x)}\n");
-                    _rankUpViewController.Init("Rank Up", message, "Ok");
+                    var message = $"Are you sure you want to vote for: \"{item.Name}\"\n";
+                    _rankUpViewController.Init("Submit Vote", message, "Yes", "No");
                     PresentViewController(_rankUpViewController);
                 };
             }
             SetLeftScreenViewController(_communityLeaderboard);
 
+            /*
             if (_globalLeaderboard == null)
             {
                 _globalLeaderboard = Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First();
                 _globalLeaderboard.name = "Community Global Leaderboard";
             }
             SetRightScreenViewController(_globalLeaderboard);
+            */
 
-            //Change global leaderboard view
-            IDifficultyBeatmap difficultyLevel = Player.Instance.GetMapForRank(level);
-            _globalLeaderboard.SetData(difficultyLevel);
-
-            //Change community leaderboard view
-            //Use the currently selected rank, if it exists
-            Category rankToView = _communityLeaderboard.selectedCategory;
-            if (rankToView <= Category.None) rankToView = Player.Instance.rank;
-            _communityLeaderboard.SetSong(difficultyLevel, rankToView);
+            //Change the item viewed
+            _communityLeaderboard.SetItem(item, itemListViewController);
         }
 
-        public virtual void HandleRankPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
+        public virtual void HandleVotePromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
         {
             if (ok)
             {
                 DismissViewController(viewController, immediately: true);
-                string signed = DiscordCommunityShared.RSA.SignVote(Plugin.PlayerId, Player.Instance.rank + 1, false);
-                Client.RequestRank(Plugin.PlayerId, Player.Instance.rank + 1, false, signed);
+                itemListViewController.VotedOn.Add(_communityLeaderboard.SelectedItem);
+                string signed = DiscordCommunityShared.RSA.SignVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category);
+                Client.SubmitVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category, signed);
             }
             DismissViewController(viewController);
         }
 
         private void ReloadServerData()
         {
-            Client.GetEventData(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
+            Client.GetEventData(_levelCollections, itemListViewController, Plugin.PlayerId.ToString());
         }
     }
 }

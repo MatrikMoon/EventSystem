@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
+using static ChristmasVotePlugin.UI.ViewControllers.ItemListViewController;
 using static DiscordCommunityShared.SharedConstructs;
 using Logger = DiscordCommunityShared.Logger;
 
@@ -73,18 +74,18 @@ namespace ChristmasVotePlugin.Misc
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetEventData(LevelCollectionSO lcfgm, SongListViewController slvc, string userId, Category category = Category.None)
+        public static void GetEventData(LevelCollectionSO lcfgm, ItemListViewController slvc, string userId, Category category = Category.None)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, userId));
         }
 
-        public static void GetUserData(SongListViewController slvc, string userId)
+        public static void GetUserData(ItemListViewController slvc, string userId)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetUserDataCoroutine(slvc, userId));
         }
 
         //Gets votes for a particular user and hands that data off to the song list view controller
-        public static IEnumerator GetUserDataCoroutine(SongListViewController slvc, string userId)
+        public static IEnumerator GetUserDataCoroutine(ItemListViewController slvc, string userId)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getuserdata/{userId}");
 #if DEBUG
@@ -120,7 +121,7 @@ namespace ChristmasVotePlugin.Misc
         }
 
         //Gets all relevant data for the mod to work
-        private static IEnumerator GetAllData(LevelCollectionSO lcfgm, SongListViewController slvc, string userId, Category category = Category.None)
+        private static IEnumerator GetAllData(LevelCollectionSO lcfgm, ItemListViewController slvc, string userId, Category category = Category.None)
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(
                 new ParallelCoroutine().ExecuteCoroutines(
@@ -131,7 +132,7 @@ namespace ChristmasVotePlugin.Misc
 
         //GET the weekly songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetItemsForCategory(LevelCollectionSO lcfgm, SongListViewController slvc, Category category = Category.None)
+        private static IEnumerator GetItemsForCategory(LevelCollectionSO lcfgm, ItemListViewController slvc, Category category = Category.None)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getitems/{(category != Category.None ? $"{(int)category}" : "")}");
 #if DEBUG
@@ -147,14 +148,22 @@ namespace ChristmasVotePlugin.Misc
             }
             else
             {
-                List<string> itemIds = new List<string>();
+                List<TableItem> items = new List<TableItem>();
                 try
                 {
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
                     foreach (var id in node)
                     {
-                        itemIds.Add(id.Key);
+                        items.Add(new TableItem
+                        {
+                            Name = node["name"],
+                            Author = node["author"],
+                            SubName = node["subName"],
+                            Category = (Category)Convert.ToInt32(node["category"].ToString()),
+                            ItemId = id.Key
+                        });
+                        slvc.SetItems(items);
                     }
                 }
                 catch (Exception e)
@@ -164,11 +173,12 @@ namespace ChristmasVotePlugin.Misc
                     yield break;
                 }
 
+                /*
                 //If we got songs, filter them as neccessary then download any we don't have
                 List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
 
                 //Filter out songs we already have and OSTS
-                IEnumerable<string> alreadyHave = itemIds.Where(x => SongIdHelper.GetSongExistsBySongId(x));
+                IEnumerable<string> alreadyHave = items.Where(x => SongIdHelper.GetSongExistsBySongId(x.ItemId)).Select(x => x.ItemId);
 
                 //Of what we already have, add the Levels to the availableSongs list
                 alreadyHave.ToList().ForEach(x => {
@@ -187,13 +197,13 @@ namespace ChristmasVotePlugin.Misc
                 if (slvc.errorHappened) yield break;
 
                 //Remove the id's of what we already have
-                itemIds.RemoveAll(x => alreadyHave.Contains(x)); //Don't redownload
+                items.RemoveAll(x => alreadyHave.Contains(x)); //Don't redownload
 
                 //Download the things we don't have, or if we have everything, show the menu
-                if (itemIds.Count > 0)
+                if (items.Count > 0)
                 {
                     List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
-                    itemIds.ForEach(x =>
+                    items.ForEach(x =>
                     {
                         downloadCoroutines.Add(DownloadItem(x, slvc));
                     });
@@ -205,9 +215,9 @@ namespace ChristmasVotePlugin.Misc
                         (SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs) =>
                         {
                             //Now that they're refreshed, we can add them to the available list
-                            itemIds.ForEach(x => availableSongs.Add(SongIdHelper.GetLevelFromSongId(x)));
+                            items.ForEach(x => availableSongs.Add(SongIdHelper.GetLevelFromSongId(x)));
 
-                            slvc.SetSongs(availableSongs);
+                            slvc.SetItems(availableSongs);
                         };
 
                     SongLoader.SongsLoadedEvent -= songsLoaded;
@@ -216,14 +226,15 @@ namespace ChristmasVotePlugin.Misc
                 }
                 else
                 {
-                    slvc.SetSongs(availableSongs);
+                    slvc.SetItems(availableSongs);
                 }
+                */
             }
         }
 
         //Download files. Taken from BeatSaberMultiplayer
         //slvc: The song list view controller to display errors to
-        private static IEnumerator DownloadItem(string songId, SongListViewController slvc = null)
+        private static IEnumerator DownloadItem(string songId, ItemListViewController slvc = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
 #if DEBUG

@@ -114,5 +114,31 @@ namespace DiscordCommunityServer.Database
 
             return ret;
         }
+
+        //Returns a list of SongConstruct of the currently active songs
+        public static List<Item> GetVotesForPlayer(string userId)
+        {
+            List<Item> ret = new List<Item>();
+            SQLiteConnection db = OpenConnection();
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT itemId, category FROM voteTable WHERE userId = \'{userId}\' AND NOT old = 1", db))
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        ret.Add(
+                            new Item(
+                                reader["itemId"].ToString(),
+                                (Category)Convert.ToInt32(reader["category"].ToString())
+                            )
+                        );
+                    }
+                }
+            }
+
+            db.Close();
+
+            return ret;
+        }
     }
 }

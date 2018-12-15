@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 using static DiscordCommunityServer.Database.SimpleSql;
 using static DiscordCommunityShared.SharedConstructs;
@@ -31,7 +32,7 @@ namespace DiscordCommunityServer
                             //Get Score object from JSON
                             Vote v = Vote.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
-                            if (RSA.SignVote(Convert.ToUInt64(v.UserId), (Category)v.Category, v.ItemId) == v.Signed &&
+                            if (RSA.SignVote(Convert.ToUInt64(v.UserId), v.ItemId, (Category)v.Category) == v.Signed &&
                                 Item.Exists(v.ItemId) &&
                                 !Database.Vote.Exists(v.UserId, v.ItemId)
                                 //Player.Exists(v.UserId) &&
@@ -72,6 +73,35 @@ namespace DiscordCommunityServer
                     Callable = (HttpRequest request) => {
                         JSONNode json = new JSONObject();
                         List<Item> items = GetActiveItems(Category.None);
+
+                        items.ForEach(x => {
+                            var item = new JSONObject();
+                            item["name"] = x.GetItemName();
+                            item["author"] = x.GetItemAuthor();
+                            item["subName"] = x.GetItemSubname();
+                            item["category"] = (int)x.Category;
+                            item["itemId"] = x.ItemId;
+                            json.Add(x.ItemId, item);
+                        });
+
+                        return new HttpResponse()
+                        {
+                            ContentAsUTF8 = json.ToString(),
+                            ReasonPhrase = "OK",
+                            StatusCode = "200"
+                        };
+                     }
+                },
+                new Route {
+                    Name = "User Data Getter",
+                    UrlRegex = @"^/getuserdata/",
+                    Method = "GET",
+                    Callable = (HttpRequest request) => {
+                        string userId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
+                        userId = Regex.Replace(userId, "[^0-9]", "");
+
+                        JSONNode json = new JSONObject();
+                        List<Item> items = GetVotesForPlayer(userId);
 
                         items.ForEach(x => {
                             var item = new JSONObject();
