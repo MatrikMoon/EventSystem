@@ -11,10 +11,10 @@ namespace DiscordCommunityShared
     public class OstHelper
     {
         public static readonly string[] ostHashes = { "BeatSaber", "Escape", "LvlInsane", "100Bills", "CountryRounds", "Breezer",
-                                "TurnMeOn", "BalearicPumping", "Legend", "CommercialPumping", "AngelVoices"};
+                                "TurnMeOn", "BalearicPumping", "Legend", "CommercialPumping", "AngelVoices", "OneHope"};
 
         public static readonly string[] ostNames = { "Beat Saber", "Escape", "Lvl Insane", "$100 Bills", "Country Rounds", "Breezer",
-                                "Turn Me On", "Balearic Pumping", "Legend", "Commercial Pumping", "Angel Voices"};
+                                "Turn Me On", "Balearic Pumping", "Legend", "Commercial Pumping", "Angel Voices", "One Hope"};
 
         //C# doesn't seem to want me to use an array of a non-primitive here.
         private static readonly int[] mainDifficulties = { (int)LevelDifficulty.Easy, (int)LevelDifficulty.Normal, (int)LevelDifficulty.Hard, (int)LevelDifficulty.Expert, (int)LevelDifficulty.ExpertPlus };
