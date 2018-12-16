@@ -91,7 +91,7 @@ namespace ChristmasVotePlugin
             {
                 if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                 {
-                    MenuButtonUI.AddButton("DiscordCommunity", () => _mainModFlowCoordinator.PresentMainModUI());
+                    MenuButtonUI.AddButton("Christmas Vote!", () => _mainModFlowCoordinator.PresentMainModUI());
                 }
                 else Logger.Error("MISSING SONG LOADER PLUGIN");
             }

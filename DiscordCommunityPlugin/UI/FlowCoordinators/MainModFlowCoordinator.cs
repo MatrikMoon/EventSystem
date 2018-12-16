@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using VRUI;
-using static ChristmasVotePlugin.UI.ViewControllers.ItemListViewController;
+using static DiscordCommunityShared.SharedConstructs;
 
 namespace ChristmasVotePlugin.UI.FlowCoordinators
 {
@@ -94,7 +94,7 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
                     SetLeftScreenViewController(null);
                     SetRightScreenViewController(null);
 
-                    var message = $"Are you sure you want to vote for: \"{item.Name}\"\n";
+                    var message = $"Are you sure you want to vote for: \"{_communityLeaderboard.SelectedItem.Name}\"\n";
                     _rankUpViewController.Init("Submit Vote", message, "Yes", "No");
                     PresentViewController(_rankUpViewController);
                 };
@@ -119,9 +119,12 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
             if (ok)
             {
                 DismissViewController(viewController, immediately: true);
-                itemListViewController.VotedOn.Add(_communityLeaderboard.SelectedItem);
                 string signed = DiscordCommunityShared.RSA.SignVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category);
-                Client.SubmitVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category, signed);
+                Client.SubmitVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category, signed, (b) =>
+                {
+                    itemListViewController.VotedOn.RemoveAll(x => x.Category == _communityLeaderboard.SelectedItem.Category);
+                    itemListViewController.VotedOn.Add(_communityLeaderboard.SelectedItem);
+                });
             }
             DismissViewController(viewController);
         }

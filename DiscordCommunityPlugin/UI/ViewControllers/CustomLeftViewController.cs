@@ -1,12 +1,9 @@
-﻿using ChristmasVotePlugin.Misc;
-using CustomUI.BeatSaber;
+﻿using CustomUI.BeatSaber;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using static ChristmasVotePlugin.UI.ViewControllers.ItemListViewController;
 using static DiscordCommunityShared.SharedConstructs;
 
 /*
@@ -33,6 +30,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 _voteButton.SetButtonText("Vote");
                 (_voteButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
                 (_voteButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
+                (_voteButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
                 (_voteButton.transform as RectTransform).sizeDelta = new Vector2(35f, 35f);
                 _voteButton.onClick.AddListener(() => VotePressed?.Invoke(SelectedItem));
             }
@@ -55,12 +53,12 @@ namespace ChristmasVotePlugin.UI.ViewControllers
             {
                 if (ilvc.VotedOn.Contains(item))
                 {
-                    _voteButton.gameObject.SetActive(false);
+                    _voteButton.interactable = false;
                     _voteButton.SetButtonText("Voted");
                 }
                 else
                 {
-                    _voteButton.gameObject.SetActive(true);
+                    _voteButton.interactable = true;
                     _voteButton.SetButtonText("Vote");
                 }
             }

@@ -25,9 +25,14 @@ namespace DiscordCommunityServer.Database
             return Exists(UserId, ItemId);
         }
 
+        public static bool RemoveExsitingVoteForCategory(string userId, Category category)
+        {
+            return SimpleSql.ExecuteCommand($"DELETE FROM voteTable WHERE userId = \'{userId}\' AND category = \'{(int)category}\'") > 1;
+        }
+
         public static bool Exists(string userId, string itemId)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM itemTable WHERE userId = \'{userId}\' AND itemId = \'{itemId}\'", "itemId").Any();
+            return SimpleSql.ExecuteQuery($"SELECT * FROM voteTable WHERE userId = \'{userId}\' AND itemId = \'{itemId}\'", "itemId").Any();
         }
     }
 }

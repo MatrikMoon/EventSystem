@@ -19,5 +19,41 @@ namespace DiscordCommunityShared
             Avatar = 2,
             Platform = 3
         }
+
+        public class TableItem
+        {
+            public string Name { get; set; }
+            public string Author { get; set; }
+            public string SubName { get; set; }
+            public Category Category { get; set; }
+            public string ItemId { get; set; }
+
+            //Necessary overrides for using Contains()
+            public static bool operator ==(TableItem a, TableItem b)
+            {
+                if (b == null) return false;
+                return a.GetHashCode() == b.GetHashCode();
+            }
+
+            public static bool operator !=(TableItem a, TableItem b)
+            {
+                if (b == null) return false;
+                return a.GetHashCode() != b.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null) return false;
+                if (!(obj is TableItem)) return false;
+                return GetHashCode() == obj.GetHashCode();
+            }
+
+            public override int GetHashCode()
+            {
+                int hash = 13;
+                hash = (hash * 7) + ItemId.GetHashCode();
+                return hash;
+            }
+        }
     }
 }

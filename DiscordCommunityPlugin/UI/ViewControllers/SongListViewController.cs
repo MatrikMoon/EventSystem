@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using static DiscordCommunityShared.SharedConstructs;
+using Logger = DiscordCommunityShared.Logger;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -21,16 +22,6 @@ namespace ChristmasVotePlugin.UI.ViewControllers
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class ItemListViewController : VRUIViewController, TableView.IDataSource
     {
-        //TODO: Move this to sharedconstructs
-        public class TableItem
-        {
-            public string Name { get; set; }
-            public string Author { get; set; }
-            public string SubName { get; set; }
-            public Category Category { get; set; }
-            public string ItemId { get; set; }
-        }
-
         public event Action<TableItem> ItemSelected;
         public event Action ReloadPressed;
         public event Action EventInfoDownloaded;
@@ -53,6 +44,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
         TextMeshProUGUI _downloadErrorText;
 
         List<TableItem> items = new List<TableItem>();
+        List<TableItem> activeItems = new List<TableItem>();
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
@@ -61,40 +53,51 @@ namespace ChristmasVotePlugin.UI.ViewControllers
             {
                 _itemTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
-                _mapButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
-                (_mapButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
-                (_mapButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
-                (_mapButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _categoryChanged += (category) => {
+                    Logger.Success($"CHANGING CATEGORY TO {category}");
+                    activeItems.Clear();
+                    activeItems = items.Where(x => x.Category == category).ToList();
+                    itemsTableView.ReloadData();
+                };
+
+                _mapButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", buttonText: "Maps");
+                (_mapButton.transform as RectTransform).anchorMin = new Vector2(.2f, .9f);
+                (_mapButton.transform as RectTransform).anchorMax = new Vector2(.2f, .9f);
+                (_mapButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+                (_mapButton.transform as RectTransform).sizeDelta = new Vector2(32, 10);
                 _mapButton.onClick.AddListener(() =>
                 {
                     SelectedCategory = Category.Map;
                     _categoryChanged?.Invoke(SelectedCategory);
                 });
 
-                _saberButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
-                (_saberButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
-                (_saberButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
-                (_saberButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _saberButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", buttonText: "Sabers");
+                (_saberButton.transform as RectTransform).anchorMin = new Vector2(.4f, .9f);
+                (_saberButton.transform as RectTransform).anchorMax = new Vector2(.4f, .9f);
+                (_saberButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+                (_saberButton.transform as RectTransform).sizeDelta = new Vector2(32, 10);
                 _saberButton.onClick.AddListener(() =>
                 {
                     SelectedCategory = Category.Saber;
                     _categoryChanged?.Invoke(SelectedCategory);
                 });
 
-                _avatarButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
-                (_avatarButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
-                (_avatarButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
-                (_avatarButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _avatarButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", buttonText: "Avatars");
+                (_avatarButton.transform as RectTransform).anchorMin = new Vector2(.6f, .9f);
+                (_avatarButton.transform as RectTransform).anchorMax = new Vector2(.6f, .9f);
+                (_avatarButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+                (_avatarButton.transform as RectTransform).sizeDelta = new Vector2(32, 10);
                 _avatarButton.onClick.AddListener(() =>
                 {
                     SelectedCategory = Category.Avatar;
                     _categoryChanged?.Invoke(SelectedCategory);
                 });
 
-                _platformButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
-                (_platformButton.transform as RectTransform).anchorMin = new Vector2(.5f, .5f);
-                (_platformButton.transform as RectTransform).anchorMax = new Vector2(.5f, .5f);
-                (_platformButton.transform as RectTransform).sizeDelta = new Vector2(35, 35);
+                _platformButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", buttonText: "Platforms");
+                (_platformButton.transform as RectTransform).anchorMin = new Vector2(.8f, .9f);
+                (_platformButton.transform as RectTransform).anchorMax = new Vector2(.8f, .9f);
+                (_platformButton.transform as RectTransform).anchoredPosition = new Vector2(1, 0);
+                (_platformButton.transform as RectTransform).sizeDelta = new Vector2(34, 10);
                 _platformButton.onClick.AddListener(() =>
                 {
                     SelectedCategory = Category.Platform;
@@ -104,7 +107,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -21f);
                 _pageUpButton.onClick.AddListener(delegate ()
                 {
                     itemsTableView.PageScrollUp();
@@ -133,7 +136,8 @@ namespace ChristmasVotePlugin.UI.ViewControllers
 
                 (itemsTableView.transform as RectTransform).anchorMin = new Vector2(0.3f, 0.5f);
                 (itemsTableView.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);
-                (itemsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
+                (itemsTableView.transform as RectTransform).anchoredPosition = new Vector2(0f, -5.5f);
+                (itemsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 50f);
 
                 _itemsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading event info...", new Vector2(0f, -25f));
                 _itemsDownloadingText.fontSize = 8f;
@@ -217,7 +221,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
 
         private void SongsTableView_DidSelectRow(TableView sender, int row)
         {
-            ItemSelected?.Invoke(items[row]);
+            ItemSelected?.Invoke(activeItems[row]);
         }
 
         public void SetItems(List<TableItem> items)
@@ -228,8 +232,13 @@ namespace ChristmasVotePlugin.UI.ViewControllers
             _pageUpButton.gameObject.SetActive(true);
             _pageDownButton.gameObject.SetActive(true);
             _itemsDownloadingText.gameObject.SetActive(false);
+            _mapButton.gameObject.SetActive(true);
+            _saberButton.gameObject.SetActive(true);
+            _avatarButton.gameObject.SetActive(true);
+            _platformButton.gameObject.SetActive(true);
 
             this.items = items;
+            _categoryChanged?.Invoke(SelectedCategory);
 
             if (itemsTableView.dataSource != (TableView.IDataSource)this)
             {
@@ -244,16 +253,11 @@ namespace ChristmasVotePlugin.UI.ViewControllers
             EventInfoDownloaded?.Invoke();
         }
 
-        public bool HasSongs()
-        {
-            return items.Count > 0;
-        }
-
         public TableCell CellForRow(int row)
         {
             LevelListTableCell cell = Instantiate(_itemTableCellInstance);
 
-            TableItem item = items[row];
+            TableItem item = activeItems[row];
 
             if (item.Category == Category.Map)
             {
@@ -263,6 +267,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 }
                 catch { }
             }
+            else cell.GetComponentsInChildren<UnityEngine.UI.Image>(true).First(x => x.name == "CoverImage").enabled = false;
 
             cell.songName = $"{item.Name}\n<size=80%>{item.SubName}</size>";
             cell.author = item.Author;
@@ -273,7 +278,7 @@ namespace ChristmasVotePlugin.UI.ViewControllers
 
         public int NumberOfRows()
         {
-            return items.Count;
+            return activeItems.Count;
         }
 
         public float RowHeight()

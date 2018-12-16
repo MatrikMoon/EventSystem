@@ -1,17 +1,14 @@
 ﻿using ChristmasVotePlugin.UI.ViewControllers;
 using DiscordCommunityShared;
 using DiscordCommunityShared.SimpleJSON;
-using SongLoaderPlugin;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
-using static ChristmasVotePlugin.UI.ViewControllers.ItemListViewController;
 using static DiscordCommunityShared.SharedConstructs;
 using Logger = DiscordCommunityShared.Logger;
 
@@ -101,15 +98,23 @@ namespace ChristmasVotePlugin.Misc
             }
             else
             {
-                List<string> itemIds = new List<string>();
+                List<TableItem> items = new List<TableItem>();
                 try
                 {
                     //Get the list of items the user has voted on
                     var node = JSON.Parse(www.downloadHandler.text);
-                    foreach (var id in node)
+                    foreach (var item in node)
                     {
-                        itemIds.Add(id.Key);
+                        items.Add(new TableItem
+                        {
+                            Name = item.Value["name"],
+                            Author = item.Value["author"],
+                            SubName = item.Value["subName"],
+                            Category = (Category)Convert.ToInt32(item.Value["category"].ToString()),
+                            ItemId = item.Key
+                        });
                     }
+                    slvc.VotedOn = items;
                 }
                 catch (Exception e)
                 {
@@ -153,15 +158,15 @@ namespace ChristmasVotePlugin.Misc
                 {
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
-                    foreach (var id in node)
+                    foreach (var item in node)
                     {
                         items.Add(new TableItem
                         {
-                            Name = node["name"],
-                            Author = node["author"],
-                            SubName = node["subName"],
-                            Category = (Category)Convert.ToInt32(node["category"].ToString()),
-                            ItemId = id.Key
+                            Name = item.Value["name"],
+                            Author = item.Value["author"],
+                            SubName = item.Value["subName"],
+                            Category = (Category)Convert.ToInt32(item.Value["category"].ToString()),
+                            ItemId = item.Key
                         });
                         slvc.SetItems(items);
                     }

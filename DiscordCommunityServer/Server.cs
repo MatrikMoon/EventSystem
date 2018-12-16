@@ -41,6 +41,7 @@ namespace DiscordCommunityServer
                             {
                                 Logger.Info($"RECEIVED VALID VOTE: {v.UserId} FOR {v.Category} {v.ItemId}");
 
+                                Database.Vote.RemoveExsitingVoteForCategory(v.UserId, (Category)v.Category);
                                 new Database.Vote(v.UserId, v.ItemId, (Category)v.Category);
 
                                 return new HttpResponse()
