@@ -120,7 +120,7 @@ namespace DiscordCommunityServer.Database
 
                 IDictionary<SongConstruct, ScoreConstruct> personalScores = GetScoresForPlayer(steamId);
 
-                IDictionary<SongConstruct, IDictionary<string, ScoreConstruct>> rankAboveScores = GetAllActiveScoresForRank((SharedConstructs.Rank)rank + 1);
+                IDictionary<SongConstruct, IDictionary<string, ScoreConstruct>> rankAboveScores = GetAllActiveScoresForRank((Rank)rank + 1);
 
                 personalScores.ToList().ForEach(x =>
                 {

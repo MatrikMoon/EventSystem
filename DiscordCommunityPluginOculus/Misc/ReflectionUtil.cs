@@ -56,7 +56,7 @@ namespace DiscordCommunityPlugin
         public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams", returns an object of the specified type
-        public static T InvokeMethod<T>(this object obj, string methodName, ulong playerId, params object[] methodParams) => (T)InvokeMethod(obj, methodName, methodParams);
+        public static T InvokeMethod<T>(this object obj, string methodName, params object[] methodParams) => (T)InvokeMethod(obj, methodName, methodParams);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams"
         public static object InvokeMethod(this object obj, string methodName, params object[] methodParams)
