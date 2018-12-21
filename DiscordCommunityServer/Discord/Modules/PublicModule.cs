@@ -2,7 +2,7 @@
 using Discord.Commands;
 using DiscordCommunityServer.Database;
 using DiscordCommunityServer.Discord.Services;
-using DiscordCommunityShared;
+using ChristmasShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
+using static ChristmasShared.SharedConstructs;
 
 namespace DiscordCommunityServer.Discord.Modules
 {

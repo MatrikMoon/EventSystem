@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = ChristmasShared.Logger;
 
 /**
  * Modified by Moon on 8/20/2018
@@ -11,7 +11,7 @@ using Logger = DiscordCommunityShared.Logger;
  * (https://github.com/xyonico/BeatSaberSongLoader/blob/master/SongLoaderPlugin/ReflectionUtil.cs)
  */
 
-namespace DiscordCommunityPlugin
+namespace ChristmasVotePlugin
 {
     public static class ReflectionUtil
     {
@@ -56,7 +56,7 @@ namespace DiscordCommunityPlugin
         public static T GetProperty<T>(this object obj, string propertyName) => (T)GetProperty(obj, propertyName);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams", returns an object of the specified type
-        public static T InvokeMethod<T>(this object obj, string methodName, ulong playerId, params object[] methodParams) => (T)InvokeMethod(obj, methodName, methodParams);
+        public static T InvokeMethod<T>(this object obj, string methodName, params object[] methodParams) => (T)InvokeMethod(obj, methodName, methodParams);
 
         //Invokes a (static?) private method with name "methodName" and params "methodParams"
         public static object InvokeMethod(this object obj, string methodName, params object[] methodParams)

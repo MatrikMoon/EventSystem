@@ -15,7 +15,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = ChristmasShared.Logger;
 
 /**
  * Created by Moon on 8/23/2018

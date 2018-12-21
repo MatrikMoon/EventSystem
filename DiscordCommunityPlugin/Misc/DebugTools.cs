@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using ChristmasShared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = ChristmasShared.Logger;
 using Object = UnityEngine.Object;
 
 /*

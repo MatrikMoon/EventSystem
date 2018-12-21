@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using ChristmasShared;
 using SongLoaderPlugin;
 using System;
 using System.IO;

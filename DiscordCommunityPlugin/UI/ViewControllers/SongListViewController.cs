@@ -9,8 +9,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static ChristmasShared.SharedConstructs;
+using Logger = ChristmasShared.Logger;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -54,7 +54,6 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 _itemTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
                 _categoryChanged += (category) => {
-                    Logger.Success($"CHANGING CATEGORY TO {category}");
                     activeItems.Clear();
                     activeItems = items.Where(x => x.Category == category).ToList();
                     itemsTableView.ReloadData();
@@ -253,6 +252,11 @@ namespace ChristmasVotePlugin.UI.ViewControllers
             EventInfoDownloaded?.Invoke();
         }
 
+        public void Refresh()
+        {
+            itemsTableView.ReloadData();
+        }
+
         public TableCell CellForRow(int row)
         {
             LevelListTableCell cell = Instantiate(_itemTableCellInstance);
@@ -265,11 +269,14 @@ namespace ChristmasVotePlugin.UI.ViewControllers
                 {
                     cell.coverImage = SongIdHelper.GetLevelFromSongId(item.ItemId).coverImage;
                 }
-                catch { }
+                catch
+                {
+                }
             }
-            else cell.GetComponentsInChildren<UnityEngine.UI.Image>(true).First(x => x.name == "CoverImage").enabled = false;
+            if (cell.coverImage == null) cell.GetComponentsInChildren<UnityEngine.UI.Image>(true).First(x => x.name == "CoverImage").enabled = false;
 
-            cell.songName = $"{item.Name}\n<size=80%>{item.SubName}</size>";
+            if (VotedOn.Contains(item)) cell.songName = $"<#666666>{item.Name}\n<size=80%>{item.SubName}</size>";
+            else cell.songName = $"{item.Name}\n<size=80%>{item.SubName}</size>";
             cell.author = item.Author;
             cell.reuseIdentifier = "SongCell";
 

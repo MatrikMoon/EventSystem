@@ -1,6 +1,6 @@
 ﻿using ChristmasVotePlugin.UI.ViewControllers;
-using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+using ChristmasShared;
+using ChristmasShared.SimpleJSON;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,8 +9,8 @@ using System.IO.Compression;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static ChristmasShared.SharedConstructs;
+using Logger = ChristmasShared.Logger;
 
 /*
  * Created by Moon on 9/9/2018
@@ -31,7 +31,6 @@ namespace ChristmasVotePlugin.Misc
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
-        [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
         public static void SubmitVote(ulong userId, string itemId, Category category, string signed, Action<bool> voteSubmittedCallback = null)
         {
             //Build score object
@@ -70,7 +69,7 @@ namespace ChristmasVotePlugin.Misc
             }
         }
 
-        //Starts the necessary coroutine chain to make the mod functional
+        //Starts theD necessary coroutine chain to make the mod functional
         public static void GetEventData(LevelCollectionSO lcfgm, ItemListViewController slvc, string userId, Category category = Category.None)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, userId));

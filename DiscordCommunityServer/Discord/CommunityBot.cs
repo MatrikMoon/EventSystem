@@ -9,7 +9,7 @@ using Discord.Commands;
 using DiscordCommunityServer.Discord.Services;
 using System.Collections.Generic;
 using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
+using static ChristmasShared.SharedConstructs;
 using DiscordCommunityServer.Database;
 
 namespace DiscordCommunityServer.Discord

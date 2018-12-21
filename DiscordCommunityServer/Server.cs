@@ -1,6 +1,6 @@
 ﻿using DiscordCommunityServer.Database;
-using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+using ChristmasShared;
+using ChristmasShared.SimpleJSON;
 using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
@@ -10,18 +10,20 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
+using static ChristmasShared.SharedConstructs;
 
 namespace DiscordCommunityServer
 {
     class Server
     {
+        private static readonly Regex IdRegex = new Regex(@"([0-9])*(-)*", RegexOptions.Compiled);
+
         public static void StartHttpServer()
         {
             var route_config = new List<Route>() {
                 new Route {
                     Name = "Vote Receiver",
-                    UrlRegex = @"^/submitvote/$",
+                    UrlRegex = @"/submitvote/$",
                     Method = "POST",
                     Callable = (HttpRequest request) => {
                         try
@@ -31,8 +33,8 @@ namespace DiscordCommunityServer
 
                             //Get Score object from JSON
                             Vote v = Vote.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
-
-                            if (RSA.SignVote(Convert.ToUInt64(v.UserId), v.ItemId, (Category)v.Category) == v.Signed &&
+                            if (E.doE(Convert.ToUInt64(v.UserId), v.ItemId, (Category)v.Category) == v.Signed &&
+                                IdRegex.IsMatch(v.ItemId) &&
                                 Item.Exists(v.ItemId) &&
                                 !Database.Vote.Exists(v.UserId, v.ItemId)
                                 //Player.Exists(v.UserId) &&
@@ -69,7 +71,7 @@ namespace DiscordCommunityServer
                 },
                 new Route {
                     Name = "Item Getter",
-                    UrlRegex = @"^/getitems/",
+                    UrlRegex = @"/getitems/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         JSONNode json = new JSONObject();
@@ -95,7 +97,7 @@ namespace DiscordCommunityServer
                 },
                 new Route {
                     Name = "User Data Getter",
-                    UrlRegex = @"^/getuserdata/",
+                    UrlRegex = @"/getuserdata/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         string userId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
@@ -131,7 +133,7 @@ namespace DiscordCommunityServer
 #else
             int port = 3705;
 #endif
-            HttpServer httpServer = new HttpServer(port, route_config);
+            HttpServer httpServer = new HttpServer(80, route_config);
             httpServer.Listen();
         }
 
@@ -141,8 +143,8 @@ namespace DiscordCommunityServer
             Config.LoadConfig();
 
             //Start Discord bot
-            Thread thread1 = new Thread(new ThreadStart(Discord.CommunityBot.Start));
-            thread1.Start();
+            //Thread thread1 = new Thread(new ThreadStart(Discord.CommunityBot.Start));
+            //thread1.Start();
 
             //Set up HTTP server
             Thread thread2 = new Thread(new ThreadStart(StartHttpServer));

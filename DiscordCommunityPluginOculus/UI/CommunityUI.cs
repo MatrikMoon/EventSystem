@@ -1,12 +1,10 @@
 ﻿using CustomUI.BeatSaber;
 using CustomUI.MenuButton;
 using CustomUI.Settings;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI;
-using DiscordCommunityPlugin.UI.FlowCoordinators;
-using DiscordCommunityPlugin.UI.ViewControllers;
-using Oculus.Platform;
-using Oculus.Platform.Models;
+using ChristmasVotePlugin.Misc;
+using ChristmasVotePlugin.UI;
+using ChristmasVotePlugin.UI.FlowCoordinators;
+using ChristmasVotePlugin.UI.ViewControllers;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -17,7 +15,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = ChristmasShared.Logger;
+using Oculus.Platform;
+using Oculus.Platform.Models;
 
 /**
  * Created by Moon on 8/23/2018
@@ -26,13 +26,12 @@ using Logger = DiscordCommunityShared.Logger;
  * (https://github.com/andruzzzhka/BeatSaverDownloader/)
  */
 
-namespace DiscordCommunityPlugin
+namespace ChristmasVotePlugin
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CommunityUI : MonoBehaviour
     {
         public static CommunityUI instance;
-        public string communitySongPlayed; //TODO: Obselete? It's no longer used because ReturnToUI is gone
 
         private MainModFlowCoordinator _mainModFlowCoordinator;
         private RectTransform _mainMenuRectTransform;
@@ -59,9 +58,8 @@ namespace DiscordCommunityPlugin
             {
                 instance = this;
                 DontDestroyOnLoad(this);
-                Config.LoadConfig();
 
-				Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
+                Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
                 {
                     Plugin.PlayerId = msg.Data.ID;
                 });
@@ -84,8 +82,6 @@ namespace DiscordCommunityPlugin
 
         private void CreateCommunitiyButton()
         {
-            CreateSettingsMenu();
-
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
@@ -100,7 +96,7 @@ namespace DiscordCommunityPlugin
             {
                 if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                 {
-                    MenuButtonUI.AddButton("DiscordCommunity", () => _mainModFlowCoordinator.PresentMainModUI());
+                    MenuButtonUI.AddButton("Christmas Vote!", () => _mainModFlowCoordinator.PresentMainModUI());
                 }
                 else Logger.Error("MISSING SONG LOADER PLUGIN");
             }
@@ -109,22 +105,6 @@ namespace DiscordCommunityPlugin
                 Logger.Error("Error: " + e.Message);
                 Logger.Error(e.StackTrace);
             }
-        }
-
-        private void CreateSettingsMenu()
-        {
-            var subMenu = SettingsUI.CreateSubMenu("Community Plugin");
-            var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
-            sooperSecretSetting.GetValue += () => Config.SooperSecretSetting;
-            sooperSecretSetting.SetValue += (value) => Config.SooperSecretSetting = value;
-
-            var mirrorSetting = subMenu.AddBool("Mirror Mode");
-            mirrorSetting.GetValue += () => Config.MirrorMode;
-            mirrorSetting.SetValue += (b) => Config.MirrorMode = b;
-
-            var staticSetting = subMenu.AddBool("Static Lights");
-            mirrorSetting.GetValue += () => Config.StaticLights;
-            mirrorSetting.SetValue += (b) => Config.StaticLights = b;
         }
     }
 }

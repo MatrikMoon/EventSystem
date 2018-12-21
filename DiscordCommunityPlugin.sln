@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityPlugin", "D
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C} = {37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreServer", "CoreServer\CoreServer.csproj", "{24A69ADD-4C76-4211-BF2D-37116C77743A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24A69ADD-4C76-4211-BF2D-37116C77743A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24A69ADD-4C76-4211-BF2D-37116C77743A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24A69ADD-4C76-4211-BF2D-37116C77743A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24A69ADD-4C76-4211-BF2D-37116C77743A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

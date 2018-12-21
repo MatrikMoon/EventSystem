@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using VRUI;
-using static DiscordCommunityShared.SharedConstructs;
+using static ChristmasShared.SharedConstructs;
 
 namespace ChristmasVotePlugin.UI.FlowCoordinators
 {
@@ -119,11 +119,12 @@ namespace ChristmasVotePlugin.UI.FlowCoordinators
             if (ok)
             {
                 DismissViewController(viewController, immediately: true);
-                string signed = DiscordCommunityShared.RSA.SignVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category);
+                string signed = ChristmasShared.E.doE(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category);
                 Client.SubmitVote(Plugin.PlayerId, _communityLeaderboard.SelectedItem.ItemId, _communityLeaderboard.SelectedItem.Category, signed, (b) =>
                 {
                     itemListViewController.VotedOn.RemoveAll(x => x.Category == _communityLeaderboard.SelectedItem.Category);
                     itemListViewController.VotedOn.Add(_communityLeaderboard.SelectedItem);
+                    itemListViewController.Refresh();
                 });
             }
             DismissViewController(viewController);

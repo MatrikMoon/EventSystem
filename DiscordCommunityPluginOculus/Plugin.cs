@@ -1,15 +1,14 @@
 ﻿using CustomUI.BeatSaber;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI;
-using DiscordCommunityShared;
+using ChristmasVotePlugin.UI;
+using ChristmasShared;
 using IllusionPlugin;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = ChristmasShared.Logger;
 
-namespace DiscordCommunityPlugin
+namespace ChristmasVotePlugin
 {
     public class Plugin : IPlugin
     {

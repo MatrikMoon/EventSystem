@@ -1,11 +1,11 @@
 ﻿using CustomUI.BeatSaber;
-using DiscordCommunityShared;
+using ChristmasShared;
 using System;
 using System.Reflection;
 using UnityEngine.UI;
 using VRUI;
 
-namespace DiscordCommunityPlugin.UI.ViewControllers
+namespace ChristmasVotePlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class GeneralNavigationController : VRUINavigationController

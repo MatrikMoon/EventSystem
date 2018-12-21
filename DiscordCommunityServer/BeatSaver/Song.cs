@@ -1,12 +1,12 @@
-﻿using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+﻿using ChristmasShared;
+using ChristmasShared.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DiscordCommunityShared.SharedConstructs;
+using static ChristmasShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/25/2018

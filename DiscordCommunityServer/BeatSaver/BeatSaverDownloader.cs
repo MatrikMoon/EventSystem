@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using ChristmasShared;
 using System;
 using System.Collections.Generic;
 using System.IO;

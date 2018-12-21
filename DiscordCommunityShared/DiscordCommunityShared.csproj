@@ -7,8 +7,8 @@
     <ProjectGuid>{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DiscordCommunityShared</RootNamespace>
-    <AssemblyName>DiscordCommunityShared</AssemblyName>
+    <RootNamespace>ChristmasShared</RootNamespace>
+    <AssemblyName>ChristmasShared</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -48,7 +48,7 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufHelper.cs" />
-    <Compile Include="RSA.cs" />
+    <Compile Include="E.cs" />
     <Compile Include="SharedConstructs.cs" />
     <Compile Include="SimpleJson.cs" />
     <Compile Include="Vote.cs" />

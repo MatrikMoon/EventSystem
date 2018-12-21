@@ -7,8 +7,8 @@
     <ProjectGuid>{3FD17151-4548-4F72-8D0F-15306F9AFC71}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DiscordCommunityPlugin</RootNamespace>
-    <AssemblyName>DiscordCommunityPluginOculus</AssemblyName>
+    <RootNamespace>ChristmasVotePlugin</RootNamespace>
+    <AssemblyName>ChristmasVotePlugin</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -40,10 +40,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\Beat Saber_Data\Managed_Oculus\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\Beat Saber_Data\Managed_Oculus\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BeatSaberCustomUI">
       <HintPath>..\..\Plugins\BeatSaberCustomUI.dll</HintPath>
@@ -51,8 +51,7 @@
     <Reference Include="Costura, Version=3.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.3.1.0\lib\net46\Costura.dll</HintPath>
     </Reference>
-    <Reference Include="IllusionPlugin, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="IllusionPlugin">
       <HintPath>..\..\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
     <Reference Include="SongLoaderPlugin">
@@ -65,55 +64,42 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TextMeshPro-1.0.55.2017.1.0b12, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="TextMeshPro-1.0.55.2017.1.0b12">
       <HintPath>..\..\Beat Saber_Data\Managed\TextMeshPro-1.0.55.2017.1.0b12.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.UI">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UIElementsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.UIElementsModule">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.UIModule">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.VRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine.VRModule">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DiscordCommunityHelpers\Player.cs" />
     <Compile Include="Misc\Client.cs" />
-    <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\DebugTools.cs" />
-    <Compile Include="Misc\Hooks.cs" />
     <Compile Include="Misc\ParallelCoroutine.cs" />
-    <Compile Include="Misc\ReflectionUtil.cs" />
-    <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Misc\SongIdHelper.cs" />
-    <Compile Include="UI\CommunityUI.cs" />
     <Compile Include="Plugin.cs" />
+    <Compile Include="UI\CommunityUI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
+    <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
-    <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
+    <Compile Include="UI\ViewControllers\CustomLeftViewController.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
   </ItemGroup>
@@ -126,6 +112,7 @@
       <Name>DiscordCommunityShared</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

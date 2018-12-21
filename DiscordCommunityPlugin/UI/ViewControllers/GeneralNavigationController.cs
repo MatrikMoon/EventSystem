@@ -1,5 +1,5 @@
 ﻿using CustomUI.BeatSaber;
-using DiscordCommunityShared;
+using ChristmasShared;
 using System;
 using System.Reflection;
 using UnityEngine.UI;

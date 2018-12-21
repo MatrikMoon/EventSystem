@@ -1,298 +1,188 @@
-﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using DiscordCommunityPlugin.UI.ViewControllers;
-using DiscordCommunityPlugin.UI.Views;
-using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
-using SongLoaderPlugin;
+﻿using ChristmasVotePlugin.UI.ViewControllers;
+using ChristmasShared;
+using ChristmasShared.SimpleJSON;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static ChristmasShared.SharedConstructs;
+using Logger = ChristmasShared.Logger;
 
 /*
  * Created by Moon on 9/9/2018
  * Communicates with a running DiscordCommunityServer
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace ChristmasVotePlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client
     {
         private static string discordCommunityUrl = "https://networkauditor.org";
 #if DEBUG
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-christmas-beta";
 #else
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-christmas";
 #endif
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
-        [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, Action<bool> scoreUploadedCallback = null)
+        public static void SubmitVote(ulong userId, string itemId, Category category, string signed, Action<bool> voteSubmittedCallback = null)
         {
             //Build score object
-            Score s = new Score
+            Vote s = new Vote
             {
-                SteamId = steamId.ToString(),
-                SongId = songId,
-                Score_ = score,
-                DifficultyLevel = difficultyLevel,
-                FullCombo = fullCombo,
+                UserId = userId.ToString(),
+                ItemId = itemId,
+                Category = (int)category,
                 Signed = signed
             };
 
-            byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);
+            byte[] voteData = ProtobufHelper.SerializeProtobuf(s);
 
-            SharedCoroutineStarter.instance.StartCoroutine(SubmitScoreCoroutine(scoreData, scoreUploadedCallback));
+            SharedCoroutineStarter.instance.StartCoroutine(SubmitVoteCoroutine(voteData, voteSubmittedCallback));
         }
 
         //Post a score to the server
-        private static IEnumerator SubmitScoreCoroutine(byte[] proto, Action<bool> scoreUploadedCallback = null)
+        private static IEnumerator SubmitVoteCoroutine(byte[] proto, Action<bool> voteSubmittedCallback = null)
         {
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
 
-            UnityWebRequest www = UnityWebRequest.Post($"{discordCommunityApi}/submit/", o.ToString());
+            UnityWebRequest www = UnityWebRequest.Post($"{discordCommunityApi}/submitvote/", o.ToString());
             www.timeout = 30;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error(www.error);
-                scoreUploadedCallback?.Invoke(false);
+                voteSubmittedCallback?.Invoke(false);
             }
             else
             {
-                Logger.Success("Score upload complete!");
-                scoreUploadedCallback?.Invoke(true);
+                Logger.Success("Vote submission complete!");
+                voteSubmittedCallback?.Invoke(true);
             }
-        }
-
-        public static void RequestRank(ulong steamId, Rank rank, bool isInitialAssignment, string signed)
-        {
-            var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First(); //No safety check intentional. If there's an issue here it needs to be noticed
-
-            //Build OST score list for blue application
-            string scoreList = "OST Scores:\n";
-            if (rank == Rank.Blue)
-            {
-                var levelCollection = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().First();
-                float roundMultiple = 100 * (float)Math.Pow(10, 2);
-
-                OstHelper.ostHashes
-                .Take(10) //Not Angel Voices
-                .ToList()
-                .ForEach(x =>
-                {
-
-                    var songName = OstHelper.GetOstSongNameFromLevelId(x);
-                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, playerDataModel);
-                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, playerDataModel);
-                    var noteCount = levelCollection.levels.First(y => y.levelID == x).difficultyBeatmaps.First(y => (int)y.difficulty == (int)LevelDifficulty.Expert).beatmapData.notesCount;
-                    int songMaxScore = ScoreController.MaxScoreForNumberOfNotes(noteCount);
-                    var percent = Mathf.Clamp((float)Math.Floor(localScore / (float)songMaxScore * roundMultiple) / roundMultiple, 0.0f, 1.0f) * 100.0f;
-
-                    scoreList += $"{songName}: {localScore} ({localRank} - {percent}%)\n";
-                });
-            }
-
-            //Build score object
-            RankRequest s = new RankRequest
-            {
-                SteamId = steamId.ToString(),
-                RequestedRank = (int)rank,
-                IsInitialAssignment = isInitialAssignment,
-                OstScoreList = scoreList,
-                Signed = signed
-            };
-
-            byte[] rankData = ProtobufHelper.SerializeProtobuf(s);
-
-            SharedCoroutineStarter.instance.StartCoroutine(RequestRankCoroutine(rankData));
-        }
-
-        //Post a score to the server
-        private static IEnumerator RequestRankCoroutine(byte[] proto)
-        {
-            JSONObject o = new JSONObject();
-            o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
-
-            UnityWebRequest www = UnityWebRequest.Post($"{discordCommunityApi}/requestrank/", o.ToString());
-            www.timeout = 30;
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Logger.Error(www.error);
-            }
-        }
-
-        //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
-        {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rank, useRankColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetDataForDiscordCommunityPlugin(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
+        public static void GetEventData(LevelCollectionSO lcfgm, ItemListViewController slvc, string userId, Category category = Category.None)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId));
+            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, userId));
         }
 
-        //Gets all relevant data for the mod to work
-        //TODO: If I can parallelize this with song downloading AND get the songs not to try to display when getting
-        //profile data fails, that'd be nice.
-        private static IEnumerator GetAllData(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
+        public static void GetUserData(ItemListViewController slvc, string userId)
         {
-            yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
-            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetWeeklySongs(lcfgm, slvc));
+            SharedCoroutineStarter.instance.StartCoroutine(GetUserDataCoroutine(slvc, userId));
         }
 
-        //GET the user's profile data from the server
-        private static IEnumerator GetUserData(SongListViewController slvc, string steamId)
+        //Gets votes for a particular user and hands that data off to the song list view controller
+        public static IEnumerator GetUserDataCoroutine(ItemListViewController slvc, string userId)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getplayerstats/{steamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getuserdata/{userId}");
 #if DEBUG
-            Logger.Info($"GETTING PLAYER DATA: {discordCommunityApi}/getplayerstats/{steamId}");
+            Logger.Info($"REQUESTING USER DATA: {discordCommunityApi}/getuserdata/{userId}");
 #endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logger.Error($"Error getting player stats: {www.error}");
-                slvc.DownloadErrorHappened($"Error getting player stats: {www.error}");
+                Logger.Error($"Error getting user data: {www.error}");
+                slvc.DownloadErrorHappened($"Error getting user data: {www.error}");
             }
             else
             {
+                List<TableItem> items = new List<TableItem>();
                 try
                 {
+                    //Get the list of items the user has voted on
                     var node = JSON.Parse(www.downloadHandler.text);
-
-                    //If there is a message from the server, display it
-                    if (node["message"] != null && node["message"].ToString().Length > 1)
+                    foreach (var item in node)
                     {
-                        slvc.DownloadErrorHappened(node["message"]);
-                        yield break;
+                        items.Add(new TableItem
+                        {
+                            Name = item.Value["name"],
+                            Author = item.Value["author"],
+                            SubName = item.Value["subName"],
+                            Category = (Category)Convert.ToInt32(item.Value["category"].ToString()),
+                            ItemId = item.Key
+                        });
                     }
-
-                    //If the client is out of date, show update message
-                    if (VersionCode < Convert.ToInt32(node["version"].Value))
-                    {
-                        slvc.DownloadErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
-                    }
-
-                    Player.Instance.rank = (Rank)Convert.ToInt64(node["rank"].Value);
-                    Player.Instance.tokens = Convert.ToInt64(node["tokens"].Value);
-                    Player.Instance.projectedTokens = Convert.ToInt64(node["projectedTokens"].Value);
-
-                    if (Player.Instance.rank == Rank.None)
-                    {
-                        Rank suitableRank = Player.Instance.GetSuitableRank();
-                        string signed = RSA.SignRankRequest(Plugin.PlayerId, suitableRank, true);
-                        RequestRank(Plugin.PlayerId, suitableRank, true, signed);
-
-                        slvc.DownloadErrorHappened($"You have been automatically assigned a rank of {suitableRank}.\nReload the page to continue.");
-                    }
+                    slvc.VotedOn = items;
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error parsing getplayerstats data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing getplayerstats data: {e}");
+                    Logger.Error($"Error parsing user data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing user data: {e}");
+                    yield break;
                 }
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
+        //Gets all relevant data for the mod to work
+        private static IEnumerator GetAllData(LevelCollectionSO lcfgm, ItemListViewController slvc, string userId, Category category = Category.None)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}");
-            www.timeout = 30;
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Logger.Error($"Error getting leaderboard data: {www.error}");
-            }
-            else
-            {
-                try
-                {
-                    var node = JSON.Parse(www.downloadHandler.text);
-                    List<CustomLeaderboardTableView.CustomScoreData> scores = new List<CustomLeaderboardTableView.CustomScoreData>();
-                    int myPos = -1;
-                    foreach (var score in node)
-                    {
-                        scores.Add(new CustomLeaderboardTableView.CustomScoreData(
-                            Convert.ToInt32(score.Value["score"].ToString()),
-                            score.Value["player"],
-                            Convert.ToInt32(score.Value["place"].ToString()),
-                            score.Value["fullCombo"] == "true",
-                            (Rank)Convert.ToInt32(score.Value["rank"].ToString())));
-
-                        //If one of the scores is us, set the "special" score position to the right value
-                        if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))
-                        {
-                            myPos = Convert.ToInt32(score.Value["place"] - 1);
-                        }
-                    }
-                    clc.SetScores(scores, myPos, useRankColors);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error($"Error parsing leaderboard data: {e}");
-                }
-            }
+            yield return SharedCoroutineStarter.instance.StartCoroutine(
+                new ParallelCoroutine().ExecuteCoroutines(
+                    new IEnumerator[] { GetUserDataCoroutine(slvc, userId), GetItemsForCategory(lcfgm, slvc, category) }
+                )
+            );
         }
 
         //GET the weekly songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetWeeklySongs(LevelCollectionSO lcfgm, SongListViewController slvc)
+        private static IEnumerator GetItemsForCategory(LevelCollectionSO lcfgm, ItemListViewController slvc, Category category = Category.None)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getitems/{(category != Category.None ? $"{(int)category}" : "")}");
 #if DEBUG
-            Logger.Info($"REQUESTING WEEKLY SONGS: {discordCommunityApi}/getweeklysongs/");
+            Logger.Info($"REQUESTING ITEMS: {discordCommunityApi}/getitems/{(category != Category.None ? $"{(int)category}" : "")}");
 #endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logger.Error($"Error getting weekly songs: {www.error}");
-                slvc.DownloadErrorHappened($"Error getting weekly songs: {www.error}");
+                Logger.Error($"Error getting items: {www.error}");
+                slvc.DownloadErrorHappened($"Error getting items: {www.error}");
             }
             else
             {
-                List<string> songIds = new List<string>();
+                List<TableItem> items = new List<TableItem>();
                 try
                 {
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
-                    foreach (var id in node)
+                    foreach (var item in node)
                     {
-                        songIds.Add(id.Key);
+                        items.Add(new TableItem
+                        {
+                            Name = item.Value["name"],
+                            Author = item.Value["author"],
+                            SubName = item.Value["subName"],
+                            Category = (Category)Convert.ToInt32(item.Value["category"].ToString()),
+                            ItemId = item.Key
+                        });
+                        slvc.SetItems(items);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error parsing getweeklysong data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing getweeklysong data: {e}");
+                    Logger.Error($"Error parsing item data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing item data: {e}");
                     yield break;
                 }
 
+                /*
                 //If we got songs, filter them as neccessary then download any we don't have
                 List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
 
                 //Filter out songs we already have and OSTS
-                IEnumerable<string> osts = songIds.Where(x => OstHelper.IsOst(x));
-                IEnumerable<string> alreadyHave = songIds.Where(x => SongIdHelper.GetSongExistsBySongId(x));
+                IEnumerable<string> alreadyHave = items.Where(x => SongIdHelper.GetSongExistsBySongId(x.ItemId)).Select(x => x.ItemId);
 
                 //Of what we already have, add the Levels to the availableSongs list
                 alreadyHave.ToList().ForEach(x => {
@@ -310,18 +200,16 @@ namespace DiscordCommunityPlugin.Misc
                 //If there's an error at this point, one of the levels failed to load. Do not continue.
                 if (slvc.errorHappened) yield break;
 
-                osts.ToList().ForEach(x => availableSongs.Add(lcfgm.levels.Where(y => y.levelID == x).First()));
-
                 //Remove the id's of what we already have
-                songIds.RemoveAll(x => alreadyHave.Contains(x) || osts.Contains(x)); //Don't redownload
+                items.RemoveAll(x => alreadyHave.Contains(x)); //Don't redownload
 
                 //Download the things we don't have, or if we have everything, show the menu
-                if (songIds.Count > 0)
+                if (items.Count > 0)
                 {
                     List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
-                    songIds.ForEach(x =>
+                    items.ForEach(x =>
                     {
-                        downloadCoroutines.Add(DownloadWeeklySongs(x, slvc));
+                        downloadCoroutines.Add(DownloadItem(x, slvc));
                     });
 
                     //Wait for the all downloads to finish
@@ -331,9 +219,9 @@ namespace DiscordCommunityPlugin.Misc
                         (SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs) =>
                         {
                             //Now that they're refreshed, we can add them to the available list
-                            songIds.ForEach(x => availableSongs.Add(SongIdHelper.GetLevelFromSongId(x)));
+                            items.ForEach(x => availableSongs.Add(SongIdHelper.GetLevelFromSongId(x)));
 
-                            slvc.SetSongs(availableSongs);
+                            slvc.SetItems(availableSongs);
                         };
 
                     SongLoader.SongsLoadedEvent -= songsLoaded;
@@ -342,18 +230,15 @@ namespace DiscordCommunityPlugin.Misc
                 }
                 else
                 {
-                    slvc.SetSongs(availableSongs);
+                    slvc.SetItems(availableSongs);
                 }
+                */
             }
         }
 
-        //Download songs. Taken from BeatSaberMultiplayer
-        //availableSongs: List of IBeatmapLevel which may hold levels already approved for display
-        //downloadQueue: List of beatsaver ids representing songs left to download
-        //completedDownloads: List of beatsaver ids representing songs that have successfully downloaded
-        //songId: The song this instance of the Coroutine is supposed to download
-        //slvc: The song list view controller to display the downloaded songs to
-        private static IEnumerator DownloadWeeklySongs(string songId, SongListViewController slvc)
+        //Download files. Taken from BeatSaberMultiplayer
+        //slvc: The song list view controller to display errors to
+        private static IEnumerator DownloadItem(string songId, ItemListViewController slvc = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
 #if DEBUG
@@ -380,7 +265,7 @@ namespace DiscordCommunityPlugin.Misc
             if (www.isNetworkError || www.isHttpError || timeout)
             {
                 Logger.Error($"Error downloading song {songId}: {www.error}");
-                slvc.DownloadErrorHappened($"Error downloading song {songId}: {www.error}");
+                slvc?.DownloadErrorHappened($"Error downloading song {songId}: {www.error}");
             }
             else
             {
@@ -409,7 +294,7 @@ namespace DiscordCommunityPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error writing zip: {e}");
-                    slvc.DownloadErrorHappened($"Error writing zip: {e}");
+                    slvc?.DownloadErrorHappened($"Error writing zip: {e}");
                     yield break;
                 }
 
@@ -422,7 +307,7 @@ namespace DiscordCommunityPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Unable to extract ZIP! Exception: {e}");
-                    slvc.DownloadErrorHappened($"Unable to extract ZIP! Exception: {e}");
+                    slvc?.DownloadErrorHappened($"Unable to extract ZIP! Exception: {e}");
                     yield break;
                 }
 
@@ -433,7 +318,7 @@ namespace DiscordCommunityPlugin.Misc
                 catch (IOException e)
                 {
                     Logger.Warning($"Unable to delete zip! Exception: {e}");
-                    slvc.DownloadErrorHappened($"Unable to delete zip! Exception: {e}");
+                    slvc?.DownloadErrorHappened($"Unable to delete zip! Exception: {e}");
                     yield break;
                 }
 

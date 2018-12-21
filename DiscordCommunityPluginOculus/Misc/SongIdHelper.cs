@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using ChristmasShared;
 using SongLoaderPlugin;
 using System;
 using System.IO;
@@ -12,15 +12,13 @@ using System.Reflection;
  * This is hacky, but it works.
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace ChristmasVotePlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongIdHelper
     {
         public static string GetSongIdFromLevelId(string levelId)
         {
-            if (OstHelper.IsOst(levelId)) return levelId;
-
             //Hacky way of getting the song id, through getting the file path from SongLoader
             string songPath = SongLoader.CustomLevels.Find(x => x.levelID == levelId).customSongInfo.path;
 
