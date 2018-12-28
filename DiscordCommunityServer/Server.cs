@@ -133,7 +133,7 @@ namespace DiscordCommunityServer
 #else
             int port = 3705;
 #endif
-            HttpServer httpServer = new HttpServer(80, route_config);
+            HttpServer httpServer = new HttpServer(port, route_config);
             httpServer.Listen();
         }
 
