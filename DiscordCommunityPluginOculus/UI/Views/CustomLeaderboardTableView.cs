@@ -95,13 +95,13 @@ namespace DiscordCommunityPlugin.UI.Views
 
         public class CustomScoreData : LeaderboardTableView.ScoreData
         {
-            public Rank CommunityRank
+            public Rarity Rarity
             {
                 get;
                 private set;
             }
 
-            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rank rank = Rank.None) : base(score, playerName, place, fullCombo)
+            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rank = Rank.None) : base(score, playerName, place, fullCombo)
             {
                 CommunityRank = rank;
             }

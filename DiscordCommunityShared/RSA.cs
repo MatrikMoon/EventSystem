@@ -51,26 +51,5 @@ namespace DiscordCommunityShared
 
             return signedText;
         }
-
-        public static string SignRankRequest(ulong userId, Rank rank, bool isInitialAssignment)
-        {
-            var sr = new StringReader(pubKey);
-            var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-            var pubkey = (RSAParameters)xs.Deserialize(sr);
-
-            sr = new StringReader(privKey);
-            var privkey = (RSAParameters)xs.Deserialize(sr);
-
-            var csp = new RSACryptoServiceProvider();
-            csp.ImportParameters(privkey);
-
-            var plainTextData = $"{userId}{rank}{isInitialAssignment}<3";
-            var bytesPlainTextData = System.Text.Encoding.Unicode.GetBytes(plainTextData);
-
-            var bytesSignedText = csp.SignData(bytesPlainTextData, CryptoConfig.MapNameToOID("SHA512"));
-            var signedText = Convert.ToBase64String(bytesSignedText);
-
-            return signedText;
-        }
     }
 }

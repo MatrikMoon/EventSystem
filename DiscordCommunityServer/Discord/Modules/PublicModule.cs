@@ -21,7 +21,7 @@ namespace DiscordCommunityServer.Discord.Modules
         public PictureService PictureService { get; set; }
 
         [Command("register")]
-        public async Task RegisterAsync([Remainder] string steamId)
+        public async Task RegisterAsync(string steamId, string timezone)
         {
             //Sanitize input
             steamId = Regex.Replace(steamId, "[^0-9]", "");
@@ -44,12 +44,11 @@ namespace DiscordCommunityServer.Discord.Modules
                 string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
                 if (saberRole > 0)
                 {
-                    player.SetRank(CommunityBot._saberRankValues[CommunityBot._saberRoles.ToList().IndexOf(userRoleText)]);
+                    player.SetRarity(CommunityBot._saberRankValues[CommunityBot._saberRoles.ToList().IndexOf(userRoleText)]);
                 }
 
-                string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}`";
-                if (saberRole > 0) reply += $" with role `{userRoleText}`";
-                //else reply += ". Please set your rank to Bronze or Silver using the `@Weekly Event Bot role [bronze/silver]` command, or have an admin set it higher.";
+                string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}` with timezone `{timezone}`";
+                if (saberRole > 0) reply += $" with rarity `{userRoleText}`";
                 await ReplyAsync(reply);
             }
             else
@@ -88,21 +87,8 @@ namespace DiscordCommunityServer.Discord.Modules
         [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task EndEventAsync()
         {
-            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Blue))
-            {
-                Player player = new Player(steamId);
-                int newTokens = player.GetProjectedTokens() + player.GetTokens();
-                player.SetTokens(newTokens > 9 ? 9 : newTokens);
-            }
-
-            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Gold))
-            {
-                Player player = new Player(steamId);
-                int newTokens = player.GetProjectedTokens() + player.GetTokens();
-                player.SetTokens(newTokens > 9 ? 9 : newTokens);
-            }
             MarkAllOld();
-            await ReplyAsync("All songs and scores are marked as Old. Player tokens stored. You may now add new songs.");
+            await ReplyAsync("All songs and scores are marked as Old. You may now add new songs.");
         }
 
         [Command("role")]
@@ -117,13 +103,11 @@ namespace DiscordCommunityServer.Discord.Modules
             if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
             else user = (IGuildUser)Context.User;
 
-            string[] rolesToRestrict = { "gold", "blue", "purple" };
-
-            if ((isAdmin || !rolesToRestrict.Contains(role)) && CommunityBot._saberRoles.Contains(role))
+            if ((isAdmin) && CommunityBot._saberRoles.Contains(role))
             {
                 Player player = Player.GetByDiscord(user.Mention);
                 if (player == null) await ReplyAsync("That user has not registered with the bot yet");
-                else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Rank rank)) CommunityBot.ChangeRank(player, rank);
+                else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Rarity rarity)) CommunityBot.ChangeRarity(player, rarity);
                 else await ReplyAsync("Role parse failed");
             }
             else await ReplyAsync("You are not authorized to assign that role");
@@ -139,15 +123,15 @@ namespace DiscordCommunityServer.Discord.Modules
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
             if (!isAdmin) return;
 
-            string finalMessage = "Weekly Leaderboard:\n\n";
+            string finalMessage = "Leaderboard:\n\n";
             List<SongConstruct> songs = GetActiveSongs();
 
-            foreach (Rank r in CommunityBot._ranksToList)
+            foreach (Rarity r in CommunityBot._rarityToList)
             {
                 Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
                 songs.ForEach(x => {
                     string songId = x.SongId;
-                    scores.Add(x, GetScoresForSong(x, (long)r));
+                    scores.Add(x, GetScoresForSong(x, (long)r, (long)Team.All));
                 });
 
                 finalMessage += $"{r}\n\n";
@@ -178,37 +162,6 @@ namespace DiscordCommunityServer.Discord.Modules
                 }
             }
             await ReplyAsync(finalMessage);
-        }
-
-        [Command("tokens")]
-        public async Task TokensAsync()
-        {
-            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
-            if (!isAdmin) return;
-
-            string finalReply = "TOKENS:\n\n";
-
-            finalReply += "Blue:\n";
-            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Blue))
-            {
-                Player player = new Player(steamId);
-                int projectedTokens = player.GetProjectedTokens();
-                if (projectedTokens > 0) finalReply += $"{player.GetDiscordName()} = {projectedTokens}\n";
-            }
-            finalReply += "\n";
-
-            finalReply += "Gold:\n";
-            foreach (string steamId in Player.GetPlayersInRank((int)Rank.Gold))
-            {
-                Player player = new Player(steamId);
-                int projectedTokens = player.GetProjectedTokens();
-                if (projectedTokens > 0) finalReply += $"{player.GetDiscordName()} = {projectedTokens}\n";
-            }
-
-            await ReplyAsync(finalReply);
         }
 
         [Command("cat")]

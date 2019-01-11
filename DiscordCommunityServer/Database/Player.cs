@@ -1,9 +1,6 @@
-﻿using DiscordCommunityShared;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static DiscordCommunityServer.Database.SimpleSql;
 using static DiscordCommunityShared.SharedConstructs;
 
@@ -25,7 +22,7 @@ namespace DiscordCommunityServer.Database
             if (!Exists())
             {
                 //Default name is the steam id
-                AddPlayer(steamId, steamId, "", "", (int)Rank.None, 0, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", (int)Rarity.None, 0, 0, 0, 0, 0, 0, true);
             }
         }
 
@@ -70,24 +67,24 @@ namespace DiscordCommunityServer.Database
             return ExecuteCommand($"UPDATE playerTable SET discordMention = \'{discordMention}\' WHERE steamId = \'{steamId}\'") > 1;
         }
 
-        public int GetRank()
+        public int GetRarity()
         {
-            return Convert.ToInt32(ExecuteQuery($"SELECT rank FROM playerTable WHERE steamId = \'{steamId}\'", "rank").First());
+            return Convert.ToInt32(ExecuteQuery($"SELECT rarity FROM playerTable WHERE steamId = \'{steamId}\'", "rarity").First());
         }
 
-        public bool SetRank(int rank)
+        public bool SetRarity(int rarity)
         {
-            return ExecuteCommand($"UPDATE playerTable SET rank = {rank} WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET rarity = {rarity} WHERE steamId = \'{steamId}\'") > 1;
         }
 
-        public int GetTokens()
+        public int GetTeam()
         {
-            return Convert.ToInt32(ExecuteQuery($"SELECT tokens FROM playerTable WHERE steamId = {steamId}", "tokens").First());
+            return Convert.ToInt32(ExecuteQuery($"SELECT team FROM playerTable WHERE steamId = {steamId}", "team").First());
         }
 
-        public bool SetTokens(int tokens)
+        public bool SetTeam(Team team)
         {
-            return ExecuteCommand($"UPDATE playerTable SET tokens = {tokens} WHERE steamId = \'{steamId}\'") > 1;
+            return ExecuteCommand($"UPDATE playerTable SET team = {team} WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public int GetTotalScore()
@@ -110,32 +107,9 @@ namespace DiscordCommunityServer.Database
             return ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{steamId}\'") > 1;
         }
 
-        //Returns the amount of tokens the user would get if scores were calculated now
-        public int GetProjectedTokens()
+        public static List<string> GetPlayersInRarity(int rarity)
         {
-            int rank = GetRank();
-            if (rank != (int)Rank.Master)
-            {
-                int tokens = 0;
-
-                IDictionary<SongConstruct, ScoreConstruct> personalScores = GetScoresForPlayer(steamId);
-
-                IDictionary<SongConstruct, IDictionary<string, ScoreConstruct>> rankAboveScores = GetAllActiveScoresForRank((Rank)rank + 1);
-
-                personalScores.ToList().ForEach(x =>
-                {
-                    IDictionary<string, ScoreConstruct> rankAboveForSong = rankAboveScores[x.Key];
-                    if (rankAboveForSong != null) tokens += rankAboveForSong.Where(y => y.Value.Score < x.Value.Score).Count();
-                });
-
-                return tokens > 3 ? 3 : tokens; //Cap at 3 tokens
-            }
-            return 0;
-        }
-
-        public static List<string> GetPlayersInRank(int rank)
-        {
-            return ExecuteQuery($"SELECT steamId FROM playerTable WHERE rank = {rank}", "steamId");
+            return ExecuteQuery($"SELECT steamId FROM playerTable WHERE rarity = {rarity}", "steamId");
         }
 
         public bool Exists()

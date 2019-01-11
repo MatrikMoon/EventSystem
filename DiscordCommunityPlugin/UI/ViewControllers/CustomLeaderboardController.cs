@@ -26,17 +26,14 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
         protected CustomLeaderboardTableView _leaderboard;
 
         public event Action<IDifficultyBeatmap> PlayPressed;
-        public event Action RequestRankPressed;
         public IDifficultyBeatmap selectedMap;
-        public Rank selectedRank = Rank.None;
+        public Team selectedTeam = Team.None;
 
         TextMeshProUGUI _songName;
-        TextMeshProUGUI _rank;
-        TextMeshProUGUI _projectedTokens;
+        TextMeshProUGUI _team;
         Button _playButton;
         Button _pageLeftButton;
         Button _pageRightButton;
-        Button _rankUpButton;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
@@ -54,28 +51,13 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 (_songName.transform as RectTransform).anchorMax = new Vector2(.5f, 1f);
                 (_songName.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
 
-                _rank = BeatSaberUI.CreateText(rectTransform, "Rank", new Vector2());
-                _rank.fontSize = 4f;
-                _rank.alignment = TextAlignmentOptions.Center;
-                _rank.color = Color.gray;
-                (_rank.transform as RectTransform).anchorMin = new Vector2(.5f, 1f);
-                (_rank.transform as RectTransform).anchorMax = new Vector2(.5f, 1f);
-                (_rank.transform as RectTransform).anchoredPosition = new Vector2(0f, -15f);
-
-                _projectedTokens = BeatSaberUI.CreateText(rectTransform, "Tokens", new Vector2());
-                (_projectedTokens.transform as RectTransform).anchorMin = new Vector2(0f, 1f);
-                (_projectedTokens.transform as RectTransform).anchorMax = new Vector2(0f, 1f);
-                (_projectedTokens.transform as RectTransform).anchoredPosition = new Vector2(15f, -19f); //new Vector2(21f, -15f);
-                _projectedTokens.fontSize = 6f;
-                _projectedTokens.alignment = TextAlignmentOptions.Center;
-
-                _rankUpButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
-                _rankUpButton.SetButtonText("Rank Up");
-                (_rankUpButton.transform as RectTransform).anchorMin = new Vector2(1f, 1f);
-                (_rankUpButton.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
-                (_rankUpButton.transform as RectTransform).anchoredPosition = new Vector2(-17f, -21f);
-                (_rankUpButton.transform as RectTransform).sizeDelta = new Vector2(28f, 10f);
-                _rankUpButton.onClick.AddListener(() => RequestRankPressed?.Invoke());
+                _team = BeatSaberUI.CreateText(rectTransform, "Team", new Vector2());
+                _team.fontSize = 4f;
+                _team.alignment = TextAlignmentOptions.Center;
+                _team.color = Color.gray;
+                (_team.transform as RectTransform).anchorMin = new Vector2(.5f, 1f);
+                (_team.transform as RectTransform).anchorMax = new Vector2(.5f, 1f);
+                (_team.transform as RectTransform).anchoredPosition = new Vector2(0f, -15f);
 
                 _pageLeftButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageLeftButton.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
@@ -86,8 +68,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _pageLeftButton.interactable = true;
                 _pageLeftButton.onClick.AddListener(() =>
                 {
-                    SetSong(selectedMap, --selectedRank);
-                    if (selectedRank <= (int)Rank.White) _pageLeftButton.interactable = false;
+                    SetSong(selectedMap, --selectedTeam);
+                    if (selectedTeam <= (int)Team.Team1) _pageLeftButton.interactable = false;
                     _pageRightButton.interactable = true;
                 });
 
@@ -100,8 +82,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 _pageRightButton.interactable = true;
                 _pageRightButton.onClick.AddListener(() =>
                 {
-                    SetSong(selectedMap, ++selectedRank);
-                    if (selectedRank >= Rank.All) _pageRightButton.interactable = false;
+                    SetSong(selectedMap, ++selectedTeam);
+                    if (selectedTeam >= Team.All) _pageRightButton.interactable = false;
                     _pageLeftButton.interactable = true;
                 });
 
@@ -121,55 +103,50 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 //Disable relevant views
                 _leaderboard.gameObject.SetActive(false);
                 _songName.gameObject.SetActive(false);
-                _rank.gameObject.SetActive(false);
+                _team.gameObject.SetActive(false);
                 _playButton.gameObject.SetActive(false);
                 _pageLeftButton.gameObject.SetActive(false);
                 _pageRightButton.gameObject.SetActive(false);
-                _projectedTokens.gameObject.SetActive(false);
-                _rankUpButton.gameObject.SetActive(false);
 
-                selectedRank = Rank.None;
+                selectedTeam = Team.None;
             }
         }
 
-        public void SetSong(IDifficultyBeatmap map, Rank rank)
+        public void SetSong(IDifficultyBeatmap map, Team team)
         {
             //Set globals
             selectedMap = map;
-            selectedRank = rank;
+            selectedTeam = team;
 
             //Enable relevant views
             _leaderboard.gameObject.SetActive(true);
             _songName.gameObject.SetActive(true);
-            _rank.gameObject.SetActive(true);
+            _team.gameObject.SetActive(true);
             _playButton.gameObject.SetActive(true);
             _pageLeftButton.gameObject.SetActive(true);
             _pageRightButton.gameObject.SetActive(true);
-            _projectedTokens.gameObject.SetActive(Player.Instance.rank >= Rank.Gold && Player.Instance.rank <= Rank.Blue);
-            _rankUpButton.gameObject.SetActive(Player.Instance.rank < Rank.Blue);
 
-            //Set song name text and rank text (and color)
+            //Set song name text and team text (and color)
             _songName.SetText(map.level.songName);
-            _rank.SetText(rank.ToString());
-            _projectedTokens.SetText($"<size=60%>Tokens</size>\n{Player.Instance.tokens}\n<size=60%>Projected Tokens</size>\n{Player.Instance.projectedTokens}");
+            _team.SetText(team.ToString());
 
-            if (rank >= Rank.White && rank <= Rank.Master) _rank.color = Player.GetColorForRank(rank);
-            else if (rank == Rank.All)
+            _team.color = Player.GetColorForTeam(team);
+            if (team == Team.All)
             {
-                _rank.color = Color.green;
-                _rank.SetText("Mixed");
+                _team.color = Color.green;
+                _team.SetText("Mixed");
             }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), rank, rank == Rank.All);
+            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), Rarity.All, team, team == Team.All);
         }
 
         public void Refresh()
         {
-            if (selectedMap != null && selectedRank != Rank.None) SetSong(selectedMap, selectedRank);
+            if (selectedMap != null && selectedTeam != Team.None) SetSong(selectedMap, selectedTeam);
         }
 
-        public void SetScores(List<CustomLeaderboardTableView.CustomScoreData> scores, int myScorePos, bool useRankColors = false)
+        public void SetScores(List<CustomLeaderboardTableView.CustomScoreData> scores, int myScorePos, bool useTeamColors = false)
         {
             int num = (scores != null) ? scores.Count : 0;
             for (int j = num; j < 10; j++)
@@ -177,7 +154,7 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
                 scores.Add(new CustomLeaderboardTableView.CustomScoreData(-1, string.Empty, j + 1, false));
             }
 
-            _leaderboard.SetScores(scores, myScorePos, useRankColors);
+            _leaderboard.SetScores(scores, myScorePos, useTeamColors);
         }
     }
 }

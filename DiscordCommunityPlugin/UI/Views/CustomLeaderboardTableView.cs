@@ -24,7 +24,7 @@ namespace DiscordCommunityPlugin.UI.Views
         private TableView _tableView;
         private LeaderboardTableCell _cellInstance;
         private List<CustomScoreData> _scores;
-        private bool _useRankColors = false;
+        private bool _useTeamColors = false;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         public void Awake()
@@ -60,7 +60,7 @@ namespace DiscordCommunityPlugin.UI.Views
             leaderboardTableCell.showFullCombo = scoreData.fullCombo;
             leaderboardTableCell.showSeparator = (row != _scores.Count - 1);
             leaderboardTableCell.specialScore = (_specialScorePos == row);
-            if (!(_specialScorePos == row) && _useRankColors) leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Player.GetColorForRank(scoreData.CommunityRank);
+            if (!(_specialScorePos == row) && _useTeamColors) leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Player.GetColorForTeam(scoreData.Team);
             return leaderboardTableCell;
         }
 
@@ -78,11 +78,11 @@ namespace DiscordCommunityPlugin.UI.Views
             return _rowHeight;
         }
 
-        public virtual void SetScores(List<CustomScoreData> scores, int specialScorePos, bool useRankColors = false)
+        public virtual void SetScores(List<CustomScoreData> scores, int specialScorePos, bool useTeamColors = false)
         {
             _scores = scores;
             _specialScorePos = specialScorePos;
-            _useRankColors = useRankColors;
+            _useTeamColors = useTeamColors;
             if (_tableView.dataSource == null)
             {
                 _tableView.dataSource = this;
@@ -95,15 +95,22 @@ namespace DiscordCommunityPlugin.UI.Views
 
         public class CustomScoreData : LeaderboardTableView.ScoreData
         {
-            public Rank CommunityRank
+            public Rarity Rarity
             {
                 get;
                 private set;
             }
 
-            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rank rank = Rank.None) : base(score, playerName, place, fullCombo)
+            public Team Team
             {
-                CommunityRank = rank;
+                get;
+                private set;
+            }
+
+            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rarity = Rarity.None, Team team = Team.None) : base(score, playerName, place, fullCombo)
+            {
+                Rarity = rarity;
+                Team = team;
             }
         }
     }
