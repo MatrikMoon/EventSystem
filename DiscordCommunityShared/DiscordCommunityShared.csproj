@@ -48,7 +48,6 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufHelper.cs" />
-    <Compile Include="Rankrequest.cs" />
     <Compile Include="RSA.cs" />
     <Compile Include="Score.cs" />
     <Compile Include="OstHelper.cs" />
@@ -57,7 +56,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="rankrequest.proto" />
     <None Include="score.proto" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

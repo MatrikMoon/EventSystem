@@ -145,8 +145,8 @@ namespace DiscordCommunityPlugin.UI.ViewControllers
             _playButton.gameObject.SetActive(true);
             _pageLeftButton.gameObject.SetActive(true);
             _pageRightButton.gameObject.SetActive(true);
-            _projectedTokens.gameObject.SetActive(Player.Instance.rank >= Rank.Gold && Player.Instance.rank <= Rank.Blue);
-            _rankUpButton.gameObject.SetActive(Player.Instance.rank < Rank.Blue);
+            _projectedTokens.gameObject.SetActive(Player.Instance.rarity >= Rank.Gold && Player.Instance.rarity <= Rank.Blue);
+            _rankUpButton.gameObject.SetActive(Player.Instance.rarity < Rank.Blue);
 
             //Set song name text and rank text (and color)
             _songName.SetText(map.level.songName);

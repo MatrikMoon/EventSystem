@@ -190,18 +190,10 @@ namespace DiscordCommunityPlugin.Misc
                         slvc.DownloadErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
                     }
 
-                    Player.Instance.rank = (Rank)Convert.ToInt64(node["rank"].Value);
+                    Player.Instance.rarity = (Rarity)Convert.ToInt64(node["rarity"].Value);
+                    Player.Instance.team = (Team)Convert.ToInt64(node["team"].Value);
                     Player.Instance.tokens = Convert.ToInt64(node["tokens"].Value);
                     Player.Instance.projectedTokens = Convert.ToInt64(node["projectedTokens"].Value);
-
-                    if (Player.Instance.rank == Rank.None)
-                    {
-                        Rank suitableRank = Player.Instance.GetSuitableRank();
-                        string signed = RSA.SignRankRequest(Plugin.PlayerId, suitableRank, true);
-                        RequestRank(Plugin.PlayerId, suitableRank, true, signed);
-
-                        slvc.DownloadErrorHappened($"You have been automatically assigned a rank of {suitableRank}.\nReload the page to continue.");
-                    }
                 }
                 catch (Exception e)
                 {
@@ -211,9 +203,9 @@ namespace DiscordCommunityPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, Team team, bool useRankColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rank}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{(int)team}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -235,7 +227,7 @@ namespace DiscordCommunityPlugin.Misc
                             score.Value["player"],
                             Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true",
-                            (Rank)Convert.ToInt32(score.Value["rank"].ToString())));
+                            (Rarity)Convert.ToInt32(score.Value["rarity"].ToString())));
 
                         //If one of the scores is us, set the "special" score position to the right value
                         if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))

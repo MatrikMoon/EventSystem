@@ -32,16 +32,24 @@ namespace DiscordCommunityShared
             "0.2.1: Fixed various issues from previous version (reload score after song, fixed restart button, re-added scoresaber submission)\n" +
             "0.2.2: Added One Hope from 0.12.1!\n";
 
-        public enum Rank
+        public enum Rarity
         {
-            None = -1, //Not to be stored. Only use as "does not exist"
-            White = 0,
-            Bronze = 1,
-            Silver = 2,
-            Gold = 3,
-            Blue = 4,
-            Master = 5,
+            None = -1, //Only use as "does not exist"
+            Uncommon = 0,
+            Rare = 1,
+            Epic = 2,
+            Legendary = 3,
+            Mythic = 4,
+            Captain = 5,
             All = 6 //Not to be stored. Only use as "no filter necessary"
+        }
+
+        public enum Team
+        {
+            None = -1, //Only use as "does not exist"
+            Team1,
+            Team2,
+            All //Not to be stored. Only use as "no filter necessary"
         }
 
         public enum LevelDifficulty

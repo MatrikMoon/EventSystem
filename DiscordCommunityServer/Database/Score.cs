@@ -24,7 +24,7 @@ namespace DiscordCommunityServer.Database
             _difficultyLevel = difficultyLevel;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRank(), difficultyLevel, false, 0);
+                SimpleSql.AddScore(songId, steamId, player.GetRarity(), difficultyLevel, false, 0);
             }
         }
 

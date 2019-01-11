@@ -45,30 +45,6 @@ namespace DiscordCommunityServer.BeatSaver
             }
         }
 
-        //Returns the most appropriate LevelDifficulty for the player's rank
-        public LevelDifficulty GetDifficultyForRank(Rank rank)
-        {
-            LevelDifficulty ret;
-            switch (rank)
-            {
-                case Rank.Master:
-                case Rank.Blue:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.ExpertPlus);
-                    break;
-                case Rank.Gold:
-                case Rank.Silver:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.Expert);
-                    break;
-                case Rank.Bronze:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.Hard);
-                    break;
-                default:
-                    ret = GetClosestDifficultyPreferLower(LevelDifficulty.Easy);
-                    break;
-            }
-            return ret;
-        }
-
         //Looks at info.json and gets the song name
         private string GetSongName()
         {

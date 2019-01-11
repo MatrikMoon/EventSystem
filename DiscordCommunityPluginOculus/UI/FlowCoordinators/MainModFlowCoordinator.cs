@@ -104,16 +104,16 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
 
                     if (Player.Instance.CanRankUp())
                     {
-                        if (Player.Instance.rank < Rank.Gold)
+                        if (Player.Instance.rarity < Rank.Gold)
                         {
                             var message =
-                                $"You are about to rank up from {Player.Instance.rank} to {Player.Instance.rank + 1}.\n" +
+                                $"You are about to rank up from {Player.Instance.rarity} to {Player.Instance.rarity + 1}.\n" +
                                 "Are you sure you want to perform this action?\n" +
                                 "You are on the honor system for now.";
                             _rankUpViewController.Init("Rank Up", message, "Yes", "No");
                             PresentViewController(_rankUpViewController);
                         }
-                        else if (Player.Instance.rank == Rank.Gold)
+                        else if (Player.Instance.rarity == Rank.Gold)
                         {
                             var message =
                                 "You are about to spend 3 tokens and apply to rank up to Blue.\n" +
@@ -123,7 +123,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                             PresentViewController(_rankUpViewController);
                         }
                     }
-                    else if (Player.Instance.rank >= Rank.Gold && Player.Instance.tokens < 3)
+                    else if (Player.Instance.rarity >= Rank.Gold && Player.Instance.tokens < 3)
                     {
                         var message =
                             "You do not have enough tokens to rank up.\n" +
@@ -157,7 +157,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             //Change community leaderboard view
             //Use the currently selected rank, if it exists
             Rank rankToView = _communityLeaderboard.selectedRank;
-            if (rankToView <= Rank.None) rankToView = Player.Instance.rank;
+            if (rankToView <= Rank.None) rankToView = Player.Instance.rarity;
             _communityLeaderboard.SetSong(difficultyLevel, rankToView);
         }
 
@@ -167,8 +167,8 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             {
                 DismissViewController(viewController, immediately: true);
                 mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
-                string signed = DiscordCommunityShared.RSA.SignRankRequest(Plugin.PlayerId, Player.Instance.rank + 1, false);
-                Client.RequestRank(Plugin.PlayerId, Player.Instance.rank + 1, false, signed);
+                string signed = DiscordCommunityShared.RSA.SignRankRequest(Plugin.PlayerId, Player.Instance.rarity + 1, false);
+                Client.RequestRank(Plugin.PlayerId, Player.Instance.rarity + 1, false, signed);
             }
             else DismissViewController(viewController);
         }

@@ -25,7 +25,6 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
 
         private GeneralNavigationController _mainModNavigationController;
         private LevelCollectionSO _levelCollections;
-        private SimpleDialogPromptViewController _rankUpViewController;
 
         protected PlatformLeaderboardViewController _globalLeaderboard;
         protected CustomLeaderboardController _communityLeaderboard;
@@ -41,23 +40,8 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
                 _mainModNavigationController.didFinishEvent += (_) => mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
 
-                if (_rankUpViewController == null)
-                {
-                    _rankUpViewController = Instantiate(Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First());
-                }
-                _rankUpViewController.didFinishEvent += HandleRankPromptViewControllerDidFinish;
-
                 ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
-            }
-        }
-
-        [Obfuscation(Exclude = false, Feature = "-rename;")]
-        protected override void DidDeactivate(DeactivationType deactivationType)
-        {
-            if (deactivationType == DeactivationType.RemovedFromHierarchy)
-            {
-                _rankUpViewController.didFinishEvent -= HandleRankPromptViewControllerDidFinish;
             }
         }
 
@@ -97,49 +81,6 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             {
                 _communityLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboardController>();
                 _communityLeaderboard.PlayPressed += SongPlayPressed;
-                _communityLeaderboard.RequestRankPressed += () =>
-                {
-                    SetLeftScreenViewController(null);
-                    SetRightScreenViewController(null);
-
-                    if (Player.Instance.CanRankUp())
-                    {
-                        if (Player.Instance.rank < Rank.Gold)
-                        {
-                            var message =
-                                $"You are about to rank up from {Player.Instance.rank} to {Player.Instance.rank + 1}.\n" +
-                                "Are you sure you want to perform this action?\n" +
-                                "You are on the honor system for now.";
-                            _rankUpViewController.Init("Rank Up", message, "Yes", "No");
-                            PresentViewController(_rankUpViewController);
-                        }
-                        else if (Player.Instance.rank == Rank.Gold)
-                        {
-                            var message =
-                                "You are about to spend 3 tokens and apply to rank up to Blue.\n" +
-                                "Your Scoresaber profile will be submitted to the Blues, where it will then be voted on.\n" +
-                                "Are you sure you want to perform this action?";
-                            _rankUpViewController.Init("Rank Up", message, "Yes", "No");
-                            PresentViewController(_rankUpViewController);
-                        }
-                    }
-                    else if (Player.Instance.rank >= Rank.Gold && Player.Instance.tokens < 3)
-                    {
-                        var message =
-                            "You do not have enough tokens to rank up.\n" +
-                            "3 tokens are required.";
-                        _rankUpViewController.Init("Rank Up", message, "Ok");
-                        PresentViewController(_rankUpViewController);
-                    }
-                    else
-                    {
-                        var message = "You must improve your scores on the following songs\n" +
-                            "(check #rules-and-info for the difficulty you need to play on):\n";
-                        Player.Instance.GetSongsToImproveBeforeRankUp().ForEach(x => message += $"{DiscordCommunityShared.OstHelper.GetOstSongNameFromLevelId(x)}\n");
-                        _rankUpViewController.Init("Rank Up", message, "Ok");
-                        PresentViewController(_rankUpViewController);
-                    }
-                };
             }
             SetLeftScreenViewController(_communityLeaderboard);
 
@@ -151,26 +92,14 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
             SetRightScreenViewController(_globalLeaderboard);
 
             //Change global leaderboard view
-            IDifficultyBeatmap difficultyLevel = Player.Instance.GetMapForRank(level);
+            IDifficultyBeatmap difficultyLevel = Player.Instance.GetClosestDifficultyPreferLower(level, BeatmapDifficulty.ExpertPlus);
             _globalLeaderboard.SetData(difficultyLevel);
 
             //Change community leaderboard view
-            //Use the currently selected rank, if it exists
-            Rank rankToView = _communityLeaderboard.selectedRank;
-            if (rankToView <= Rank.None) rankToView = Player.Instance.rank;
-            _communityLeaderboard.SetSong(difficultyLevel, rankToView);
-        }
-
-        public virtual void HandleRankPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
-        {
-            if (ok && Player.Instance.CanRankUp())
-            {
-                DismissViewController(viewController, immediately: true);
-                mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
-                string signed = DiscordCommunityShared.RSA.SignRankRequest(Plugin.PlayerId, Player.Instance.rank + 1, false);
-                Client.RequestRank(Plugin.PlayerId, Player.Instance.rank + 1, false, signed);
-            }
-            else DismissViewController(viewController);
+            //Use the currently selected team, if it exists
+            Team teamToView = _communityLeaderboard.selectedTeam;
+            if (teamToView <= Team.None) teamToView = Player.Instance.team;
+            _communityLeaderboard.SetSong(difficultyLevel, teamToView);
         }
 
         private void ReloadServerData()
