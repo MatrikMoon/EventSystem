@@ -1,8 +1,8 @@
-﻿using DiscordCommunityShared.SimpleJSON;
+﻿using TeamSaberShared.SimpleJSON;
 using System;
 using System.IO;
 
-namespace DiscordCommunityServer
+namespace TeamSaberServer
 {
     class Config
     {

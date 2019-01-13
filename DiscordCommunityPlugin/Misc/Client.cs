@@ -1,8 +1,8 @@
-﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using DiscordCommunityPlugin.UI.ViewControllers;
-using DiscordCommunityPlugin.UI.Views;
-using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+﻿using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.UI.ViewControllers;
+using TeamSaberPlugin.UI.Views;
+using TeamSaberShared;
+using TeamSaberShared.SimpleJSON;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -13,24 +13,24 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static TeamSaberShared.SharedConstructs;
+using Logger = TeamSaberShared.Logger;
 
 /*
  * Created by Moon on 9/9/2018
  * Communicates with a running DiscordCommunityServer
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client
     {
         private static string discordCommunityUrl = "https://networkauditor.org";
 #if DEBUG
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
 #else
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
 #endif
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
@@ -133,8 +133,6 @@ namespace DiscordCommunityPlugin.Misc
 
                     Player.Instance.rarity = (Rarity)Convert.ToInt64(node["rarity"].Value);
                     Player.Instance.team = (Team)Convert.ToInt64(node["team"].Value);
-                    Player.Instance.tokens = Convert.ToInt64(node["tokens"].Value);
-                    Player.Instance.projectedTokens = Convert.ToInt64(node["projectedTokens"].Value);
                 }
                 catch (Exception e)
                 {
@@ -146,7 +144,7 @@ namespace DiscordCommunityPlugin.Misc
 
         private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, Team team, bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity/(int)team}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{(int)team}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -168,7 +166,9 @@ namespace DiscordCommunityPlugin.Misc
                             score.Value["player"],
                             Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true",
-                            (Rarity)Convert.ToInt32(score.Value["rarity"].ToString())));
+                            (Rarity)Convert.ToInt32(score.Value["rarity"].ToString()),
+                            (Team)Convert.ToInt32(score.Value["team"].ToString())
+                        ));
 
                         //If one of the scores is us, set the "special" score position to the right value
                         if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))

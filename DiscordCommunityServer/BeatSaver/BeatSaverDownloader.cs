@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using TeamSaberShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +12,7 @@ using System.Threading;
  * Handles the downloading and unzipping of songs from Beatsaver
  */
 
-namespace DiscordCommunityServer.BeatSaver
+namespace TeamSaberServer.BeatSaver
 {
     class BeatSaverDownloader
     {

@@ -1,7 +1,7 @@
 ﻿using CustomUI.BeatSaber;
-using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI.ViewControllers;
+using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.Misc;
+using TeamSaberPlugin.UI.ViewControllers;
 using HMUI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -11,10 +11,10 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using VRUI;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static TeamSaberShared.SharedConstructs;
+using Logger = TeamSaberShared.Logger;
 
-namespace DiscordCommunityPlugin.UI.FlowCoordinators
+namespace TeamSaberPlugin.UI.FlowCoordinators
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class MainModFlowCoordinator : FlowCoordinator
@@ -151,7 +151,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                     string songId = null;
 
                     //If the song is an OST, just send the hash
-                    if (DiscordCommunityShared.OstHelper.IsOst(songHash))
+                    if (TeamSaberShared.OstHelper.IsOst(songHash))
                     {
                         songId = songHash;
                     }
@@ -164,7 +164,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                     var d = standardLevelSceneSetupData.GetProperty("difficultyBeatmap");
                     var rs = results.GetProperty("unmodifiedScore");
                     var fc = results.GetProperty("fullCombo");
-                    var ms = typeof(DiscordCommunityShared.RSA);
+                    var ms = typeof(TeamSaberShared.RSA);
                     var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs);
 
                     var c = typeof(Client);
@@ -204,7 +204,7 @@ namespace DiscordCommunityPlugin.UI.FlowCoordinators
                         plm.InvokeMethod("AddScore", dbm, results.GetProperty("unmodifiedScore"), gm);
                     }
 
-                    //string signed = DiscordCommunityShared.RSA.SignScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore);
+                    //string signed = TeamSaberShared.RSA.SignScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore);
                     //Client.SubmitScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore, signed);
 
                     /*

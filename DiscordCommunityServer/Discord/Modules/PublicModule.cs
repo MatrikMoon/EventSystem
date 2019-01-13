@@ -1,18 +1,18 @@
 ﻿using Discord;
 using Discord.Commands;
-using DiscordCommunityServer.Database;
-using DiscordCommunityServer.Discord.Services;
-using DiscordCommunityShared;
+using TeamSaberServer.Database;
+using TeamSaberServer.Discord.Services;
+using TeamSaberShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberServer.Database.SimpleSql;
+using static TeamSaberShared.SharedConstructs;
 
-namespace DiscordCommunityServer.Discord.Modules
+namespace TeamSaberServer.Discord.Modules
 {
     // Modules must be public and inherit from an IModuleBase
     public class PublicModule : ModuleBase<SocketCommandContext>
@@ -24,7 +24,18 @@ namespace DiscordCommunityServer.Discord.Modules
         public async Task RegisterAsync(string steamId, string timezone)
         {
             //Sanitize input
+            if (steamId.StartsWith("https://scoresaber.com/u/"))
+            {
+                steamId = steamId.Substring("https://scoresaber.com/u/".Length);
+            }
+
+            if (steamId.Contains("&"))
+            {
+                steamId = steamId.Substring(0, steamId.IndexOf("&"));
+            }
+
             steamId = Regex.Replace(steamId, "[^0-9]", "");
+            timezone = Regex.Replace(timezone, "[^a-zA-Z0-9]", "");
 
             if (!Player.Exists(steamId) || !Player.IsRegistered(steamId))
             {
@@ -32,11 +43,12 @@ namespace DiscordCommunityServer.Discord.Modules
                 player.SetDiscordName(Context.User.Username);
                 player.SetDiscordExtension(Context.User.Discriminator);
                 player.SetDiscordMention(Context.User.Mention);
+                player.SetTimezone(timezone);
 
                 var guildRoles = Context.Guild.Roles.ToList();
 
                 ulong[] discordRoleIds = guildRoles
-                    .Where(x => CommunityBot._saberRoles.Contains(x.Name.ToLower()))
+                    .Where(x => CommunityBot._rarityRoles.Contains(x.Name.ToLower()))
                     .Select(x => x.Id)
                     .ToArray();
 
@@ -44,7 +56,7 @@ namespace DiscordCommunityServer.Discord.Modules
                 string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
                 if (saberRole > 0)
                 {
-                    player.SetRarity(CommunityBot._saberRankValues[CommunityBot._saberRoles.ToList().IndexOf(userRoleText)]);
+                    player.SetRarity(CommunityBot._saberRankValues[CommunityBot._rarityRoles.ToList().IndexOf(userRoleText)]);
                 }
 
                 string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}` with timezone `{timezone}`";
@@ -91,9 +103,9 @@ namespace DiscordCommunityServer.Discord.Modules
             await ReplyAsync("All songs and scores are marked as Old. You may now add new songs.");
         }
 
-        [Command("role")]
+        [Command("rarity")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task RoleAsync(string role, IGuildUser user = null)
+        public async Task RarityAsync(string role, IGuildUser user = null)
         {
             role = role.ToLower();
             ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
@@ -103,12 +115,34 @@ namespace DiscordCommunityServer.Discord.Modules
             if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
             else user = (IGuildUser)Context.User;
 
-            if ((isAdmin) && CommunityBot._saberRoles.Contains(role))
+            if ((isAdmin) && CommunityBot._rarityRoles.Contains(role))
             {
                 Player player = Player.GetByDiscord(user.Mention);
                 if (player == null) await ReplyAsync("That user has not registered with the bot yet");
                 else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Rarity rarity)) CommunityBot.ChangeRarity(player, rarity);
                 else await ReplyAsync("Role parse failed");
+            }
+            else await ReplyAsync("You are not authorized to assign that role");
+        }
+
+        [Command("team")]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task TeamAsync(string role, IGuildUser user = null)
+        {
+            role = role.ToLower();
+            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
+            if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
+            else user = (IGuildUser)Context.User;
+
+            if ((isAdmin) && CommunityBot._teamRoles.Contains(role))
+            {
+                Player player = Player.GetByDiscord(user.Mention);
+                if (player == null) await ReplyAsync("That user has not registered with the bot yet");
+                else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Team team)) CommunityBot.ChangeTeam(player, team);
+                else await ReplyAsync("Team parse failed");
             }
             else await ReplyAsync("You are not authorized to assign that role");
         }

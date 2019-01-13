@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using TeamSaberShared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = TeamSaberShared.Logger;
 using Object = UnityEngine.Object;
 
 /*
@@ -16,7 +16,7 @@ using Object = UnityEngine.Object;
  * to find the views which are necessary to destroy for the Leaderboards
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class DebugTools

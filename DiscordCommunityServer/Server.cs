@@ -1,5 +1,5 @@
-﻿using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+﻿using TeamSaberShared;
+using TeamSaberShared.SimpleJSON;
 using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
@@ -7,10 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberServer.Database.SimpleSql;
+using static TeamSaberShared.SharedConstructs;
 
-namespace DiscordCommunityServer
+namespace TeamSaberServer
 {
     class Server
     {
@@ -136,8 +136,7 @@ namespace DiscordCommunityServer
 
                             json["version"] = VersionCode;
                             json["rarity"] = player.GetRarity();
-                            json["tokens"] = player.GetTokens();
-                            json["team"] = player.GetProjectedTokens();
+                            json["team"] = player.GetTeam();
                         }
                         else
                         {
@@ -162,6 +161,9 @@ namespace DiscordCommunityServer
                         string songId = requestData[1];
                         int rarity = Convert.ToInt32(requestData[2]);
                         int team = Convert.ToInt32(requestData[3]);
+
+                        Logger.Warning($"{songId} {(Rarity)rarity} {(Team)team}");
+
                         SongConstruct songConstruct = new SongConstruct()
                         {
                             SongId = songId,
@@ -207,9 +209,9 @@ namespace DiscordCommunityServer
             Logger.Info($"HTTP Server listening on {Dns.GetHostName()}");
 
 #if DEBUG
-            int port = 3704; //My vhost is set up to direct to 3704 when the /api-beta/ route is followed
+            int port = 3708; //My vhost is set up to direct to 3704 when the /api-beta/ route is followed
 #else
-            int port = 3703;
+            int port = 3707;
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);
             httpServer.Listen();

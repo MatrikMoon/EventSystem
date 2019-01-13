@@ -1,12 +1,12 @@
-﻿using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+﻿using TeamSaberShared;
+using TeamSaberShared.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/25/2018
@@ -14,7 +14,7 @@ using static DiscordCommunityShared.SharedConstructs;
  * songs downloaded from BeatSaver
  */
 
-namespace DiscordCommunityServer.BeatSaver
+namespace TeamSaberServer.BeatSaver
 {
     class Song
     {

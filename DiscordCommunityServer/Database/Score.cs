@@ -9,7 +9,7 @@ using System.Threading.Tasks;
  * TODO: Use Properties (get/set) instead of getters and setters
  */
 
-namespace DiscordCommunityServer.Database
+namespace TeamSaberServer.Database
 {
     class Score
     {
@@ -24,7 +24,7 @@ namespace DiscordCommunityServer.Database
             _difficultyLevel = difficultyLevel;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRarity(), difficultyLevel, false, 0);
+                SimpleSql.AddScore(songId, steamId, player.GetRarity(), player.GetTeam(), difficultyLevel, false, 0);
             }
         }
 

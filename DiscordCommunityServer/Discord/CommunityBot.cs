@@ -6,13 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
-using DiscordCommunityServer.Discord.Services;
+using TeamSaberServer.Discord.Services;
 using System.Collections.Generic;
-using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
-using DiscordCommunityServer.Database;
+using static TeamSaberServer.Database.SimpleSql;
+using static TeamSaberShared.SharedConstructs;
+using TeamSaberServer.Database;
 
-namespace DiscordCommunityServer.Discord
+namespace TeamSaberServer.Discord
 {
     class CommunityBot
     {
@@ -25,7 +25,8 @@ namespace DiscordCommunityServer.Discord
         //to see if they're assigned a role that's relevant to us.
         //Also leaderboards uses _rarityToList
         public static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
-        public static string[] _saberRoles = { "uncommon", "rare", "epic", "legendary", "mythic", "captain" };
+        public static string[] _teamRoles = { "team1", "team2" };
+        public static string[] _rarityRoles = { "uncommon", "rare", "epic", "legendary", "mythic", "captain" };
         public static Rarity[] _rarityToList = { Rarity.Captain, Rarity.Mythic, Rarity.Legendary,
                                             Rarity.Epic, Rarity.Rare, Rarity.Uncommon };
 
@@ -43,7 +44,7 @@ namespace DiscordCommunityServer.Discord
 #else
                 var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
 #endif
-                guild.TextChannels.ToList().Where(x => x.Name == "event-scores").First().SendMessageAsync(message);
+                guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First().SendMessageAsync(message);
             }
         }
 
@@ -55,10 +56,10 @@ namespace DiscordCommunityServer.Discord
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
 #endif
             var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
-            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-scores").First();
+            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
 
             player.SetRarity((int)rarity);
-            await user.RemoveRolesAsync(guild.Roles.Where(x => _saberRoles.Contains(x.Name.ToLower())));
+            await user.RemoveRolesAsync(guild.Roles.Where(x => _rarityRoles.Contains(x.Name.ToLower())));
             await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == rarity.ToString().ToLower()));
 
             //Sort out existing scores
@@ -74,10 +75,37 @@ namespace DiscordCommunityServer.Discord
                 });
             }
 
-            else
+            await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been designated as {rarity}!");
+        }
+
+        public static async void ChangeTeam(Player player, Team team)
+        {
+#if DEBUG
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
+#else
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+#endif
+            var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
+            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
+
+            player.SetTeam((int)team);
+            await user.RemoveRolesAsync(guild.Roles.Where(x => _teamRoles.Contains(x.Name.ToLower())));
+            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.ToString().ToLower()));
+
+            //Sort out existing scores
+            string steamId = player.GetSteamId();
+            IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(steamId);
+
+            if (playerScores.Count >= 0)
             {
-                await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been promoted to {rarity}!");
+                playerScores.ToList().ForEach(x =>
+                {
+                    BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongId);
+                    ExecuteCommand($"UPDATE scoreTable SET team = {(int)team} WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
+                });
             }
+
+            await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been assigned to {team}!");
         }
 
         public static async Task MainAsync()

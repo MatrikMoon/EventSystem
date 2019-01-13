@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using static DiscordCommunityServer.Database.SimpleSql;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberServer.Database.SimpleSql;
+using static TeamSaberShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
  * TODO: Use Properties (get/set) instead of getters and setters
  */
 
-namespace DiscordCommunityServer.Database
+namespace TeamSaberServer.Database
 {
     class Player
     {
@@ -22,7 +22,7 @@ namespace DiscordCommunityServer.Database
             if (!Exists())
             {
                 //Default name is the steam id
-                AddPlayer(steamId, steamId, "", "", (int)Rarity.None, 0, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", "", (int)Rarity.None, (int)Team.None, 0, 0, 0, 0, 0, true);
             }
         }
 
@@ -52,6 +52,11 @@ namespace DiscordCommunityServer.Database
             return ExecuteQuery($"SELECT discordMention FROM playerTable WHERE steamId = {steamId}", "discordMention").First();
         }
 
+        public string GetTimezone()
+        {
+            return ExecuteQuery($"SELECT timezone FROM playerTable WHERE steamId = {steamId}", "timezone").First();
+        }
+
         public bool SetDiscordName(string discordName)
         {
             return ExecuteCommand($"UPDATE playerTable SET discordName = \'{discordName}\' WHERE steamId = \'{steamId}\'") > 1;
@@ -65,6 +70,11 @@ namespace DiscordCommunityServer.Database
         public bool SetDiscordMention(string discordMention)
         {
             return ExecuteCommand($"UPDATE playerTable SET discordMention = \'{discordMention}\' WHERE steamId = \'{steamId}\'") > 1;
+        }
+
+        public bool SetTimezone(string timezone)
+        {
+            return ExecuteCommand($"UPDATE playerTable SET timezone = \'{timezone}\' WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public int GetRarity()
@@ -82,7 +92,7 @@ namespace DiscordCommunityServer.Database
             return Convert.ToInt32(ExecuteQuery($"SELECT team FROM playerTable WHERE steamId = {steamId}", "team").First());
         }
 
-        public bool SetTeam(Team team)
+        public bool SetTeam(int team)
         {
             return ExecuteCommand($"UPDATE playerTable SET team = {team} WHERE steamId = \'{steamId}\'") > 1;
         }

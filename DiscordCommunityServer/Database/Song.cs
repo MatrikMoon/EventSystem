@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using TeamSaberShared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
  * TODO: Use Properties (get/set) instead of getters and setters
  */
 
-namespace DiscordCommunityServer.Database
+namespace TeamSaberServer.Database
 {
     class Song
     {

@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace DiscordCommunityServer.Discord.Services
+namespace TeamSaberServer.Discord.Services
 {
     public class PictureService
     {

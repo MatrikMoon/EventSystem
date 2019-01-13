@@ -1,11 +1,11 @@
-﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
+﻿using TeamSaberPlugin.DiscordCommunityHelpers;
 using HMUI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberShared.SharedConstructs;
 
 /*
  * Created by Moon on 10/28/2018 at 2:18am
@@ -13,7 +13,7 @@ using static DiscordCommunityShared.SharedConstructs;
  * so we can set custom colors on all the players
  */
 
-namespace DiscordCommunityPlugin.UI.Views
+namespace TeamSaberPlugin.UI.Views
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CustomLeaderboardTableView : MonoBehaviour, TableView.IDataSource
