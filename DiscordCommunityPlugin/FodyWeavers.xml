@@ -2,7 +2,7 @@
 <Weavers>
   <Costura IncludeDebugSymbols='false' DisableCleanup='true'>
     <IncludeAssemblies>
-        DiscordCommunityShared
+        TeamSaberShared
         Google.Protobuf
     </IncludeAssemblies>
   </Costura>

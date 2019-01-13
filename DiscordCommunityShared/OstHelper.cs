@@ -1,12 +1,12 @@
 ﻿using System.Linq;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
  * A simple class to map "stock" songIds to their corresponding song names
  */
 
-namespace DiscordCommunityShared
+namespace TeamSaberShared
 {
     public class OstHelper
     {

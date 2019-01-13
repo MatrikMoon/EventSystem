@@ -7,10 +7,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using Logger = DiscordCommunityShared.Logger;
-using DiscordCommunityPlugin.Misc;
-using static DiscordCommunityShared.SharedConstructs;
+using TeamSaberPlugin.DiscordCommunityHelpers;
+using Logger = TeamSaberShared.Logger;
+using TeamSaberPlugin.Misc;
+using static TeamSaberShared.SharedConstructs;
 using CustomUI.BeatSaber;
 
 /**
@@ -18,7 +18,7 @@ using CustomUI.BeatSaber;
  * modified for the DiscordCommunityPlugin
  */
 
-namespace DiscordCommunityPlugin.UI.ViewControllers
+namespace TeamSaberPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource

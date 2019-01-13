@@ -1,9 +1,9 @@
-﻿using DiscordCommunityShared.SimpleJSON;
+﻿using TeamSaberShared.SimpleJSON;
 using System;
 using System.IO;
 using System.Reflection;
 
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Config

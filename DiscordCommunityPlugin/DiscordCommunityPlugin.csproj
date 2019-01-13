@@ -7,8 +7,8 @@
     <ProjectGuid>{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DiscordCommunityPlugin</RootNamespace>
-    <AssemblyName>DiscordCommunityPlugin</AssemblyName>
+    <RootNamespace>TeamSaberPlugin</RootNamespace>
+    <AssemblyName>TeamSaber</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

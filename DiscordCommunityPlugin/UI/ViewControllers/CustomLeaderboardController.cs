@@ -1,7 +1,7 @@
 ﻿using CustomUI.BeatSaber;
-using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI.Views;
+using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.Misc;
+using TeamSaberPlugin.UI.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,15 +10,15 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static TeamSaberShared.SharedConstructs;
+using Logger = TeamSaberShared.Logger;
 
 /*
  * Created by Moon on 9/22/2018
  * A ViewController allowing me to show a leaderboard and other player data
  */
 
-namespace DiscordCommunityPlugin.UI.ViewControllers
+namespace TeamSaberPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CustomLeaderboardController : VRUIViewController

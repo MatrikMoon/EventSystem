@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     /// <summary>
     ///   Provides the ability to redirect calls from one method to another.

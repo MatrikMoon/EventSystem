@@ -1,4 +1,4 @@
-﻿using DiscordCommunityShared;
+﻿using TeamSaberShared;
 using SongLoaderPlugin;
 using System;
 using System.IO;
@@ -12,7 +12,7 @@ using System.Reflection;
  * This is hacky, but it works.
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongIdHelper

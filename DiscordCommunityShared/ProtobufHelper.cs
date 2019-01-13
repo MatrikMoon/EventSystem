@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf;
 using System;
 
-namespace DiscordCommunityShared
+namespace TeamSaberShared
 {
     public class ProtobufHelper
     {

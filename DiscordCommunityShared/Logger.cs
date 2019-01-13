@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace DiscordCommunityShared
+namespace TeamSaberShared
 {
     public class Logger
     {
-        private const string prefix = "[DiscordCommunityPlugin]: ";
+        private const string prefix = "[TeamSaberPlugin]: ";
 
         public static void Error(string message)
         {

@@ -3,14 +3,14 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = TeamSaberShared.Logger;
 
 /*
  * Created by Moon on 9/23/2018
  * Handles interactions with other mods. Such as multiplayer.
  */
  
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Hooks

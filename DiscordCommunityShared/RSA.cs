@@ -2,14 +2,14 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/9/2018
  * Handles RSA signature generation of communications
  */
 
-namespace DiscordCommunityShared
+namespace TeamSaberShared
 {
     public class RSA
     {
