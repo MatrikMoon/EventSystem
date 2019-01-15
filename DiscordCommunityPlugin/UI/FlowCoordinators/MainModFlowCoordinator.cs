@@ -116,9 +116,9 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
                 MenuSceneSetupDataSO _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupDataSO>().FirstOrDefault();
-                PlayerSpecificSettings playerSettings = new PlayerSpecificSettings();
-                playerSettings.leftHanded = Config.MirrorMode;
-                playerSettings.staticLights = Config.StaticLights;
+                var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
+                    .FirstOrDefault()?
+                    .currentLocalPlayer.playerSpecificSettings;
                 GameplayModifiers gameplayModifiers = new GameplayModifiers();
                 _menuSceneSetupData.StartStandardLevel(map, gameplayModifiers, playerSettings, null, null, SongFinished);
             };
