@@ -45,6 +45,22 @@ namespace TeamSaberServer.Discord.Modules
                 player.SetDiscordMention(Context.User.Mention);
                 player.SetTimezone(timezone);
 
+                int rank = 0;
+
+                var embed = Context.Message.Embeds.FirstOrDefault();
+
+                if (embed != null)
+                {
+                    //Scrape out the rank data
+                    var description = embed.Description;
+                    var searchBy = "Player Ranking: #";
+                    description = description.Substring(description.IndexOf(searchBy) + searchBy.Length);
+                    description = description.Substring(0, description.IndexOf("\n"));
+
+                    rank = Convert.ToInt32(Regex.Replace(description, "[^0-9]", ""));
+                    player.SetRank(rank);
+                }
+                
                 var guildRoles = Context.Guild.Roles.ToList();
 
                 ulong[] discordRoleIds = guildRoles
@@ -60,7 +76,8 @@ namespace TeamSaberServer.Discord.Modules
                 }
 
                 string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}` with timezone `{timezone}`";
-                if (saberRole > 0) reply += $" with rarity `{userRoleText}`";
+                if (saberRole > 0) reply += $" and rarity `{userRoleText}`";
+                if (rank > 0) reply += $" and rank `{rank}`";
                 await ReplyAsync(reply);
             }
             else
@@ -212,24 +229,81 @@ namespace TeamSaberServer.Discord.Modules
         public async Task NekoAsync()
         {
             // Get a stream containing an image of a cat
-            var stream = await PictureService.GetNekoPictureAsync();
+            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.Neko);
             // Streams must be seeked to their beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
             await Context.Channel.SendFileAsync(stream, "neko.png");
         }
 
-        [Command("embed")]
-        public async Task EmbedAsync(string url = null)
+        [Command("nekolewd")]
+        [RequireNsfw]
+        public async Task NekoLewdAsync()
         {
-            var builder = new EmbedBuilder();
-            builder.WithTitle("TESTTIT");
-            builder.AddInlineField("COST", "E");
-            builder.WithColor(Color.Purple);
-            builder.WithImageUrl("https://cdn.nekos.life/ngif/neko_089.gif");
+            // Get a stream containing an image of a cat
+            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.NekoLewd);
+            // Streams must be seeked to their beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "nekolewd.png");
+        }
 
-            //if (embed != null) await ReplyAsync(embed.ToString(), false, builder);
-            //else await ReplyAsync("NO EMBED", false, builder);
-            await ReplyAsync("NO EMBED", false, builder);
+        [Command("nekogif")]
+        public async Task NekoGifAsync()
+        {
+            // Get a stream containing an image of a cat
+            var gifLink = await PictureService.GetNekoGifAsync();
+
+            var builder = new EmbedBuilder();
+            builder.WithImageUrl(gifLink);
+
+            await ReplyAsync("", false, builder);
+        }
+
+        [Command("nekolewdgif")]
+        [RequireNsfw]
+        public async Task NekoLewdGifAsync()
+        {
+            // Get a stream containing an image of a cat
+            var gifLink = await PictureService.GetNekoLewdGifAsync();
+
+            var builder = new EmbedBuilder();
+            builder.WithImageUrl(gifLink);
+
+            await ReplyAsync("", false, builder);
+        }
+
+        [Command("lewd")]
+        [RequireNsfw]
+        public async Task LewdAsync()
+        {
+            // Get a stream containing an image of a cat
+            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.Hentai);
+            // Streams must be seeked to their beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "lewd.png");
+        }
+
+        [Command("lewdgif")]
+        [RequireNsfw]
+        public async Task LewdGifAsync()
+        {
+            // Get a stream containing an image of a cat
+            var gifLink = await PictureService.GetLewdGifAsync();
+
+            var builder = new EmbedBuilder();
+            builder.WithImageUrl(gifLink);
+
+            await ReplyAsync("", false, builder);
+        }
+
+        [Command("lewdsmall")]
+        [RequireNsfw]
+        public async Task LewdSmallAsync()
+        {
+            // Get a stream containing an image of a cat
+            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.HentaiSmall);
+            // Streams must be seeked to their beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "lewdsmall.png");
         }
     }
 }

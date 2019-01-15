@@ -22,7 +22,7 @@ namespace TeamSaberServer.Database
             if (!Exists())
             {
                 //Default name is the steam id
-                AddPlayer(steamId, steamId, "", "", "", (int)Rarity.None, (int)Team.None, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", "", (int)Rarity.None, (int)Team.None, 0, 0, 0, 0, 0, 0, true);
             }
         }
 
@@ -95,6 +95,16 @@ namespace TeamSaberServer.Database
         public bool SetTeam(int team)
         {
             return ExecuteCommand($"UPDATE playerTable SET team = {team} WHERE steamId = \'{steamId}\'") > 1;
+        }
+
+        public int GetRank()
+        {
+            return Convert.ToInt32(ExecuteQuery($"SELECT rank FROM playerTable WHERE steamId = {steamId}", "rank").First());
+        }
+
+        public bool SetRank(int rank)
+        {
+            return ExecuteCommand($"UPDATE playerTable SET rank = {rank} WHERE steamId = \'{steamId}\'") > 1;
         }
 
         public int GetTotalScore()

@@ -8,10 +8,11 @@ namespace TeamSaberShared
     public static class SharedConstructs
     {
         public static string Name => "TeamSaberPlugin";
-        public static string Version => "0.0.1";
-        public static int VersionCode => 001;
+        public static string Version => "0.0.2";
+        public static int VersionCode => 002;
         public static string Changelog =
-            "0.0.1: First attempt at fork from DiscordCommunityPlugin\n";
+            "0.0.1: First attempt at fork from DiscordCommunityPlugin\n" +
+            "0.0.2: Sample update\n";
 
         public enum Rarity
         {

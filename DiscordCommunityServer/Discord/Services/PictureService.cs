@@ -8,6 +8,17 @@ namespace TeamSaberServer.Discord.Services
 {
     public class PictureService
     {
+        public enum NekoType
+        {
+            Neko,
+            NekoLewd,
+            NekoGif,
+            NekoLewdGif,
+            Hentai,
+            HentaiGif,
+            HentaiSmall
+        }
+
         private readonly HttpClient _http;
 
         public PictureService(HttpClient http)
@@ -19,14 +30,81 @@ namespace TeamSaberServer.Discord.Services
             return await resp.Content.ReadAsStreamAsync();
         }
 
-        public async Task<Stream> GetNekoPictureAsync()
+        public async Task<string> GetNekoPictureAsync()
         {
-            var resp = await _http.GetAsync("https://nekos.life/api/v2/img/neko");
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/neko");
+        }
+
+        public async Task<string> GetNekoLewdPictureAsync()
+        {
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/lewd");
+        }
+
+        public async Task<string> GetNekoGifAsync()
+        {
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/ngif");
+        }
+
+        public async Task<string> GetNekoLewdGifAsync()
+        {
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/nsfw_neko_gif");
+        }
+
+        public async Task<string> GetLewdPictureAsync()
+        {
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/classic");
+        }
+
+        public async Task<string> GetLewdGifAsync()
+        {
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/Random_hentai_gif");
+        }
+        
+        public async Task<string> GetLewdPetitePictureAsync()
+        {
+            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/smallboobs");
+        }
+
+        public async Task<string> GetStringFromNekosApi(string apiCall)
+        {
+            var resp = await _http.GetAsync(apiCall);
             var stringResp = await resp.Content.ReadAsStringAsync();
 
             JSONNode node = JSON.Parse(WebUtility.UrlDecode(stringResp));
 
-            var pic = await _http.GetAsync(node["url"]);
+            return node["url"];
+        }
+
+        public async Task<Stream> GetNekoStreamAsync(NekoType type)
+        {
+            string url = null;
+
+            switch (type)
+            {
+                case NekoType.Neko:
+                    url = await GetNekoPictureAsync();
+                    break;
+                case NekoType.NekoLewd:
+                    url = await GetNekoLewdPictureAsync();
+                    break;
+                case NekoType.NekoGif:
+                    url = await GetNekoGifAsync();
+                    break;
+                case NekoType.NekoLewdGif:
+                    url = await GetNekoLewdGifAsync();
+                    break;
+                case NekoType.Hentai:
+                    url = await GetLewdPictureAsync();
+                    break;
+                case NekoType.HentaiGif:
+                    url = await GetLewdGifAsync();
+                    break;
+                case NekoType.HentaiSmall:
+                    url = await GetLewdPetitePictureAsync();
+                    break;
+            }
+
+            var pic = await _http.GetAsync(url);
             return await pic.Content.ReadAsStreamAsync();
         }
     }
