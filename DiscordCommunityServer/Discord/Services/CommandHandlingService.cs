@@ -29,6 +29,7 @@ namespace TeamSaberServer.Discord.Services
             _discord.MessageUpdated += MessageUpdatedAsync;
             _discord.ReactionAdded += ReactionAddedAsync;
             _discord.ReactionRemoved += ReactionRemovedAsync;
+            _discord.UserVoiceStateUpdated += UserVoiceStateUpdated;
         }
 
         public async Task InitializeAsync()
@@ -57,7 +58,7 @@ namespace TeamSaberServer.Discord.Services
         private async Task MessageUpdatedAsync(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
         {
             var message = await before.GetOrDownloadAsync();
-            //Console.WriteLine($"{message} -> {after}");
+            Console.WriteLine($"{message} -> {after}");
         }
 
         private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel channel, SocketReaction reaction)
@@ -70,6 +71,11 @@ namespace TeamSaberServer.Discord.Services
         {
             var message = await before.GetOrDownloadAsync();
             ReactionRemoved?.Invoke(message, reaction);
+        }
+
+        private async Task UserVoiceStateUpdated(SocketUser socketUser, SocketVoiceState socketVoiceState, SocketVoiceState userVoiceStateUpdated)
+        {
+
         }
     }
 }

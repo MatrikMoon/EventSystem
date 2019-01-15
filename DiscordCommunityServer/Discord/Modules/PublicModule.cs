@@ -207,5 +207,29 @@ namespace TeamSaberServer.Discord.Modules
             stream.Seek(0, SeekOrigin.Begin);
             await Context.Channel.SendFileAsync(stream, "cat.png");
         }
+
+        [Command("neko")]
+        public async Task NekoAsync()
+        {
+            // Get a stream containing an image of a cat
+            var stream = await PictureService.GetNekoPictureAsync();
+            // Streams must be seeked to their beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "neko.png");
+        }
+
+        [Command("embed")]
+        public async Task EmbedAsync(string url = null)
+        {
+            var builder = new EmbedBuilder();
+            builder.WithTitle("TESTTIT");
+            builder.AddInlineField("COST", "E");
+            builder.WithColor(Color.Purple);
+            builder.WithImageUrl("https://cdn.nekos.life/ngif/neko_089.gif");
+
+            //if (embed != null) await ReplyAsync(embed.ToString(), false, builder);
+            //else await ReplyAsync("NO EMBED", false, builder);
+            await ReplyAsync("NO EMBED", false, builder);
+        }
     }
 }
