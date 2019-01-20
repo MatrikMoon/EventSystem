@@ -9,6 +9,8 @@ using System.Net;
 using System.Threading;
 using static TeamSaberServer.Database.SimpleSql;
 using static TeamSaberShared.SharedConstructs;
+using System.Text.RegularExpressions;
+using TeamSaberServer.Database;
 
 namespace TeamSaberServer
 {
@@ -110,6 +112,30 @@ namespace TeamSaberServer
                         };
                      }
                 },
+                new Route {
+                    Name = "Team Getter",
+                    UrlRegex = @"^/getteams/$",
+                    Method = "GET",
+                    Callable = (HttpRequest request) => {
+                        JSONNode json = new JSONObject();
+                        List<Team> teams = GetAllTeams();
+
+                        teams.ForEach(x => {
+                            var item = new JSONObject();
+                            item["captainId"] = x.GetCaptain();
+                            item["teamName"] = x.GetTeamName();
+                            item["color"] = x.GetColor();
+                            json.Add(x.GetTeamId(), item);
+                        });
+
+                        return new HttpResponse()
+                        {
+                            ContentAsUTF8 = json.ToString(),
+                            ReasonPhrase = "OK",
+                            StatusCode = "200"
+                        };
+                     }
+                },
                 //TODO: This is totally vulnerable to an attack where I could be spammed
                 //with new id's and it'd fill the database with junk. Should verify with steam/oculus
                 new Route {
@@ -118,6 +144,7 @@ namespace TeamSaberServer
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         string steamId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
+                        steamId = Regex.Replace(steamId, "[^a-zA-Z0-9]", "");
 
                         if (!(steamId.Length == 17 || steamId.Length == 16 || steamId.Length == 15)) //17 = vive, 16 = oculus, 15 = sfkwww
                         {
@@ -160,9 +187,10 @@ namespace TeamSaberServer
 
                         string songId = requestData[1];
                         int rarity = Convert.ToInt32(requestData[2]);
-                        int team = Convert.ToInt32(requestData[3]);
+                        string teamId = requestData[3];
+                        teamId = Regex.Replace(teamId, "[^a-zA-Z0-9]", "");
 
-                        Logger.Warning($"{songId} {(Rarity)rarity} {(Team)team}");
+                        Logger.Warning($"{songId} {(Rarity)rarity} {teamId}");
 
                         SongConstruct songConstruct = new SongConstruct()
                         {
@@ -179,7 +207,7 @@ namespace TeamSaberServer
                             };
                         }
 
-                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rarity, team);
+                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rarity, teamId);
                         JSONNode json = new JSONObject();
 
                         int place = 1;
@@ -192,7 +220,7 @@ namespace TeamSaberServer
                             node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
                             node["steamId"] = x.Key;
                             node["rarity"] = (int)x.Value.Rarity;
-                            node["team"] = (int)x.Value.Team;
+                            node["team"] = x.Value.Team.GetTeamId();
                             json.Add(Convert.ToString(place++), node);
                         });
 
@@ -209,7 +237,7 @@ namespace TeamSaberServer
             Logger.Info($"HTTP Server listening on {Dns.GetHostName()}");
 
 #if DEBUG
-            int port = 3708; //My vhost is set up to direct to 3704 when the /api-beta/ route is followed
+            int port = 3708; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #else
             int port = 3707;
 #endif

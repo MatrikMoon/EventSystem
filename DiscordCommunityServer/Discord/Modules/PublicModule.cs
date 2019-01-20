@@ -144,9 +144,9 @@ namespace TeamSaberServer.Discord.Modules
 
         [Command("team")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task TeamAsync(string role, IGuildUser user = null)
+        public async Task TeamAsync(string teamId, IGuildUser user = null)
         {
-            role = role.ToLower();
+            teamId = teamId.ToLower();
             ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
@@ -154,11 +154,11 @@ namespace TeamSaberServer.Discord.Modules
             if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
             else user = (IGuildUser)Context.User;
 
-            if ((isAdmin) && CommunityBot._teamRoles.Contains(role))
+            if ((isAdmin))
             {
                 Player player = Player.GetByDiscord(user.Mention);
                 if (player == null) await ReplyAsync("That user has not registered with the bot yet");
-                else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Team team)) CommunityBot.ChangeTeam(player, team);
+                else if (Team.Exists(teamId)) CommunityBot.ChangeTeam(player, new Team(teamId));
                 else await ReplyAsync("Team parse failed");
             }
             else await ReplyAsync("You are not authorized to assign that role");
@@ -182,7 +182,7 @@ namespace TeamSaberServer.Discord.Modules
                 Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
                 songs.ForEach(x => {
                     string songId = x.SongId;
-                    scores.Add(x, GetScoresForSong(x, (long)r, (long)Team.All));
+                    scores.Add(x, GetScoresForSong(x, (long)r));
                 });
 
                 finalMessage += $"{r}\n\n";

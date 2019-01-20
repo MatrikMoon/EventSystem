@@ -27,7 +27,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
 
         public event Action<IDifficultyBeatmap> PlayPressed;
         public IDifficultyBeatmap selectedMap;
-        public Team selectedTeam = Team.None;
+        public string selectedTeam = "-1";
 
         TextMeshProUGUI _songName;
         TextMeshProUGUI _team;
@@ -108,15 +108,15 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageLeftButton.gameObject.SetActive(false);
                 _pageRightButton.gameObject.SetActive(false);
 
-                selectedTeam = Team.None;
+                selectedTeam = "-1";
             }
         }
 
-        public void SetSong(IDifficultyBeatmap map, Team team)
+        public void SetSong(IDifficultyBeatmap map, string teamId)
         {
             //Set globals
             selectedMap = map;
-            selectedTeam = team;
+            selectedTeam = teamId;
 
             //Enable relevant views
             _leaderboard.gameObject.SetActive(true);
@@ -128,17 +128,17 @@ namespace TeamSaberPlugin.UI.ViewControllers
 
             //Set song name text and team text (and color)
             _songName.SetText(map.level.songName);
-            _team.SetText(team.ToString());
+            _team.SetText(teamId.ToString());
 
-            _team.color = Player.GetColorForTeam(team);
-            if (team == Team.All)
+            _team.color = Player.GetColorForTeam(teamId);
+            if (teamId == Team.All)
             {
                 _team.color = Color.green;
                 _team.SetText("Mixed");
             }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), Rarity.All, team, team == Team.All);
+            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), Rarity.All, teamId, teamId == Team.All);
         }
 
         public void Refresh()

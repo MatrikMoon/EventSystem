@@ -77,9 +77,9 @@ namespace TeamSaberPlugin.Misc
         }
 
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rarity rarity, Team team, bool useTeamColors = false)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rarity rarity, string teamId, bool useTeamColors = false)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rarity, team, useTeamColors));
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rarity, teamId, useTeamColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
@@ -94,6 +94,7 @@ namespace TeamSaberPlugin.Misc
         private static IEnumerator GetAllData(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
+            yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
             if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetWeeklySongs(lcfgm, slvc));
         }
 
@@ -132,7 +133,7 @@ namespace TeamSaberPlugin.Misc
                     }
 
                     Player.Instance.rarity = (Rarity)Convert.ToInt64(node["rarity"].Value);
-                    Player.Instance.team = (Team)Convert.ToInt64(node["team"].Value);
+                    Player.Instance.team = node["team"].ToString();
                 }
                 catch (Exception e)
                 {
@@ -142,9 +143,9 @@ namespace TeamSaberPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, Team team, bool useTeamColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{(int)team}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -167,7 +168,7 @@ namespace TeamSaberPlugin.Misc
                             Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true",
                             (Rarity)Convert.ToInt32(score.Value["rarity"].ToString()),
-                            (Team)Convert.ToInt32(score.Value["team"].ToString())
+                            score.Value["team"].ToString()
                         ));
 
                         //If one of the scores is us, set the "special" score position to the right value
@@ -181,6 +182,43 @@ namespace TeamSaberPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error parsing leaderboard data: {e}");
+                }
+            }
+        }
+
+        //GET the weekly songs from the server, then start the Download coroutine to download and display them
+        //TODO: Time complexity here is a mess.
+        private static IEnumerator GetTeams(SongListViewController slvc)
+        {
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getteams/");
+#if DEBUG
+            Logger.Info($"REQUESTING TEAMS: {discordCommunityApi}/getteams/");
+#endif
+            www.timeout = 30;
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Logger.Error($"Error getting teams: {www.error}");
+                slvc.DownloadErrorHappened($"Error getting teams: {www.error}");
+            }
+            else
+            {
+                try
+                {
+                    //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
+                    var node = JSON.Parse(www.downloadHandler.text);
+                    foreach (var team in node)
+                    {
+                        Logger.Success("Adding team: " + team.Key + " : " +  team.Value["teamName"] + " : " +  team.Value["captainId"] + " : " +  team.Value["color"]);
+                        Team.allTeams.Add(new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"Error parsing getteams data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing getteams data: {e}");
+                    yield break;
                 }
             }
         }

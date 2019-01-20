@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DiscordCommunityHelpers\Player.cs" />
+    <Compile Include="DiscordCommunityHelpers\Team.cs" />
     <Compile Include="Misc\Client.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\DebugTools.cs" />

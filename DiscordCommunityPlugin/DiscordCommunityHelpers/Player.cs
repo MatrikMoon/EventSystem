@@ -30,7 +30,7 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
 
         //Fields
         public Rarity rarity;
-        public Team team;
+        public string team;
 
         //Constructor
         public Player()
@@ -70,21 +70,6 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
                     return Color.cyan;
                 case Rarity.Rare:
                     return Color.blue;
-                default:
-                    return Color.white;
-            }
-        }
-
-        //Returns the appropriate color for a team
-        public Color GetColorForTeam() => GetColorForTeam(team);
-        public static Color GetColorForTeam(Team team)
-        {
-            switch (team)
-            {
-                case Team.Team1:
-                    return Color.red;
-                case Team.Team2:
-                    return Color.yellow;
                 default:
                     return Color.white;
             }

@@ -166,6 +166,7 @@
     <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="Database\Player.cs" />
     <Compile Include="Database\Score.cs" />
+    <Compile Include="Database\Team.cs" />
     <Compile Include="Database\Song.cs" />
     <Compile Include="Discord\CommunityBot.cs" />
     <Compile Include="Discord\Modules\PublicModule.cs" />

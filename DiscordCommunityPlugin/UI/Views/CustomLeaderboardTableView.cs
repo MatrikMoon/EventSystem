@@ -60,7 +60,7 @@ namespace TeamSaberPlugin.UI.Views
             leaderboardTableCell.showFullCombo = scoreData.fullCombo;
             leaderboardTableCell.showSeparator = (row != _scores.Count - 1);
             leaderboardTableCell.specialScore = (_specialScorePos == row);
-            if (!(_specialScorePos == row) && _useTeamColors) leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Player.GetColorForTeam(scoreData.Team);
+            if (!(_specialScorePos == row) && _useTeamColors) leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Team.allTeams.FirstOrDefault(x => x.TeamId == scoreData.TeamId).Color;
             return leaderboardTableCell;
         }
 
@@ -101,16 +101,16 @@ namespace TeamSaberPlugin.UI.Views
                 private set;
             }
 
-            public Team Team
+            public string TeamId
             {
                 get;
                 private set;
             }
 
-            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rarity = Rarity.None, Team team = Team.None) : base(score, playerName, place, fullCombo)
+            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rarity = Rarity.None, string teamId = "-1") : base(score, playerName, place, fullCombo)
             {
                 Rarity = rarity;
-                Team = team;
+                TeamId = teamId;
             }
         }
     }
