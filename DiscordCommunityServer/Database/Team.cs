@@ -21,7 +21,9 @@ namespace TeamSaberServer.Database
             this.teamId = teamId;
             if (!Exists())
             {
+                Logger.Warning("ADDING TEAM: " + teamId);
                 SimpleSql.AddTeam(teamId, "", "", "");
+                Logger.Warning("DONE ADDING TEAM");
             }
         }
         

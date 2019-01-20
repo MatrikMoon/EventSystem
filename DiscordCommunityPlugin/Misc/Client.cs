@@ -168,7 +168,7 @@ namespace TeamSaberPlugin.Misc
                             Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true",
                             (Rarity)Convert.ToInt32(score.Value["rarity"].ToString()),
-                            score.Value["team"].ToString()
+                            score.Value["team"]
                         ));
 
                         //If one of the scores is us, set the "special" score position to the right value
@@ -206,11 +206,13 @@ namespace TeamSaberPlugin.Misc
             {
                 try
                 {
+                    //Clear out existing teams
+                    Team.allTeams.Clear();
+
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
                     foreach (var team in node)
                     {
-                        Logger.Success("Adding team: " + team.Key + " : " +  team.Value["teamName"] + " : " +  team.Value["captainId"] + " : " +  team.Value["color"]);
                         Team.allTeams.Add(new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]));
                     }
                 }

@@ -59,6 +59,10 @@ namespace TeamSaberServer.Discord.Services
         {
             var message = await before.GetOrDownloadAsync();
             Console.WriteLine($"{message} -> {after}");
+
+            //When a message is edited, toss it through the parser again
+            //Allows editing to fix spacing errors and such that prevent commands from being run
+            await MessageReceivedAsync(after);
         }
 
         private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel channel, SocketReaction reaction)

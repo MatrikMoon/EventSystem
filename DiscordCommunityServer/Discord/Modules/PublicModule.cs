@@ -39,18 +39,17 @@ namespace TeamSaberServer.Discord.Modules
 
             if (!Player.Exists(steamId) || !Player.IsRegistered(steamId))
             {
-                Player player = new Player(steamId);
-                player.SetDiscordName(Context.User.Username);
-                player.SetDiscordExtension(Context.User.Discriminator);
-                player.SetDiscordMention(Context.User.Mention);
-                player.SetTimezone(timezone);
-
                 int rank = 0;
-
                 var embed = Context.Message.Embeds.FirstOrDefault();
 
                 if (embed != null)
                 {
+                    Player player = new Player(steamId);
+                    player.SetDiscordName(Context.User.Username);
+                    player.SetDiscordExtension(Context.User.Discriminator);
+                    player.SetDiscordMention(Context.User.Mention);
+                    player.SetTimezone(timezone);
+
                     //Scrape out the rank data
                     var description = embed.Description;
                     var searchBy = "Player Ranking: #";
@@ -59,28 +58,29 @@ namespace TeamSaberServer.Discord.Modules
 
                     rank = Convert.ToInt32(Regex.Replace(description, "[^0-9]", ""));
                     player.SetRank(rank);
+
+                    var guildRoles = Context.Guild.Roles.ToList();
+
+                    ulong[] discordRoleIds = guildRoles
+                        .Where(x => CommunityBot._rarityRoles.Contains(x.Name.ToLower()))
+                        .Select(x => x.Id)
+                        .ToArray();
+
+                    ulong saberRole = ((IGuildUser)Context.User).RoleIds.ToList().Where(x => discordRoleIds.Contains(x)).FirstOrDefault();
+                    string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
+                    if (saberRole > 0)
+                    {
+                        player.SetRarity(CommunityBot._saberRankValues[CommunityBot._rarityRoles.ToList().IndexOf(userRoleText)]);
+                    }
+
+                    string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}` with timezone `{timezone}`";
+                    if (saberRole > 0) reply += $" and rarity `{userRoleText}`";
+                    if (rank > 0) reply += $" and rank `{rank}`";
+                    await ReplyAsync(reply);
                 }
-                
-                var guildRoles = Context.Guild.Roles.ToList();
-
-                ulong[] discordRoleIds = guildRoles
-                    .Where(x => CommunityBot._rarityRoles.Contains(x.Name.ToLower()))
-                    .Select(x => x.Id)
-                    .ToArray();
-
-                ulong saberRole = ((IGuildUser)Context.User).RoleIds.ToList().Where(x => discordRoleIds.Contains(x)).FirstOrDefault();
-                string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
-                if (saberRole > 0)
-                {
-                    player.SetRarity(CommunityBot._saberRankValues[CommunityBot._rarityRoles.ToList().IndexOf(userRoleText)]);
-                }
-
-                string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}` with timezone `{timezone}`";
-                if (saberRole > 0) reply += $" and rarity `{userRoleText}`";
-                if (rank > 0) reply += $" and rank `{rank}`";
-                await ReplyAsync(reply);
+                else await ReplyAsync("Waitng for embedded content...");
             }
-            else
+            else if (new Player(steamId).GetDiscordMention() != Context.User.Mention)
             {
                 await ReplyAsync($"That steam account is already linked to `{new Player(steamId).GetDiscordName()}`, message an admin if you *really* need to relink it.");
             }

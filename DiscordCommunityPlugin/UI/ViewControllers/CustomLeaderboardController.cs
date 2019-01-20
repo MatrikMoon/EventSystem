@@ -28,6 +28,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
         public event Action<IDifficultyBeatmap> PlayPressed;
         public IDifficultyBeatmap selectedMap;
         public string selectedTeam = "-1";
+        public int selectedTeamIndex = -1;
 
         TextMeshProUGUI _songName;
         TextMeshProUGUI _team;
@@ -68,8 +69,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageLeftButton.interactable = true;
                 _pageLeftButton.onClick.AddListener(() =>
                 {
-                    SetSong(selectedMap, --selectedTeam);
-                    if (selectedTeam <= (int)Team.Team1) _pageLeftButton.interactable = false;
+                    SetSong(selectedMap, --selectedTeamIndex);
+                    if (selectedTeamIndex <= -1) _pageLeftButton.interactable = false;
                     _pageRightButton.interactable = true;
                 });
 
@@ -82,8 +83,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageRightButton.interactable = true;
                 _pageRightButton.onClick.AddListener(() =>
                 {
-                    SetSong(selectedMap, ++selectedTeam);
-                    if (selectedTeam >= Team.All) _pageRightButton.interactable = false;
+                    SetSong(selectedMap, ++selectedTeamIndex);
+                    if (selectedTeamIndex >= Team.allTeams.Count - 1) _pageRightButton.interactable = false;
                     _pageLeftButton.interactable = true;
                 });
 
@@ -97,6 +98,13 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 {
                     PlayPressed?.Invoke(selectedMap);
                 });
+
+                if (selectedTeamIndex <= -1) _pageLeftButton.interactable = false;
+                if (selectedTeamIndex >= Team.allTeams.Count - 1) _pageRightButton.interactable = false;
+
+                //???
+                //_leaderboard.SetUpArrow(_pageLeftButton);
+                //_leaderboard.SetDownArrow(_pageRightButton);
             }
             else if (!firstActivation && type == ActivationType.AddedToHierarchy)
             {
@@ -109,14 +117,20 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageRightButton.gameObject.SetActive(false);
 
                 selectedTeam = "-1";
+                selectedTeamIndex = -1;
             }
         }
 
-        public void SetSong(IDifficultyBeatmap map, string teamId)
+        public void SetSong(IDifficultyBeatmap map, int teamIndex)
         {
             //Set globals
             selectedMap = map;
-            selectedTeam = teamId;
+
+            if (teamIndex >= 0)
+            {
+                selectedTeam = Team.allTeams.ToArray().ElementAt(teamIndex).TeamId;
+            }
+            else selectedTeam = "-1";
 
             //Enable relevant views
             _leaderboard.gameObject.SetActive(true);
@@ -128,22 +142,26 @@ namespace TeamSaberPlugin.UI.ViewControllers
 
             //Set song name text and team text (and color)
             _songName.SetText(map.level.songName);
-            _team.SetText(teamId.ToString());
 
-            _team.color = Player.GetColorForTeam(teamId);
-            if (teamId == Team.All)
+            if (selectedTeam == "-1")
             {
                 _team.color = Color.green;
                 _team.SetText("Mixed");
             }
+            else
+            {
+                var currentTeam = Team.allTeams.FirstOrDefault(x => x.TeamId == selectedTeam);
+                _team.color = currentTeam.Color;
+                _team.SetText(currentTeam.TeamName);
+            }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), Rarity.All, teamId, teamId == Team.All);
+            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), Rarity.All, selectedTeam, selectedTeam == "-1");
         }
 
         public void Refresh()
         {
-            if (selectedMap != null && selectedTeam != Team.None) SetSong(selectedMap, selectedTeam);
+            if (selectedMap != null) SetSong(selectedMap, selectedTeamIndex);
         }
 
         public void SetScores(List<CustomLeaderboardTableView.CustomScoreData> scores, int myScorePos, bool useTeamColors = false)

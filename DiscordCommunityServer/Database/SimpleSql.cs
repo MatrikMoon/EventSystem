@@ -35,7 +35,7 @@ namespace TeamSaberServer.Database
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', rank INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', difficultyLevel INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', old BIT DEFAULT 0)");
             }
             else
             {
@@ -185,7 +185,7 @@ namespace TeamSaberServer.Database
                                 Score = Convert.ToInt64(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 Rarity = (Rarity)Convert.ToInt64(reader["rarity"].ToString()),
-                                Team = new Team(reader["team"].ToString()),
+                                TeamId = reader["team"].ToString(),
                                 Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
                             });
                     }
@@ -217,7 +217,7 @@ namespace TeamSaberServer.Database
                                 Score = Convert.ToInt64(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 Rarity = (Rarity)Convert.ToInt64(reader["rarity"].ToString()),
-                                Team = new Team(reader["team"].ToString()),
+                                TeamId = reader["team"].ToString(),
                                 Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
                             });
                     }
@@ -235,7 +235,7 @@ namespace TeamSaberServer.Database
             public long Score { get; set; }
             public bool FullCombo { get; set; }
             public Rarity Rarity { get; set; }
-            public Team Team { get; set; }
+            public string TeamId { get; set; }
             public LevelDifficulty Difficulty { get; set; }
         }
 
