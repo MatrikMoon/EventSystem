@@ -88,9 +88,14 @@ namespace TeamSaberServer.Discord
             var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
 
-            player.SetTeam((int)team);
-            await user.RemoveRolesAsync(guild.Roles.Where(x => _teamRoles.Contains(x.Name.ToLower())));
-            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.ToString().ToLower()));
+            //If the player already has a team role, remove it
+            if (player.GetTeam() != "-1")
+            {
+                await user.RemoveRolesAsync(guild.Roles.Where(x => x.Name.ToLower() == player.GetTeam().ToLower()));
+            }
+
+            player.SetTeam(team.GetTeamId());
+            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.GetTeamName().ToLower()));
 
             //Sort out existing scores
             string steamId = player.GetSteamId();
@@ -101,7 +106,7 @@ namespace TeamSaberServer.Discord
                 playerScores.ToList().ForEach(x =>
                 {
                     BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongId);
-                    ExecuteCommand($"UPDATE scoreTable SET team = {(int)team} WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
+                    ExecuteCommand($"UPDATE scoreTable SET team = \'{team.GetTeamId()}\' WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
                 });
             }
 

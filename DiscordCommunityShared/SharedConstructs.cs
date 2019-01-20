@@ -26,6 +26,7 @@ namespace TeamSaberShared
             All = 6 //Not to be stored. Only use as "no filter necessary"
         }
 
+        /*
         public enum Team
         {
             None = -1, //Only use as "does not exist"
@@ -33,6 +34,7 @@ namespace TeamSaberShared
             Team2,
             All //Not to be stored. Only use as "no filter necessary"
         }
+        */
 
         public enum LevelDifficulty
         {
