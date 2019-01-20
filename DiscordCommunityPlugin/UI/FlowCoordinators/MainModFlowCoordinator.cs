@@ -97,9 +97,9 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
 
             //Change community leaderboard view
             //Use the currently selected team, if it exists
-            string teamToView = _communityLeaderboard.selectedTeam;
-            if (teamToView == "-1") teamToView = Player.Instance.team;
-            _communityLeaderboard.SetSong(difficultyLevel, teamToView);
+            int teamIndex = _communityLeaderboard.selectedTeamIndex;
+            if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.team);
+            _communityLeaderboard.SetSong(difficultyLevel, teamIndex);
         }
 
         private void ReloadServerData()

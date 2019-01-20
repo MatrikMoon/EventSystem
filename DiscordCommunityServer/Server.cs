@@ -188,7 +188,7 @@ namespace TeamSaberServer
                         string songId = requestData[1];
                         int rarity = Convert.ToInt32(requestData[2]);
                         string teamId = requestData[3];
-                        teamId = Regex.Replace(teamId, "[^a-zA-Z0-9]", "");
+                        teamId = Regex.Replace(teamId, "[^a-zA-Z0-9-]", "");
 
                         Logger.Warning($"{songId} {(Rarity)rarity} {teamId}");
 
@@ -220,7 +220,7 @@ namespace TeamSaberServer
                             node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
                             node["steamId"] = x.Key;
                             node["rarity"] = (int)x.Value.Rarity;
-                            node["team"] = x.Value.Team.GetTeamId();
+                            node["team"] = x.Value.TeamId;
                             json.Add(Convert.ToString(place++), node);
                         });
 

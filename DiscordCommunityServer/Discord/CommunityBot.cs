@@ -25,7 +25,6 @@ namespace TeamSaberServer.Discord
         //to see if they're assigned a role that's relevant to us.
         //Also leaderboards uses _rarityToList
         public static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
-        public static string[] _teamRoles = { "team1", "team2" };
         public static string[] _rarityRoles = { "uncommon", "rare", "epic", "legendary", "mythic", "captain" };
         public static Rarity[] _rarityToList = { Rarity.Captain, Rarity.Mythic, Rarity.Legendary,
                                             Rarity.Epic, Rarity.Rare, Rarity.Uncommon };
@@ -42,7 +41,7 @@ namespace TeamSaberServer.Discord
 #if DEBUG
                 var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
 #else
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
 #endif
                 guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First().SendMessageAsync(message);
             }
@@ -53,7 +52,7 @@ namespace TeamSaberServer.Discord
 #if DEBUG
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
 #else
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
 #endif
             var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
@@ -83,7 +82,7 @@ namespace TeamSaberServer.Discord
 #if DEBUG
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
 #else
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
 #endif
             var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
