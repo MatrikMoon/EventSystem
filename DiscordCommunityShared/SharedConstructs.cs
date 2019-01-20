@@ -8,8 +8,8 @@ namespace DiscordCommunityShared
     public static class SharedConstructs
     {
         public static string Name => "DiscordCommunityPlugin";
-        public static string Version => "0.2.3";
-        public static int VersionCode => 023;
+        public static string Version => "0.2.4";
+        public static int VersionCode => 024;
         public static string Changelog =
             "0.0.1: First Commit. Base Discord/Plugin/Server functional, some commands. Just added \"mode\' differentiation between songs.\n" +
             "0.0.2: Added Oculus support. Added Leaderboard views.\n" +
@@ -31,7 +31,8 @@ namespace DiscordCommunityShared
             "0.2.0: Updated for 0.12.0!\n" +
             "0.2.1: Fixed various issues from previous version (reload score after song, fixed restart button, re-added scoresaber submission)\n" +
             "0.2.2: Added One Hope from 0.12.1!\n" +
-            "0.2.3: Added Pop Stars from 0.12.2!\n";
+            "0.2.3: Added Pop Stars from 0.12.2!\n" +
+            "0.2.4: Ost's now top out at Expert\n";
 
         public enum Rank
         {

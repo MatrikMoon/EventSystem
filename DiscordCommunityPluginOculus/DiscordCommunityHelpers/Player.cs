@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DiscordCommunityShared;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -193,7 +194,8 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
             {
                 case Rank.Master:
                 case Rank.Blue:
-                    ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.ExpertPlus);
+                    if (OstHelper.IsOst(level.levelID)) ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.Expert);
+                    else ret = GetClosestDifficultyPreferLower(level, BeatmapDifficulty.ExpertPlus);
                     break;
                 case Rank.Gold:
                 case Rank.Silver:

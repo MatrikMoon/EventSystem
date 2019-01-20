@@ -35,9 +35,12 @@ namespace DiscordCommunityServer
                                 !new Database.Song(s.SongId).IsOld() &&
                                 Database.Player.Exists(s.SteamId) &&
                                 Database.Player.IsRegistered(s.SteamId) &&
-                                new BeatSaver.Song(s.SongId)
-                                    .GetDifficultyForRank(
-                                        (Rank)(new Database.Player(s.SteamId).GetRank())) == (LevelDifficulty)s.DifficultyLevel) //If the score is invalid or the song doesn't exist, or the user played the wrong difficulty
+                                (
+                                    OstHelper.IsOst(s.SongId) ||
+                                    new BeatSaver.Song(s.SongId)
+                                        .GetDifficultyForRank(
+                                            (Rank)(new Database.Player(s.SteamId).GetRank())) == (LevelDifficulty)s.DifficultyLevel)
+                                )//If the score is invalid or the song doesn't exist, or the user played the wrong difficulty
                             {
                                 Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
                             }
