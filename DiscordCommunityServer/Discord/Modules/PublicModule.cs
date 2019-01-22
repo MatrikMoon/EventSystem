@@ -125,10 +125,10 @@ namespace TeamSaberServer.Discord.Modules
         public async Task RarityAsync(string role, IGuildUser user = null)
         {
             role = role.ToLower();
-            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
             if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
             else user = (IGuildUser)Context.User;
 
@@ -142,36 +142,88 @@ namespace TeamSaberServer.Discord.Modules
             else await ReplyAsync("You are not authorized to assign that role");
         }
 
-        [Command("team")]
+        [Command("createTeam")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task TeamAsync(string teamId, IGuildUser user = null)
+        public async Task CreateTeamAsync(string teamId, string name = "Default Team Name", string color = "#ffffff")
         {
             teamId = teamId.ToLower();
-            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
-            if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
-            else user = (IGuildUser)Context.User;
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
-            if ((isAdmin))
+            if (isAdmin)
             {
-                Player player = Player.GetByDiscord(user.Mention);
-                if (player == null) await ReplyAsync("That user has not registered with the bot yet");
-                else if (Team.Exists(teamId)) CommunityBot.ChangeTeam(player, new Team(teamId));
-                else await ReplyAsync("Team parse failed");
+                if (!Team.Exists(teamId))
+                {
+                    AddTeam(teamId, name, "", color);
+                    await ReplyAsync($"Team created with id `{teamId}`, name `{name}`, and color `{color}`");
+                }
+                else await ReplyAsync("That team already exists, sorry.");
             }
-            else await ReplyAsync("You are not authorized to assign that role");
+            else await ReplyAsync("You are not authorized to create teams");
+        }
+
+        [Command("modifyTeam")]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task ModifyTeamAsync(string teamId, string name = "Default Team Name", string color = "#ffffff")
+        {
+            teamId = teamId.ToLower();
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            if (Team.Exists(teamId))
+            {
+                bool isCaptain = new Team(teamId).GetCaptain() == Player.GetByDiscord(Context.User.Mention).GetSteamId(); //In the case of teams, team captains count as admins
+
+                if (isAdmin || isCaptain)
+                {
+                    AddTeam(teamId, name, "", color);
+                    await ReplyAsync($"Team created with id `{teamId}`, name `{name}`, and color `{color}`");
+                }
+                else await ReplyAsync("You are not authorized to create teams");
+            }
+            else await ReplyAsync("That team does not exist, sorry.");
+        }
+
+        [Command("assignTeam")]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task AssignTeamAsync(string teamId, string captain = null, IGuildUser user = null)
+        {
+            bool setToCaptain = "captain" == captain;
+            teamId = teamId.ToLower();
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            user = user ?? (IGuildUser)Context.User; //Anyone who can assign teams can assign roles for others
+
+            if (Team.Exists(teamId)) {
+                bool isCaptain = new Team(teamId).GetCaptain() == Player.GetByDiscord(Context.User.Mention).GetSteamId(); //In the case of teams, team captains count as admins
+
+                if (isAdmin || isCaptain)
+                {
+                    Player player = Player.GetByDiscord(user.Mention);
+                    if (player == null) await ReplyAsync("That user has not registered with the bot yet");
+                    else if ((isCaptain && !isAdmin) && player.GetTeam() != "-1") await ReplyAsync("This person is already on a team");
+                    CommunityBot.ChangeTeam(player, new Team(teamId), setToCaptain);
+                }
+                else await ReplyAsync("You are not authorized to assign that role");
+            }
+            else await ReplyAsync("Team does not exist");
         }
 
         //A certifiable mess.
         [Command("leaderboards")]
         public async Task LeaderboardsAsync()
         {
-            ulong weeklyEventManagerRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "weekly event manager").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == weeklyEventManagerRoleId);
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
             if (!isAdmin) return;
 
             string finalMessage = "Leaderboard:\n\n";

@@ -58,8 +58,11 @@ namespace TeamSaberServer.Discord
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
 
             player.SetRarity((int)rarity);
+
+            /*
             await user.RemoveRolesAsync(guild.Roles.Where(x => _rarityRoles.Contains(x.Name.ToLower())));
             await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == rarity.ToString().ToLower()));
+            */
 
             //Sort out existing scores
             string steamId = player.GetSteamId();
@@ -74,10 +77,10 @@ namespace TeamSaberServer.Discord
                 });
             }
 
-            await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been designated as {rarity}!");
+            await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been designated as `{rarity}`!");
         }
 
-        public static async void ChangeTeam(Player player, Team team)
+        public static async void ChangeTeam(Player player, Team team, bool captain = false)
         {
 #if DEBUG
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
@@ -87,14 +90,16 @@ namespace TeamSaberServer.Discord
             var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
 
+            /*
             //If the player already has a team role, remove it
             if (player.GetTeam() != "-1")
             {
                 await user.RemoveRolesAsync(guild.Roles.Where(x => x.Name.ToLower() == player.GetTeam().ToLower()));
             }
+            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.GetTeamName().ToLower()));
+            */
 
             player.SetTeam(team.GetTeamId());
-            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.GetTeamName().ToLower()));
 
             //Sort out existing scores
             string steamId = player.GetSteamId();
@@ -109,7 +114,10 @@ namespace TeamSaberServer.Discord
                 });
             }
 
-            await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been assigned to {team}!");
+            if (captain) team.SetCaptain(player.GetSteamId());
+
+            string teamName = team.GetTeamName();
+            await rankChannel.SendMessageAsync($"{player.GetDiscordMention()} has been assigned {(captain ? "as the captain of" : "to")} `{((teamName == string.Empty || teamName == null )? team.GetTeamId() : teamName)}`!");
         }
 
         public static async Task MainAsync()

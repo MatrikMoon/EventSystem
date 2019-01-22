@@ -107,8 +107,22 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
         }
 
+        //BSUtils: disable gameplay-modifying plugins
+
+        private void BSUtilsDisableOtherPlugins()
+        {
+            BS_Utils.Gameplay.Gamemode.NextLevelIsIsolated("TeamSaberPlugin");
+            Logger.Success("Disabled game-modifying plugins through bs_utils :)");
+        }
+
         private void SongPlayPressed(IDifficultyBeatmap map)
         {
+            if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+            {
+                BSUtilsDisableOtherPlugins();
+            }
+            else Logger.Warning("BSUtils not installed, not disabling other plugins");
+
             //We're playing from the mod's menu
             CommunityUI.instance.communitySongPlayed = map.level.levelID;
 

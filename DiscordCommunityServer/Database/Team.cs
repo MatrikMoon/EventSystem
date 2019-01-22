@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 /*
  * Created by Moon on 9/11/2018
@@ -21,9 +22,7 @@ namespace TeamSaberServer.Database
             this.teamId = teamId;
             if (!Exists())
             {
-                Logger.Warning("ADDING TEAM: " + teamId);
                 SimpleSql.AddTeam(teamId, "", "", "");
-                Logger.Warning("DONE ADDING TEAM");
             }
         }
         
@@ -39,6 +38,7 @@ namespace TeamSaberServer.Database
 
         public bool SetTeamName(string name)
         {
+            name = Regex.Replace(name, "[^a-zA-Z0-9]", "");
             return SimpleSql.ExecuteCommand($"UPDATE teamTable SET teamName = \'{name}\' WHERE teamId = \'{teamId}\'") > 1;
         }
 
@@ -59,6 +59,7 @@ namespace TeamSaberServer.Database
 
         public bool SetColor(string color)
         {
+            color = Regex.Replace(color, "[^a-zA-Z0-9#]", "");
             return SimpleSql.ExecuteCommand($"UPDATE teamTable SET color = \'{color}\' WHERE teamId = \'{teamId}\'") > 1;
         }
 
@@ -74,6 +75,7 @@ namespace TeamSaberServer.Database
 
         public static bool Exists(string teamId)
         {
+            teamId = Regex.Replace(teamId, "[^a-zA-Z0-9]", "");
             return SimpleSql.ExecuteQuery($"SELECT * FROM teamTable WHERE teamId = \'{teamId}\'", "teamId").Any();
         }
     }
