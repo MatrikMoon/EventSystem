@@ -32,7 +32,8 @@ namespace DiscordCommunityShared
             "0.2.1: Fixed various issues from previous version (reload score after song, fixed restart button, re-added scoresaber submission)\n" +
             "0.2.2: Added One Hope from 0.12.1!\n" +
             "0.2.3: Added Pop Stars from 0.12.2!\n" +
-            "0.2.4: Ost's now top out at Expert\n";
+            "0.2.4: Ost's now top out at Expert\n" +
+            "0.2.5: Player settings carry over into the plugin, implemented bs_utils isolation (only if it's already installed)\n";
 
         public enum Rank
         {

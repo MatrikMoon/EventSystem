@@ -79,8 +79,6 @@ namespace DiscordCommunityPlugin
 
         private void CreateCommunitiyButton()
         {
-            CreateSettingsMenu();
-
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
@@ -104,22 +102,6 @@ namespace DiscordCommunityPlugin
                 Logger.Error("Error: " + e.Message);
                 Logger.Error(e.StackTrace);
             }
-        }
-
-        private void CreateSettingsMenu()
-        {
-            var subMenu = SettingsUI.CreateSubMenu("Community Plugin");
-            var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
-            sooperSecretSetting.GetValue += () => Config.SooperSecretSetting;
-            sooperSecretSetting.SetValue += (value) => Config.SooperSecretSetting = value;
-
-            var mirrorSetting = subMenu.AddBool("Mirror Mode");
-            mirrorSetting.GetValue += () => Config.MirrorMode;
-            mirrorSetting.SetValue += (b) => Config.MirrorMode = b;
-
-            var staticSetting = subMenu.AddBool("Static Lights");
-            mirrorSetting.GetValue += () => Config.StaticLights;
-            mirrorSetting.SetValue += (b) => Config.StaticLights = b;
         }
     }
 }
