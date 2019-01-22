@@ -181,9 +181,9 @@ namespace TeamSaberServer.Discord.Modules
                 if (isAdmin || isCaptain)
                 {
                     AddTeam(teamId, name, "", color);
-                    await ReplyAsync($"Team created with id `{teamId}`, name `{name}`, and color `{color}`");
+                    await ReplyAsync($"Team now has id `{teamId}`, name `{name}`, and color `{color}`");
                 }
-                else await ReplyAsync("You are not authorized to create teams");
+                else await ReplyAsync("You are not authorized to modify this team");
             }
             else await ReplyAsync("That team does not exist, sorry.");
         }
