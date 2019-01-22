@@ -1,15 +1,14 @@
 ﻿using CustomUI.BeatSaber;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI;
-using DiscordCommunityShared;
+using TeamSaberPlugin.UI;
+using TeamSaberShared;
 using IllusionPlugin;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = TeamSaberShared.Logger;
 
-namespace DiscordCommunityPlugin
+namespace TeamSaberPlugin
 {
     public class Plugin : IPlugin
     {

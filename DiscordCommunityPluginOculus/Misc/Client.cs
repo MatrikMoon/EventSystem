@@ -1,8 +1,8 @@
-﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
-using DiscordCommunityPlugin.UI.ViewControllers;
-using DiscordCommunityPlugin.UI.Views;
-using DiscordCommunityShared;
-using DiscordCommunityShared.SimpleJSON;
+﻿using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.UI.ViewControllers;
+using TeamSaberPlugin.UI.Views;
+using TeamSaberShared;
+using TeamSaberShared.SimpleJSON;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -13,24 +13,24 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static TeamSaberShared.SharedConstructs;
+using Logger = TeamSaberShared.Logger;
 
 /*
  * Created by Moon on 9/9/2018
  * Communicates with a running DiscordCommunityServer
  */
 
-namespace DiscordCommunityPlugin.Misc
+namespace TeamSaberPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client
     {
         private static string discordCommunityUrl = "https://networkauditor.org";
 #if DEBUG
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
 #else
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
 #endif
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
@@ -76,69 +76,10 @@ namespace DiscordCommunityPlugin.Misc
             }
         }
 
-        public static void RequestRank(ulong steamId, Rank rank, bool isInitialAssignment, string signed)
-        {
-            var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First(); //No safety check intentional. If there's an issue here it needs to be noticed
-
-            //Build OST score list for blue application
-            string scoreList = "OST Scores:\n";
-            if (rank == Rank.Blue)
-            {
-                var levelCollection = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().First();
-                float roundMultiple = 100 * (float)Math.Pow(10, 2);
-
-                OstHelper.ostHashes
-                .Take(10) //Not Angel Voices
-                .ToList()
-                .ForEach(x =>
-                {
-
-                    var songName = OstHelper.GetOstSongNameFromLevelId(x);
-                    var localRank = Player.Instance.GetLocalRank(x, LevelDifficulty.Expert, playerDataModel);
-                    var localScore = Player.Instance.GetLocalScore(x, LevelDifficulty.Expert, playerDataModel);
-                    var noteCount = levelCollection.levels.First(y => y.levelID == x).difficultyBeatmaps.First(y => (int)y.difficulty == (int)LevelDifficulty.Expert).beatmapData.notesCount;
-                    int songMaxScore = ScoreController.MaxScoreForNumberOfNotes(noteCount);
-                    var percent = Mathf.Clamp((float)Math.Floor(localScore / (float)songMaxScore * roundMultiple) / roundMultiple, 0.0f, 1.0f) * 100.0f;
-
-                    scoreList += $"{songName}: {localScore} ({localRank} - {percent}%)\n";
-                });
-            }
-
-            //Build score object
-            RankRequest s = new RankRequest
-            {
-                SteamId = steamId.ToString(),
-                RequestedRank = (int)rank,
-                IsInitialAssignment = isInitialAssignment,
-                OstScoreList = scoreList,
-                Signed = signed
-            };
-
-            byte[] rankData = ProtobufHelper.SerializeProtobuf(s);
-
-            SharedCoroutineStarter.instance.StartCoroutine(RequestRankCoroutine(rankData));
-        }
-
-        //Post a score to the server
-        private static IEnumerator RequestRankCoroutine(byte[] proto)
-        {
-            JSONObject o = new JSONObject();
-            o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
-
-            UnityWebRequest www = UnityWebRequest.Post($"{discordCommunityApi}/requestrank/", o.ToString());
-            www.timeout = 30;
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Logger.Error(www.error);
-            }
-        }
-
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rank rank, bool useRankColors = false)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rarity rarity, string teamId, bool useTeamColors = false)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rank, useRankColors));
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rarity, teamId, useTeamColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
@@ -153,6 +94,7 @@ namespace DiscordCommunityPlugin.Misc
         private static IEnumerator GetAllData(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
+            yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
             if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetWeeklySongs(lcfgm, slvc));
         }
 
@@ -191,9 +133,7 @@ namespace DiscordCommunityPlugin.Misc
                     }
 
                     Player.Instance.rarity = (Rarity)Convert.ToInt64(node["rarity"].Value);
-                    Player.Instance.team = (Team)Convert.ToInt64(node["team"].Value);
-                    Player.Instance.tokens = Convert.ToInt64(node["tokens"].Value);
-                    Player.Instance.projectedTokens = Convert.ToInt64(node["projectedTokens"].Value);
+                    Player.Instance.team = node["team"].ToString();
                 }
                 catch (Exception e)
                 {
@@ -203,9 +143,9 @@ namespace DiscordCommunityPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, Team team, bool useRankColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{(int)team}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -227,7 +167,9 @@ namespace DiscordCommunityPlugin.Misc
                             score.Value["player"],
                             Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true",
-                            (Rarity)Convert.ToInt32(score.Value["rarity"].ToString())));
+                            (Rarity)Convert.ToInt32(score.Value["rarity"].ToString()),
+                            score.Value["team"]
+                        ));
 
                         //If one of the scores is us, set the "special" score position to the right value
                         if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))
@@ -235,11 +177,50 @@ namespace DiscordCommunityPlugin.Misc
                             myPos = Convert.ToInt32(score.Value["place"] - 1);
                         }
                     }
-                    clc.SetScores(scores, myPos, useRankColors);
+                    clc.SetScores(scores, myPos, useTeamColors);
                 }
                 catch (Exception e)
                 {
                     Logger.Error($"Error parsing leaderboard data: {e}");
+                }
+            }
+        }
+
+        //GET the weekly songs from the server, then start the Download coroutine to download and display them
+        //TODO: Time complexity here is a mess.
+        private static IEnumerator GetTeams(SongListViewController slvc)
+        {
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getteams/");
+#if DEBUG
+            Logger.Info($"REQUESTING TEAMS: {discordCommunityApi}/getteams/");
+#endif
+            www.timeout = 30;
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Logger.Error($"Error getting teams: {www.error}");
+                slvc.DownloadErrorHappened($"Error getting teams: {www.error}");
+            }
+            else
+            {
+                try
+                {
+                    //Clear out existing teams
+                    Team.allTeams.Clear();
+
+                    //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
+                    var node = JSON.Parse(www.downloadHandler.text);
+                    foreach (var team in node)
+                    {
+                        Team.allTeams.Add(new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"Error parsing getteams data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing getteams data: {e}");
+                    yield break;
                 }
             }
         }
