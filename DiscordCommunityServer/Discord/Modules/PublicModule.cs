@@ -78,7 +78,7 @@ namespace TeamSaberServer.Discord.Modules
                     if (rank > 0) reply += $" and rank `{rank}`";
                     await ReplyAsync(reply);
                 }
-                else await ReplyAsync("Waitng for embedded content...");
+                else await ReplyAsync("Waiting for embedded content...");
             }
             else if (new Player(steamId).GetDiscordMention() != Context.User.Mention)
             {
