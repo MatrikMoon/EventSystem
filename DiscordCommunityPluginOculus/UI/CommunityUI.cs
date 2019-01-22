@@ -1,12 +1,10 @@
 ﻿using CustomUI.BeatSaber;
 using CustomUI.MenuButton;
 using CustomUI.Settings;
-using DiscordCommunityPlugin.Misc;
-using DiscordCommunityPlugin.UI;
-using DiscordCommunityPlugin.UI.FlowCoordinators;
-using DiscordCommunityPlugin.UI.ViewControllers;
-using Oculus.Platform;
-using Oculus.Platform.Models;
+using TeamSaberPlugin.Misc;
+using TeamSaberPlugin.UI;
+using TeamSaberPlugin.UI.FlowCoordinators;
+using TeamSaberPlugin.UI.ViewControllers;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -17,7 +15,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
-using Logger = DiscordCommunityShared.Logger;
+using Logger = TeamSaberShared.Logger;
+using Oculus.Platform;
+using Oculus.Platform.Models;
 
 /**
  * Created by Moon on 8/23/2018
@@ -26,7 +26,7 @@ using Logger = DiscordCommunityShared.Logger;
  * (https://github.com/andruzzzhka/BeatSaverDownloader/)
  */
 
-namespace DiscordCommunityPlugin
+namespace TeamSaberPlugin
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CommunityUI : MonoBehaviour
@@ -48,7 +48,7 @@ namespace DiscordCommunityPlugin
             {
                 return;
             }
-            new GameObject("Discord Community Plugin").AddComponent<CommunityUI>();
+            new GameObject("TeamSaber Plugin").AddComponent<CommunityUI>();
         }
 
         //Called on object creation (only once in lifetime)
@@ -61,7 +61,7 @@ namespace DiscordCommunityPlugin
                 DontDestroyOnLoad(this);
                 Config.LoadConfig();
 
-				Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
+                Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
                 {
                     Plugin.PlayerId = msg.Data.ID;
                 });
@@ -84,7 +84,7 @@ namespace DiscordCommunityPlugin
 
         private void CreateCommunitiyButton()
         {
-            CreateSettingsMenu();
+            //CreateSettingsMenu();
 
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
@@ -100,7 +100,7 @@ namespace DiscordCommunityPlugin
             {
                 if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                 {
-                    MenuButtonUI.AddButton("DiscordCommunity", () => _mainModFlowCoordinator.PresentMainModUI());
+                    MenuButtonUI.AddButton("Team Saber", () => _mainModFlowCoordinator.PresentMainModUI());
                 }
                 else Logger.Error("MISSING SONG LOADER PLUGIN");
             }

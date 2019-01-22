@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using static DiscordCommunityShared.SharedConstructs;
-using Logger = DiscordCommunityShared.Logger;
+using static TeamSaberShared.SharedConstructs;
+using Logger = TeamSaberShared.Logger;
 
 /*
  * Created by Moon on 9/14/2018
@@ -11,7 +11,7 @@ using Logger = DiscordCommunityShared.Logger;
  * TODO: Add more relevant info later
  */
 
-namespace DiscordCommunityPlugin.DiscordCommunityHelpers
+namespace TeamSaberPlugin.DiscordCommunityHelpers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Player
@@ -30,9 +30,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
 
         //Fields
         public Rarity rarity;
-        public Team team;
-        public long tokens;
-        public long projectedTokens;
+        public string team;
 
         //Constructor
         public Player()
@@ -56,20 +54,20 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
         }
 
-        //Returns the appropriate color for a rank
+        //Returns the appropriate color for a rarity
         public Color GetColorForRarity() => GetColorForRarity(rarity);
-        public static Color GetColorForRank(Rarity rarity)
+        public static Color GetColorForRarity(Rarity rarity)
         {
             switch (rarity)
             {
                 case Rarity.Captain:
                     return Color.red;
                 case Rarity.Epic:
-                    return Color.purple;
+                    return Color.magenta;
                 case Rarity.Legendary:
                     return Color.yellow;
                 case Rarity.Mythic:
-                    return Color.pink;
+                    return Color.cyan;
                 case Rarity.Rare:
                     return Color.blue;
                 default:
@@ -78,7 +76,7 @@ namespace DiscordCommunityPlugin.DiscordCommunityHelpers
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        private IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty)
+        public IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty)
         {
             IDifficultyBeatmap ret = level.GetDifficultyBeatmap(difficulty);
             if (ret == null)

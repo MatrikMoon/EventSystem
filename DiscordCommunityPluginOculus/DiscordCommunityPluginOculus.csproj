@@ -7,8 +7,8 @@
     <ProjectGuid>{3FD17151-4548-4F72-8D0F-15306F9AFC71}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DiscordCommunityPlugin</RootNamespace>
-    <AssemblyName>DiscordCommunityPluginOculus</AssemblyName>
+    <RootNamespace>TeamSaberPlugin</RootNamespace>
+    <AssemblyName>TeamSaberOculus</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -100,6 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DiscordCommunityHelpers\Player.cs" />
+    <Compile Include="DiscordCommunityHelpers\Team.cs" />
     <Compile Include="Misc\Client.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\DebugTools.cs" />

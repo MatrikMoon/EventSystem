@@ -1,11 +1,12 @@
-﻿using DiscordCommunityPlugin.DiscordCommunityHelpers;
+﻿using TeamSaberPlugin.DiscordCommunityHelpers;
 using HMUI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
-using static DiscordCommunityShared.SharedConstructs;
+using static TeamSaberShared.SharedConstructs;
+using Logger = TeamSaberShared.Logger;
 
 /*
  * Created by Moon on 10/28/2018 at 2:18am
@@ -13,7 +14,7 @@ using static DiscordCommunityShared.SharedConstructs;
  * so we can set custom colors on all the players
  */
 
-namespace DiscordCommunityPlugin.UI.Views
+namespace TeamSaberPlugin.UI.Views
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CustomLeaderboardTableView : MonoBehaviour, TableView.IDataSource
@@ -24,7 +25,7 @@ namespace DiscordCommunityPlugin.UI.Views
         private TableView _tableView;
         private LeaderboardTableCell _cellInstance;
         private List<CustomScoreData> _scores;
-        private bool _useRankColors = false;
+        private bool _useTeamColors = false;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         public void Awake()
@@ -48,6 +49,16 @@ namespace DiscordCommunityPlugin.UI.Views
             _cellInstance = Resources.FindObjectsOfTypeAll<LeaderboardTableCell>().First(x => x.name == "LeaderboardTableCell");
         }
 
+        public void SetUpArrow(object upArrowButton)
+        {
+            _tableView.SetField("_pageUpButton", upArrowButton);
+        }
+        
+        public void SetDownArrow(object downArrowButton)
+        {
+            _tableView.SetField("_pageDownButton", downArrowButton);
+        }
+
         public TableCell CellForRow(int row)
         {
             LeaderboardTableCell leaderboardTableCell = Instantiate(_cellInstance);
@@ -60,7 +71,7 @@ namespace DiscordCommunityPlugin.UI.Views
             leaderboardTableCell.showFullCombo = scoreData.fullCombo;
             leaderboardTableCell.showSeparator = (row != _scores.Count - 1);
             leaderboardTableCell.specialScore = (_specialScorePos == row);
-            if (!(_specialScorePos == row) && _useRankColors) leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Player.GetColorForRank(scoreData.CommunityRank);
+            if (!(_specialScorePos == row) && _useTeamColors && scoreData.TeamId != "-1") leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Team.allTeams.FirstOrDefault(x => x.TeamId == scoreData.TeamId).Color;
             return leaderboardTableCell;
         }
 
@@ -78,11 +89,11 @@ namespace DiscordCommunityPlugin.UI.Views
             return _rowHeight;
         }
 
-        public virtual void SetScores(List<CustomScoreData> scores, int specialScorePos, bool useRankColors = false)
+        public virtual void SetScores(List<CustomScoreData> scores, int specialScorePos, bool useTeamColors = false)
         {
             _scores = scores;
             _specialScorePos = specialScorePos;
-            _useRankColors = useRankColors;
+            _useTeamColors = useTeamColors;
             if (_tableView.dataSource == null)
             {
                 _tableView.dataSource = this;
@@ -101,9 +112,16 @@ namespace DiscordCommunityPlugin.UI.Views
                 private set;
             }
 
-            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rank = Rank.None) : base(score, playerName, place, fullCombo)
+            public string TeamId
             {
-                CommunityRank = rank;
+                get;
+                private set;
+            }
+
+            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rarity = Rarity.None, string teamId = "-1") : base(score, playerName, place, fullCombo)
+            {
+                Rarity = rarity;
+                TeamId = teamId;
             }
         }
     }
