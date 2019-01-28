@@ -90,14 +90,9 @@ namespace TeamSaberServer.Discord
             var user = guild.Users.Where(x => x.Mention == player.GetDiscordMention()).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
 
-            /*
-            //If the player already has a team role, remove it
-            if (player.GetTeam() != "-1")
-            {
-                await user.RemoveRolesAsync(guild.Roles.Where(x => x.Name.ToLower() == player.GetTeam().ToLower()));
-            }
+            //Add the role of the team we're being switched to
+            //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.
             await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.GetTeamName().ToLower()));
-            */
 
             player.SetTeam(team.GetTeamId());
 

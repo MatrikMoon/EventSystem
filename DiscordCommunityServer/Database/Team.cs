@@ -73,6 +73,14 @@ namespace TeamSaberServer.Database
             return Exists(teamId);
         }
 
+        public static Team GetByDiscordMentionOfCaptain(string mention)
+        {
+            Player player = Player.GetByDiscordMetion(mention);
+            if (player == null) return null; //If the player doesn't exist, we definitely don't need to continue; it's obviously an invalid request
+
+            return SimpleSql.GetAllTeams().FirstOrDefault(x => x.GetCaptain() == player.GetSteamId());
+        }
+
         public static bool Exists(string teamId)
         {
             teamId = Regex.Replace(teamId, "[^a-zA-Z0-9]", "");
