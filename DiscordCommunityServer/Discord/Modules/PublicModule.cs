@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static TeamSaberServer.Database.SimpleSql;
 using static TeamSaberShared.SharedConstructs;
+using System.Globalization;
 
 namespace TeamSaberServer.Discord.Modules
 {
@@ -229,32 +230,33 @@ namespace TeamSaberServer.Discord.Modules
             string finalMessage = "Leaderboard:\n\n";
             List<SongConstruct> songs = GetActiveSongs();
 
-            foreach (Rarity r in CommunityBot._rarityToList)
+            Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
+            songs.ForEach(x => {
+                string songId = x.SongId;
+                scores.Add(x, GetScoresForSong(x));
+            });
+
+            songs.ForEach(x =>
             {
-                Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
-                songs.ForEach(x => {
-                    string songId = x.SongId;
-                    scores.Add(x, GetScoresForSong(x, (long)r));
-                });
+                string songId = x.SongId;
 
-                finalMessage += $"{r}\n\n";
-                songs.ForEach(x =>
+                if (scores[x].Count > 0) //Don't print if no one submitted scores
                 {
-                    string songId = x.SongId;
+                    var song = new Song(songId);
+                    finalMessage += song.GetSongName() + ":\n";
 
-                    if (scores[x].Count > 0) //Don't print if no one submitted scores
+                    foreach (KeyValuePair<string, ScoreConstruct> item in scores[x])
                     {
-                        finalMessage += new Song(songId).GetSongName() + ":\n";
-
-                        foreach (KeyValuePair<string, ScoreConstruct> item in scores[x])
-                        {
-                            finalMessage += new Player(item.Key).GetDiscordName() + " - " + item.Value.Score + (item.Value.FullCombo ? " (Full Combo)" : "") + "\n";
-                        }
-                        finalMessage += "\n";
+                        //TODO: This means the info file is read *EVERY LOOP*. Super inefficient.
+                        //It's left this way because there seems to be no way to determine the difficulty in a higher
+                        //scope. This is something to look into later.
+                        var percentage = ((double)item.Value.Score / (double)new BeatSaver.Song(songId).GetMaxScore(item.Value.Difficulty)).ToString("P", CultureInfo.InvariantCulture);
+                        finalMessage += new Player(item.Key).GetDiscordName() + " - " + item.Value.Score + $" ({percentage})" + (item.Value.FullCombo ? " (Full Combo)" : "") + "\n";
                     }
-                });
-            }
-            
+                    finalMessage += "\n";
+                }
+            });
+
             //Deal with long messages
             if (finalMessage.Length > 2000)
             {

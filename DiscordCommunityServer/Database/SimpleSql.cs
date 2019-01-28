@@ -168,7 +168,7 @@ namespace TeamSaberServer.Database
         }
 
         //Returns a dictionary of steamIds and scores for the designated song and rarity
-        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rarity, string teamId = "-1")
+        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rarity = (long)Rarity.All, string teamId = "-1")
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
