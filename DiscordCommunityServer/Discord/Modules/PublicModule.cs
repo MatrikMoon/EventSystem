@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static TeamSaberServer.Database.SimpleSql;
 using static TeamSaberShared.SharedConstructs;
+using Discord.WebSocket;
 using System.Globalization;
 
 namespace TeamSaberServer.Discord.Modules
@@ -135,7 +136,7 @@ namespace TeamSaberServer.Discord.Modules
 
             if ((isAdmin) && CommunityBot._rarityRoles.Contains(role))
             {
-                Player player = Player.GetByDiscord(user.Mention);
+                Player player = Player.GetByDiscordMetion(user.Mention);
                 if (player == null) await ReplyAsync("That user has not registered with the bot yet");
                 else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Rarity rarity)) CommunityBot.ChangeRarity(player, rarity);
                 else await ReplyAsync("Role parse failed");
@@ -158,6 +159,12 @@ namespace TeamSaberServer.Discord.Modules
                 if (!Team.Exists(teamId))
                 {
                     AddTeam(teamId, name, "", color);
+
+                    //If the provided color can be parsed into a uint, we can use the provided color as the color for the dicsord role
+                    Color discordColor = Color.Blue;
+                    if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
+
+                    await Context.Guild.CreateRoleAsync(name, color: discordColor, isHoisted: true);
                     await ReplyAsync($"Team created with id `{teamId}`, name `{name}`, and color `{color}`");
                 }
                 else await ReplyAsync("That team already exists, sorry.");
@@ -167,8 +174,18 @@ namespace TeamSaberServer.Discord.Modules
 
         [Command("modifyTeam")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task ModifyTeamAsync(string teamId, string name = "Default Team Name", string color = "#ffffff")
+        public async Task ModifyTeamAsync(string name, string color, string teamId = null)
         {
+            if (teamId == null)
+            {
+                teamId = Team.GetByDiscordMentionOfCaptain(Context.User.Mention)?.GetTeamId();
+                if (teamId == null)
+                {
+                    await ReplyAsync("You must provide the TeamId at the end of the command, since you are not the captian of any team");
+                    return;
+                }
+            }
+
             teamId = teamId.ToLower();
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
@@ -177,12 +194,31 @@ namespace TeamSaberServer.Discord.Modules
 
             if (Team.Exists(teamId))
             {
-                bool isCaptain = new Team(teamId).GetCaptain() == Player.GetByDiscord(Context.User.Mention).GetSteamId(); //In the case of teams, team captains count as admins
+                //Check if the person issuing the command is the captain of the team.
+                //Note: this was more relevant when the command required the issuer to input the team id instead of finding it for them,
+                //though, it's still relevant since any person could *try* to modify the team still. They should just get a permission required message
+                Team currentTeam = new Team(teamId);
+                string captain = currentTeam.GetCaptain();
+                bool isCaptain = string.IsNullOrEmpty(captain) ? true : captain == Player.GetByDiscordMetion(Context.User.Mention).GetSteamId(); //In the case of teams, team captains count as admins
 
                 if (isAdmin || isCaptain)
                 {
-                    AddTeam(teamId, name, "", color);
-                    await ReplyAsync($"Team now has id `{teamId}`, name `{name}`, and color `{color}`");
+                    //If the provided color can be parsed into a uint, we can use the provided color as the color for the dicsord role
+                    Color discordColor = Color.Blue;
+                    if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
+
+                    Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == currentTeam.GetTeamName().ToLower())?
+                        .ModifyAsync(x =>
+                            {
+                                x.Name = name;
+                                x.Color = discordColor;
+                            }
+                        );
+
+                    currentTeam.SetColor(color);
+                    currentTeam.SetTeamName(name);
+
+                    await ReplyAsync($"Team with id `{teamId}` now has name `{name}` and color `{color}`");
                 }
                 else await ReplyAsync("You are not authorized to modify this team");
             }
@@ -191,8 +227,18 @@ namespace TeamSaberServer.Discord.Modules
 
         [Command("assignTeam")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task AssignTeamAsync(string teamId, string captain = null, IGuildUser user = null)
+        public async Task AssignTeamAsync(IGuildUser user, string teamId = null, string captain = null)
         {
+            if (teamId == null)
+            {
+                teamId = Team.GetByDiscordMentionOfCaptain(Context.User.Mention)?.GetTeamId();
+                if (teamId == null)
+                {
+                    await ReplyAsync("You must provide the TeamId at the end of the command, since you are not the captian of any team");
+                    return;
+                }
+            }
+
             bool setToCaptain = "captain" == captain;
             teamId = teamId.ToLower();
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
@@ -203,14 +249,19 @@ namespace TeamSaberServer.Discord.Modules
             user = user ?? (IGuildUser)Context.User; //Anyone who can assign teams can assign roles for others
 
             if (Team.Exists(teamId)) {
-                bool isCaptain = new Team(teamId).GetCaptain() == Player.GetByDiscord(Context.User.Mention).GetSteamId(); //In the case of teams, team captains count as admins
+                //Check if the person issuing the command is the captain of the team.
+                //Note: this was more relevant when the command required the issuer to input the team id instead of finding it for them,
+                //though, it's still relevant since any person could *try* to modify the team still. They should just get a permission required message
+                Team currentTeam = new Team(teamId);
+                string currentCaptain = currentTeam.GetCaptain();
+                bool isCaptain = string.IsNullOrEmpty(currentCaptain) ? true : currentCaptain == Player.GetByDiscordMetion(Context.User.Mention).GetSteamId(); //In the case of teams, team captains count as admins
 
                 if (isAdmin || isCaptain)
                 {
-                    Player player = Player.GetByDiscord(user.Mention);
+                    Player player = Player.GetByDiscordMetion(user.Mention);
                     if (player == null) await ReplyAsync("That user has not registered with the bot yet");
                     else if ((isCaptain && !isAdmin) && player.GetTeam() != "-1") await ReplyAsync("This person is already on a team");
-                    CommunityBot.ChangeTeam(player, new Team(teamId), setToCaptain);
+                    else CommunityBot.ChangeTeam(player, currentTeam, setToCaptain);
                 }
                 else await ReplyAsync("You are not authorized to assign that role");
             }

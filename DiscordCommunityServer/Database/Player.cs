@@ -26,7 +26,7 @@ namespace TeamSaberServer.Database
             }
         }
 
-        public static Player GetByDiscord(string mention)
+        public static Player GetByDiscordMetion(string mention)
         {
             var steamId = ExecuteQuery($"SELECT steamId FROM playerTable WHERE discordMention = \'{mention}\'", "steamId").FirstOrDefault();
             return steamId != null ? new Player(steamId) : null;
