@@ -68,6 +68,37 @@ namespace TeamSaberServer.BeatSaver
             return difficulties.OrderBy(x => x).ToArray();
         }
 
+        public int GetNoteCount(LevelDifficulty difficulty)
+        {
+            var infoText = File.ReadAllText(GetDifficultyPath(difficulty));
+            JSONNode node = JSON.Parse(infoText);
+            return node["_notes"].AsArray.Count;
+        }
+
+        public int GetMaxScore(LevelDifficulty difficulty)
+        {
+            int noteCount = GetNoteCount(difficulty);
+
+            //Coptied from game files
+            int num = 0;
+            int num2 = 1;
+            while (num2 < 8)
+            {
+                if (noteCount >= num2 * 2)
+                {
+                    num += num2 * num2 * 2 + num2;
+                    noteCount -= num2 * 2;
+                    num2 *= 2;
+                    continue;
+                }
+                num += num2 * noteCount;
+                noteCount = 0;
+                break;
+            }
+            num += noteCount * num2;
+            return num * 110;
+        }
+
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
         private LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty)
         {
@@ -101,6 +132,12 @@ namespace TeamSaberServer.BeatSaver
         {
             var songFolder = Directory.GetDirectories($"{songDirectory}{SongId}").First(); //Assuming each id folder has only one song folder
             return Directory.GetFiles(songFolder, "info.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+        }
+
+        private string GetDifficultyPath(LevelDifficulty difficulty)
+        {
+            var songFolder = Directory.GetDirectories($"{songDirectory}{SongId}").First(); //Assuming each id folder has only one song folder
+            return Directory.GetFiles(songFolder, $"{difficulty}.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
     }
 }

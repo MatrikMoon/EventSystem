@@ -26,8 +26,6 @@ namespace TeamSaberServer.Discord
         //Also leaderboards uses _rarityToList
         public static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
         public static string[] _rarityRoles = { "uncommon", "rare", "epic", "legendary", "mythic", "captain" };
-        public static Rarity[] _rarityToList = { Rarity.Captain, Rarity.Mythic, Rarity.Legendary,
-                                            Rarity.Epic, Rarity.Rare, Rarity.Uncommon };
 
         public static void Start()
         {
