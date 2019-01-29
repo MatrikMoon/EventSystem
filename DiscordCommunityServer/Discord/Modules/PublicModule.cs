@@ -209,13 +209,13 @@ namespace TeamSaberServer.Discord.Modules
                     Color discordColor = Color.Blue;
                     if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
 
-                    if (currentRoles.Any(x => x.Name.ToLower() == name.ToLower()))
+                    if (currentRoles.Any(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9]", "") == Regex.Replace(name.ToLower(), "[^a-z0-9]", "")))
                     {
                         await ReplyAsync("A role with that name already exists. Please use a different name");
                         return;
                     }
 
-                    currentRoles.FirstOrDefault(x => x.Name.ToLower() == currentTeam.GetTeamName().ToLower())?
+                    currentRoles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9]", "") == currentTeam.GetTeamName().ToLower())?
                         .ModifyAsync(x =>
                             {
                                 x.Name = name;
