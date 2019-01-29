@@ -207,7 +207,7 @@ namespace TeamSaberServer.Discord.Modules
                     Color discordColor = Color.Blue;
                     if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
 
-                    Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == currentTeam.GetTeamName().ToLower())?
+                    Context.Guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9]", "") == currentTeam.GetTeamName().ToLower())?
                         .ModifyAsync(x =>
                             {
                                 x.Name = name;
