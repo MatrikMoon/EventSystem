@@ -186,8 +186,10 @@ namespace TeamSaberServer.Discord.Modules
                 }
             }
 
+            var currentRoles = Context.Guild.Roles;
+
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = currentRoles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -207,7 +209,13 @@ namespace TeamSaberServer.Discord.Modules
                     Color discordColor = Color.Blue;
                     if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
 
-                    Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == currentTeam.GetTeamName().ToLower())?
+                    if (currentRoles.Any(x => x.Name.ToLower() == name.ToLower()))
+                    {
+                        await ReplyAsync("A role with that name already exists. Please use a different name");
+                        return;
+                    }
+
+                    currentRoles.FirstOrDefault(x => x.Name.ToLower() == currentTeam.GetTeamName().ToLower())?
                         .ModifyAsync(x =>
                             {
                                 x.Name = name;
