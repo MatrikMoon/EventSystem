@@ -30,6 +30,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
         public string selectedTeam = "-1";
         public int selectedTeamIndex = -1;
 
+        TextMeshProUGUI _difficulty;
         TextMeshProUGUI _songName;
         TextMeshProUGUI _team;
         Button _playButton;
@@ -44,6 +45,13 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _leaderboard = gameObject.AddComponent<CustomLeaderboardTableView>();
                 _leaderboard.transform.SetParent(rectTransform, false);
                 _leaderboard.name = "Community Leaderboard";
+
+                _difficulty = BeatSaberUI.CreateText(rectTransform, "Difficulty", new Vector2());
+                _difficulty.fontSize = 3f;
+                _difficulty.alignment = TextAlignmentOptions.Center;
+                (_difficulty.transform as RectTransform).anchorMin = new Vector2(.5f, 1f);
+                (_difficulty.transform as RectTransform).anchorMax = new Vector2(.5f, 1f);
+                (_difficulty.transform as RectTransform).anchoredPosition = new Vector2(0f, -5f);
 
                 _songName = BeatSaberUI.CreateText(rectTransform, "Song", new Vector2());
                 _songName.fontSize = 8f;
@@ -64,6 +72,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 (_pageLeftButton.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
                 (_pageLeftButton.transform as RectTransform).anchorMax = new Vector2(0f, 0.5f);
                 (_pageLeftButton.transform as RectTransform).anchoredPosition = new Vector2(27f, -10f);
+                (_pageLeftButton.transform as RectTransform).sizeDelta = new Vector2(40f, 5f);
                 Quaternion currentRot = (_pageLeftButton.transform as RectTransform).rotation;
                 (_pageLeftButton.transform as RectTransform).rotation = Quaternion.Euler(currentRot.eulerAngles.x, currentRot.eulerAngles.y, currentRot.eulerAngles.z + 90);
                 _pageLeftButton.interactable = true;
@@ -78,6 +87,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 (_pageRightButton.transform as RectTransform).anchorMin = new Vector2(1f, 0.5f);
                 (_pageRightButton.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
                 (_pageRightButton.transform as RectTransform).anchoredPosition = new Vector2(-27f, -10f);
+                (_pageRightButton.transform as RectTransform).sizeDelta = new Vector2(40f, 5f);
                 currentRot = (_pageRightButton.transform as RectTransform).rotation;
                 (_pageRightButton.transform as RectTransform).rotation = Quaternion.Euler(currentRot.eulerAngles.x, currentRot.eulerAngles.y, currentRot.eulerAngles.z + 90);
                 _pageRightButton.interactable = true;
@@ -110,6 +120,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             {
                 //Disable relevant views
                 _leaderboard.gameObject.SetActive(false);
+                _difficulty.gameObject.SetActive(false);
                 _songName.gameObject.SetActive(false);
                 _team.gameObject.SetActive(false);
                 _playButton.gameObject.SetActive(false);
@@ -134,6 +145,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
 
             //Enable relevant views
             _leaderboard.gameObject.SetActive(true);
+            _difficulty.gameObject.SetActive(true);
             _songName.gameObject.SetActive(true);
             _team.gameObject.SetActive(true);
             _playButton.gameObject.SetActive(true);
@@ -142,6 +154,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
 
             //Set song name text and team text (and color)
             _songName.SetText(map.level.songName);
+            _difficulty.SetText(map.difficulty.ToString());
 
             if (selectedTeam == "-1")
             {
@@ -156,7 +169,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), Rarity.All, selectedTeam, selectedTeam == "-1");
+            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), (LevelDifficulty)map.difficulty, Rarity.All, selectedTeam, selectedTeam == "-1");
         }
 
         public void Refresh()

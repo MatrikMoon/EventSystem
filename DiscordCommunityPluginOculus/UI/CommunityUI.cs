@@ -16,6 +16,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
 using Logger = TeamSaberShared.Logger;
+using TeamSaberPlugin.DiscordCommunityHelpers;
 using Oculus.Platform;
 using Oculus.Platform.Models;
 
@@ -38,7 +39,7 @@ namespace TeamSaberPlugin
         private RectTransform _mainMenuRectTransform;
         private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
-        private Button _communityButton; //TODO: Find a way to grab the button instance so we can disable it
+        private MenuButton _communityButton; //TODO: Find a way to grab the button instance so we can disable it
 
         //Called on Menu scene load (only once in lifetime)
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -100,7 +101,8 @@ namespace TeamSaberPlugin
             {
                 if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                 {
-                    MenuButtonUI.AddButton("Team Saber", () => _mainModFlowCoordinator.PresentMainModUI());
+                    _communityButton = MenuButtonUI.AddButton("Team Saber", "Compete with your team in the competition!", () => _mainModFlowCoordinator.PresentMainModUI());
+                    _communityButton.interactable = SongLoader.AreSongsLoaded;
                 }
                 else Logger.Error("MISSING SONG LOADER PLUGIN");
             }

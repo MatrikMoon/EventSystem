@@ -74,7 +74,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             }
         }
 
-        private void SongListRowSelected(IBeatmapLevel level)
+        private void SongListRowSelected(IDifficultyBeatmap level)
         {
             //Open up the custom/global leaderboard pane when we need to
             if (_communityLeaderboard == null)
@@ -92,14 +92,13 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             SetRightScreenViewController(_globalLeaderboard);
 
             //Change global leaderboard view
-            IDifficultyBeatmap difficultyLevel = Player.Instance.GetClosestDifficultyPreferLower(level, BeatmapDifficulty.ExpertPlus);
-            _globalLeaderboard.SetData(difficultyLevel);
+            _globalLeaderboard.SetData(level);
 
             //Change community leaderboard view
             //Use the currently selected team, if it exists
             int teamIndex = _communityLeaderboard.selectedTeamIndex;
             if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.team);
-            _communityLeaderboard.SetSong(difficultyLevel, teamIndex);
+            _communityLeaderboard.SetSong(level, teamIndex);
         }
 
         private void ReloadServerData()
@@ -107,8 +106,22 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
         }
 
+        //BSUtils: disable gameplay-modifying plugins
+
+        private void BSUtilsDisableOtherPlugins()
+        {
+            BS_Utils.Gameplay.Gamemode.NextLevelIsIsolated("TeamSaberPlugin");
+            Logger.Success("Disabled game-modifying plugins through bs_utils :)");
+        }
+
         private void SongPlayPressed(IDifficultyBeatmap map)
         {
+            if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+            {
+                BSUtilsDisableOtherPlugins();
+            }
+            else Logger.Warning("BSUtils not installed, not disabling other plugins");
+
             //We're playing from the mod's menu
             CommunityUI.instance.communitySongPlayed = map.level.levelID;
 
@@ -134,6 +147,11 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             }
         }
 
+        private bool BSUtilsScoreDisabled()
+        {
+            return BS_Utils.Gameplay.ScoreSubmission.Disabled || BS_Utils.Gameplay.ScoreSubmission.ProlongedDisabled;
+        }
+
         private void SongFinished(StandardLevelSceneSetupDataSO standardLevelSceneSetupData, LevelCompletionResults results)
         {
             standardLevelSceneSetupData.didFinishEvent -= SongFinished;
@@ -146,6 +164,12 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                 }
                 else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
                 {
+                    //If bs_utils disables score submission, we do too
+                    if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+                    {
+                        if (BSUtilsScoreDisabled()) return;
+                    }
+
                     IBeatmapLevel level = standardLevelSceneSetupData.difficultyBeatmap.level;
                     string songHash = level.levelID.Substring(0, Math.Min(32, level.levelID.Length));
                     string songId = null;

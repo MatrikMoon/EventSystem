@@ -77,9 +77,9 @@ namespace TeamSaberPlugin.Misc
         }
 
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, Rarity rarity, string teamId, bool useTeamColors = false)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, Rarity rarity, string teamId, bool useTeamColors = false)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, rarity, teamId, useTeamColors));
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, difficulty, rarity, teamId, useTeamColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
@@ -143,9 +143,9 @@ namespace TeamSaberPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, Rarity rarity, string teamId = "-1", bool useTeamColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, Rarity rarity, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)rarity}/{teamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)difficulty}/{(int)rarity}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -243,14 +243,19 @@ namespace TeamSaberPlugin.Misc
             }
             else
             {
-                List<string> songIds = new List<string>();
+                List<SongConstruct> songs = new List<SongConstruct>();
                 try
                 {
                     //Get the list of songs to download, and map out the song ids to the corresponding gamemodes
                     var node = JSON.Parse(www.downloadHandler.text);
                     foreach (var id in node)
                     {
-                        songIds.Add(id.Key);
+                        songs.Add(new SongConstruct()
+                        {
+                            SongId = id.Value["songId"],
+                            SongName = id.Value["songName"],
+                            Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString())
+                        });
                     }
                 }
                 catch (Exception e)
@@ -261,40 +266,45 @@ namespace TeamSaberPlugin.Misc
                 }
 
                 //If we got songs, filter them as neccessary then download any we don't have
-                List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
+                List<IDifficultyBeatmap> availableSongs = new List<IDifficultyBeatmap>();
 
                 //Filter out songs we already have and OSTS
-                IEnumerable<string> osts = songIds.Where(x => OstHelper.IsOst(x));
-                IEnumerable<string> alreadyHave = songIds.Where(x => SongIdHelper.GetSongExistsBySongId(x));
+                IEnumerable<string> osts = songs.Where(x => OstHelper.IsOst(x.SongId)).Select(x => x.SongId);
+                IEnumerable<SongConstruct> alreadyHave = songs.Where(x => SongIdHelper.GetSongExistsBySongId(x.SongId));
 
                 //Of what we already have, add the Levels to the availableSongs list
                 alreadyHave.ToList().ForEach(x => {
-                    var level = SongIdHelper.GetLevelFromSongId(x);
+                    var level = SongIdHelper.GetLevelFromSongId(x.SongId);
 
                     //If the directory exists, but isn't loaded in song loader,
                     //there's probably a conflict with another loaded song
                     if (level == null)
                     {
-                        slvc.DownloadErrorHappened($"Could not load level {x}. You probably have an older version ('{x.Substring(0, x.IndexOf("-"))}') already downloded. Please remove this or save it elsewhere to continue.");
+                        slvc.DownloadErrorHappened($"Could not load level {x}. You probably have an older version ('{x.SongId.Substring(0, x.SongId.IndexOf("-"))}') already downloded. Please remove this or save it elsewhere to continue.");
                     }
-                    availableSongs.Add(level);
+
+                    availableSongs.Add(
+                        Player.Instance.GetClosestDifficultyPreferLower(
+                            level,
+                            (BeatmapDifficulty)x.Difficulty
+                        ));
                 });
 
                 //If there's an error at this point, one of the levels failed to load. Do not continue.
                 if (slvc.errorHappened) yield break;
 
-                osts.ToList().ForEach(x => availableSongs.Add(lcfgm.levels.Where(y => y.levelID == x).First()));
+                osts.ToList().ForEach(x => availableSongs.Add(Player.Instance.GetClosestDifficultyPreferLower(lcfgm.levels.Where(y => y.levelID == x).First(), (BeatmapDifficulty)songs.First(y => y.SongId == x).Difficulty)));
 
                 //Remove the id's of what we already have
-                songIds.RemoveAll(x => alreadyHave.Contains(x) || osts.Contains(x)); //Don't redownload
+                songs.RemoveAll(x => alreadyHave.Select(y => y.SongId).Contains(x.SongId) || osts.Contains(x.SongId)); //Don't redownload
 
                 //Download the things we don't have, or if we have everything, show the menu
-                if (songIds.Count > 0)
+                if (songs.Count > 0)
                 {
                     List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
-                    songIds.ForEach(x =>
+                    songs.ForEach(x =>
                     {
-                        downloadCoroutines.Add(DownloadWeeklySongs(x, slvc));
+                        downloadCoroutines.Add(DownloadWeeklySongs(x.SongId, slvc));
                     });
 
                     //Wait for the all downloads to finish
@@ -304,7 +314,14 @@ namespace TeamSaberPlugin.Misc
                         (SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs) =>
                         {
                             //Now that they're refreshed, we can add them to the available list
-                            songIds.ForEach(x => availableSongs.Add(SongIdHelper.GetLevelFromSongId(x)));
+                            songs.ForEach(x => {
+                                availableSongs.Add(
+                                    Player.Instance.GetClosestDifficultyPreferLower(
+                                        SongIdHelper.GetLevelFromSongId(x.SongId),
+                                        (BeatmapDifficulty)x.Difficulty
+                                    )
+                                );
+                            });
 
                             slvc.SetSongs(availableSongs);
                         };
@@ -412,6 +429,14 @@ namespace TeamSaberPlugin.Misc
 
                 Logger.Success($"Downloaded!");
             }
+        }
+
+        //Tiny classes to help organize song downloading
+        public class SongConstruct
+        {
+            public string SongId { get; set; }
+            public string SongName { get; set; }
+            public LevelDifficulty Difficulty { get; set; }
         }
     }
 }

@@ -11,7 +11,7 @@ using static TeamSaberShared.SharedConstructs;
 
 namespace TeamSaberServer.Database
 {
-    class Player
+    public class Player
     {
         //Main SQL identification
         private string steamId;

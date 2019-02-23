@@ -22,7 +22,7 @@ namespace TeamSaberServer.Database
             this.teamId = teamId;
             if (!Exists())
             {
-                SimpleSql.AddTeam(teamId, "", "", "");
+                SimpleSql.AddTeam(teamId, "", "", "", 0);
             }
         }
         
@@ -38,7 +38,7 @@ namespace TeamSaberServer.Database
 
         public bool SetTeamName(string name)
         {
-            name = Regex.Replace(name, "[^a-zA-Z0-9]", "");
+            name = Regex.Replace(name, "[^a-zA-Z0-9 ]", "");
             return SimpleSql.ExecuteCommand($"UPDATE teamTable SET teamName = \'{name}\' WHERE teamId = \'{teamId}\'") > 1;
         }
 
@@ -61,6 +61,17 @@ namespace TeamSaberServer.Database
         {
             color = Regex.Replace(color, "[^a-zA-Z0-9#]", "");
             return SimpleSql.ExecuteCommand($"UPDATE teamTable SET color = \'{color}\' WHERE teamId = \'{teamId}\'") > 1;
+        }
+
+        public int GetTeamScore()
+        {
+            string score = SimpleSql.ExecuteQuery($"SELECT score FROM teamTable WHERE teamId = \'{teamId}\'", "score").First();
+            return Convert.ToInt32(score);
+        }
+
+        public bool SetTeamScore(int score)
+        {
+            return SimpleSql.ExecuteCommand($"UPDATE teamTable SET score = {score} WHERE teamId = \'{teamId}\'") > 1;
         }
 
         public bool IsOld()

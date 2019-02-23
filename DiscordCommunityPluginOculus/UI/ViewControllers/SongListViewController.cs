@@ -23,7 +23,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource
     {
-        public event Action<IBeatmapLevel> SongListRowSelected;
+        public event Action<IDifficultyBeatmap> SongListRowSelected;
         public event Action ReloadPressed;
         public event Action SongsDownloaded;
         public bool errorHappened = false;
@@ -38,7 +38,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
         TextMeshProUGUI _songsDownloadingText;
         TextMeshProUGUI _downloadErrorText;
 
-        List<IBeatmapLevel> availableSongs = new List<IBeatmapLevel>();
+        List<IDifficultyBeatmap> availableSongs = new List<IDifficultyBeatmap>();
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
@@ -50,7 +50,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -8f);
+                (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
                 _pageUpButton.onClick.AddListener(delegate ()
                 {
                     songsTableView.PageScrollUp();
@@ -60,7 +61,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
+                (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
                     songsTableView.PageScrollDown();
@@ -159,7 +161,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             selectWhenLoaded = levelId;
         }
 
-        public void SetSongs(List<IBeatmapLevel> levels)
+        public void SetSongs(List<IDifficultyBeatmap> levels)
         {
             //Now that songs are being set, hide the "downloading" text
             if (_downloadErrorText.gameObject.activeSelf) return; //If there was an error earlier, don't continue
@@ -182,7 +184,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             songsTableView.ScrollToRow(0, false);
             if (selectWhenLoaded != null)
             {
-                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.levelID == selectWhenLoaded).First());
+                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.level.levelID == selectWhenLoaded).First());
                 songsTableView.SelectRow(songIndex, true);
             }
             SongsDownloaded?.Invoke();
@@ -197,7 +199,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
-            IBeatmapLevel song = availableSongs[row];
+            IBeatmapLevel song = availableSongs[row].level;
 
             cell.coverImage = song.coverImage;
             cell.songName = $"{song.songName}\n<size=80%>{song.songSubName}</size>";
