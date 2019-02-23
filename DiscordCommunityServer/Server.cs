@@ -16,6 +16,8 @@ namespace TeamSaberServer
 {
     class Server
     {
+        private static Random rand = new Random();
+
         public static void StartHttpServer()
         {
             var route_config = new List<Route>() {
@@ -33,16 +35,16 @@ namespace TeamSaberServer
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
                             if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_) == s.Signed &&
-                                Database.Song.Exists(s.SongId) &&
-                                !new Database.Song(s.SongId).IsOld() &&
-                                Database.Player.Exists(s.SteamId) &&
-                                Database.Player.IsRegistered(s.SteamId))
+                                Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel) &&
+                                !new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).IsOld() &&
+                                Player.Exists(s.SteamId) &&
+                                Player.IsRegistered(s.SteamId))
                             {
-                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
+                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {new Player(s.SteamId).GetDiscordName()} {s.SongId} {s.DifficultyLevel}");
                             }
                             else
                             {
-                                Logger.Warning($"RECEIVED INVALID SCORE {s.Score_} FROM {s.SteamId}");
+                                Logger.Warning($"RECEIVED INVALID SCORE {s.Score_} FROM {new Player(s.SteamId).GetDiscordName()} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
                                 return new HttpResponse()
                                 {
                                     ReasonPhrase = "Bad Request",
@@ -50,25 +52,28 @@ namespace TeamSaberServer
                                 };
                             }
 
-                            long oldScore = 0;
-                            if (Database.Score.Exists(s.SongId, s.SteamId, s.DifficultyLevel))
+                            Database.Score oldScore = null;
+                            if (Database.Score.Exists(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel))
                             {
-                                oldScore = new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel).GetScore();
+                                oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                             }
 
-                            if (s.Score_ > oldScore)
+                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
                             {
-                                Database.Player player = new Database.Player(s.SteamId);
+                                Player player = new Player(s.SteamId);
+
+                                long oldScoreNumber = (long)oldScore?.GetScore();
+                                oldScore?.SetOld();
 
                                 //Player stats
-                                if (oldScore > 0) player.IncrementPersonalBestsBeaten();
+                                if (oldScoreNumber > 0) player.IncrementPersonalBestsBeaten();
                                 else player.IncrementSongsPlayed();
-                                player.IncrementTotalScore(s.Score_ - oldScore); //Increment total score only by the amount the score has increased
+                                player.IncrementTotalScore(s.Score_ - oldScoreNumber); //Increment total score only by the amount the score has increased
 
-                                new Database.Score(s.SongId, s.SteamId, s.DifficultyLevel).SetScore(s.Score_, s.FullCombo);
+                                new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel).SetScore(s.Score_, s.FullCombo);
                                 
                                 //Only send message if player is registered
-                                if (Database.Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Database.Song(s.SongId).GetSongName()}!");
+                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).GetSongName()} ({(LevelDifficulty)s.DifficultyLevel})!");
                             }
 
                             return new HttpResponse()
@@ -101,7 +106,8 @@ namespace TeamSaberServer
                             var item = new JSONObject();
                             item["songName"] = x.Name;
                             item["songId"] = x.SongId;
-                            json.Add(x.SongId, item);
+                            item["difficulty"] = (int)x.Difficulty;
+                            json.Add(x.SongId + (int)x.Difficulty, item);
                         });
 
                         return new HttpResponse()
@@ -114,9 +120,12 @@ namespace TeamSaberServer
                 },
                 new Route {
                     Name = "Team Getter",
-                    UrlRegex = @"^/getteams/$",
+                    UrlRegex = @"^/getteams/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
+                        string source = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
+                        if (!string.IsNullOrEmpty(source)) Logger.Success("Team Request from Duo's Site");
+
                         JSONNode json = new JSONObject();
                         List<Team> teams = GetAllTeams();
 
@@ -125,6 +134,7 @@ namespace TeamSaberServer
                             item["captainId"] = x.GetCaptain();
                             item["teamName"] = x.GetTeamName();
                             item["color"] = x.GetColor();
+                            item["score"] = x.GetTeamScore();
                             json.Add(x.GetTeamId(), item);
                         });
 
@@ -158,8 +168,8 @@ namespace TeamSaberServer
 
                         JSONNode json = new JSONObject();
 
-                        if (Database.Player.Exists(steamId)) {
-                            Database.Player player = new Database.Player(steamId);
+                        if (Player.Exists(steamId)) {
+                            Player player = new Player(steamId);
 
                             json["version"] = VersionCode;
                             json["rarity"] = player.GetRarity();
@@ -186,18 +196,19 @@ namespace TeamSaberServer
                         string[] requestData = request.Path.Substring(1).Split('/');
 
                         string songId = requestData[1];
-                        int rarity = Convert.ToInt32(requestData[2]);
-                        string teamId = requestData[3];
+                        int difficulty = Convert.ToInt32(requestData[2]);
+                        int rarity = Convert.ToInt32(requestData[3]);
+                        string teamId = requestData[4];
+                        songId = Regex.Replace(songId, "[^a-zA-Z0-9-]", "");
                         teamId = Regex.Replace(teamId, "[^a-zA-Z0-9-]", "");
-
-                        Logger.Warning($"{songId} {(Rarity)rarity} {teamId}");
 
                         SongConstruct songConstruct = new SongConstruct()
                         {
                             SongId = songId,
+                            Difficulty = (LevelDifficulty)difficulty
                         };
 
-                        if (!Database.Song.Exists(songId))
+                        if (!Song.Exists(songId, (LevelDifficulty)difficulty))
                         {
                             Logger.Error($"Song doesn't exist for leaderboards: {songId}");
                             return new HttpResponse()
@@ -215,7 +226,7 @@ namespace TeamSaberServer
                         {
                             JSONNode node = new JSONObject();
                             node["score"] = x.Value.Score;
-                            node["player"] = new Database.Player(x.Key).GetDiscordName();
+                            node["player"] = new Player(x.Key).GetDiscordName();
                             node["place"] = place;
                             node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
                             node["steamId"] = x.Key;

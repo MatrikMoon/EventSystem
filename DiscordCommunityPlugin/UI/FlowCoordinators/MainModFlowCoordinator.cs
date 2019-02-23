@@ -24,7 +24,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
         public SongListViewController songListViewController;
 
         private GeneralNavigationController _mainModNavigationController;
-        private LevelCollectionSO _levelCollections;
+        private LevelCollectionSO _levelCollection;
 
         protected PlatformLeaderboardViewController _globalLeaderboard;
         protected CustomLeaderboardController _communityLeaderboard;
@@ -56,9 +56,9 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             {
                 songListViewController = BeatSaberUI.CreateViewController<SongListViewController>();
             }
-            if (_levelCollections == null)
+            if (_levelCollection == null)
             {
-                _levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().First();
+                _levelCollection = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().First();
             }
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
@@ -74,7 +74,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             }
         }
 
-        private void SongListRowSelected(IBeatmapLevel level)
+        private void SongListRowSelected(IDifficultyBeatmap level)
         {
             //Open up the custom/global leaderboard pane when we need to
             if (_communityLeaderboard == null)
@@ -92,19 +92,18 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             SetRightScreenViewController(_globalLeaderboard);
 
             //Change global leaderboard view
-            IDifficultyBeatmap difficultyLevel = Player.Instance.GetClosestDifficultyPreferLower(level, BeatmapDifficulty.ExpertPlus);
-            _globalLeaderboard.SetData(difficultyLevel);
+            _globalLeaderboard.SetData(level);
 
             //Change community leaderboard view
             //Use the currently selected team, if it exists
             int teamIndex = _communityLeaderboard.selectedTeamIndex;
             if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.team);
-            _communityLeaderboard.SetSong(difficultyLevel, teamIndex);
+            _communityLeaderboard.SetSong(level, teamIndex);
         }
 
         private void ReloadServerData()
         {
-            Client.GetDataForDiscordCommunityPlugin(_levelCollections, songListViewController, Plugin.PlayerId.ToString());
+            Client.GetDataForDiscordCommunityPlugin(_levelCollection, songListViewController, Plugin.PlayerId.ToString());
         }
 
         //BSUtils: disable gameplay-modifying plugins
@@ -129,6 +128,25 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             //Callback for when the song is ready to be played
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
+                //If one-saber is enabled, we will forcefully add it to the level characteristics
+                //We need to grab the "characteristic" and use it for ourselves
+                /*
+                BeatmapCharacteristicSO oneSaberCharacteristic = null;
+                for (int i = 0; oneSaberCharacteristic == null && i < _levelCollection.levels.Length; i++)
+                {
+                    oneSaberCharacteristic = _levelCollection.levels.ElementAt(i).beatmapCharacteristics.FirstOrDefault(x => x.characteristicName == "One Saber");
+                }
+
+                //If we didn't end up finding it, just skip it
+                if (oneSaberCharacteristic != null)
+                {
+                    List<BeatmapCharacteristicSO> newCharacteristics = new List<BeatmapCharacteristicSO>();
+                    newCharacteristics.AddRange(loadedLevel.beatmapCharacteristics);
+                    newCharacteristics.Add(oneSaberCharacteristic);
+                    loadedLevel.SetField("_beatmapCharacteristics", newCharacteristics.ToArray());
+                }
+                */
+
                 MenuSceneSetupDataSO _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupDataSO>().FirstOrDefault();
                 var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
                     .FirstOrDefault()?
@@ -148,6 +166,11 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             }
         }
 
+        private bool BSUtilsScoreDisabled()
+        {
+            return BS_Utils.Gameplay.ScoreSubmission.Disabled || BS_Utils.Gameplay.ScoreSubmission.ProlongedDisabled;
+        }
+
         private void SongFinished(StandardLevelSceneSetupDataSO standardLevelSceneSetupData, LevelCompletionResults results)
         {
             standardLevelSceneSetupData.didFinishEvent -= SongFinished;
@@ -160,6 +183,12 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                 }
                 else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
                 {
+                    //If bs_utils disables score submission, we do too
+                    if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+                    {
+                        if (BSUtilsScoreDisabled()) return;
+                    }
+
                     IBeatmapLevel level = standardLevelSceneSetupData.difficultyBeatmap.level;
                     string songHash = level.levelID.Substring(0, Math.Min(32, level.levelID.Length));
                     string songId = null;

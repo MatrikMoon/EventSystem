@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using static TeamSaberShared.SharedConstructs;
 using Logger = TeamSaberShared.Logger;
+using System;
 
 /*
  * Created by Moon on 10/28/2018 at 2:18am
@@ -67,11 +68,12 @@ namespace TeamSaberPlugin.UI.Views
             CustomScoreData scoreData = _scores[row];
             leaderboardTableCell.rank = scoreData.rank;
             leaderboardTableCell.playerName = scoreData.playerName;
-            leaderboardTableCell.score = scoreData.score;
+            leaderboardTableCell.score = Math.Abs(scoreData.score);
             leaderboardTableCell.showFullCombo = scoreData.fullCombo;
             leaderboardTableCell.showSeparator = (row != _scores.Count - 1);
             leaderboardTableCell.specialScore = (_specialScorePos == row);
             if (!(_specialScorePos == row) && _useTeamColors && scoreData.TeamId != "-1") leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Team.allTeams.FirstOrDefault(x => x.TeamId == scoreData.TeamId).Color;
+            else if (!_useTeamColors && scoreData.score < 0) leaderboardTableCell.GetField<TextMeshProUGUI>("_playerNameText").color = Color.red;
             return leaderboardTableCell;
         }
 

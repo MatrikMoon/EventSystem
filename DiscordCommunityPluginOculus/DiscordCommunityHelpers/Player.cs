@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Oculus.Platform;
+using Oculus.Platform.Models;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -60,15 +63,15 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         {
             switch (rarity)
             {
-                case Rarity.Captain:
+                case Rarity.SSS:
                     return Color.red;
-                case Rarity.Epic:
+                case Rarity.A:
                     return Color.magenta;
-                case Rarity.Legendary:
+                case Rarity.S:
                     return Color.yellow;
-                case Rarity.Mythic:
+                case Rarity.SS:
                     return Color.cyan;
-                case Rarity.Rare:
+                case Rarity.B:
                     return Color.blue;
                 default:
                     return Color.white;
@@ -102,6 +105,45 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         {
             IDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
+        }
+
+        //User ID code, courtesy of Kyle and Beat Saber Utils//
+        public static ulong GetUserId()
+        {
+            if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR || Environment.CommandLine.Contains("-vrmode oculus"))
+            {
+                return GetSteamUser();
+            }
+            else if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
+            {
+                return GetOculusUser();
+            }
+            else if (Environment.CommandLine.Contains("fpfc") && VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Unknown)
+            {
+                return GetSteamUser();
+            }
+            else return 0;
+        }
+
+        internal static ulong GetSteamUser()
+        {
+            return 0;
+        }
+
+        internal static ulong GetOculusUser()
+        {
+            ulong ret = 0;
+            Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
+            {
+                if (!msg.IsError)
+                {
+                    ret = msg.Data.ID;
+                }
+            });
+
+            while (ret == 0) { } //TODO: Gross. Shame on you, Moon.
+
+            return ret;
         }
     }
 }

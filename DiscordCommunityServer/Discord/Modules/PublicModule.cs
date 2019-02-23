@@ -23,8 +23,20 @@ namespace TeamSaberServer.Discord.Modules
         public PictureService PictureService { get; set; }
 
         [Command("register")]
-        public async Task RegisterAsync(string steamId, string timezone)
+        [RequireContext(ContextType.Guild)]
+        public async Task RegisterAsync(string steamId, string timezone, IGuildUser user = null)
         {
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            if (isAdmin)
+            {
+                user = user ?? (IGuildUser)Context.User;
+            }
+            else user = (IGuildUser)Context.User;
+
             //Sanitize input
             if (steamId.StartsWith("https://scoresaber.com/u/"))
             {
@@ -46,10 +58,12 @@ namespace TeamSaberServer.Discord.Modules
 
                 if (embed != null)
                 {
+                    string username = Regex.Replace(user.Username, "[\'\";]", "");
+
                     Player player = new Player(steamId);
-                    player.SetDiscordName(Context.User.Username);
-                    player.SetDiscordExtension(Context.User.Discriminator);
-                    player.SetDiscordMention(Context.User.Mention);
+                    player.SetDiscordName(username);
+                    player.SetDiscordExtension(user.Discriminator);
+                    player.SetDiscordMention(user.Mention);
                     player.SetTimezone(timezone);
 
                     //Scrape out the rank data
@@ -61,65 +75,110 @@ namespace TeamSaberServer.Discord.Modules
                     rank = Convert.ToInt32(Regex.Replace(description, "[^0-9]", ""));
                     player.SetRank(rank);
 
-                    var guildRoles = Context.Guild.Roles.ToList();
-
-                    ulong[] discordRoleIds = guildRoles
-                        .Where(x => CommunityBot._rarityRoles.Contains(x.Name.ToLower()))
-                        .Select(x => x.Id)
-                        .ToArray();
-
-                    ulong saberRole = ((IGuildUser)Context.User).RoleIds.ToList().Where(x => discordRoleIds.Contains(x)).FirstOrDefault();
-                    string userRoleText = guildRoles.Where(x => x.Id == saberRole).Select(x => x.Name.ToLower()).FirstOrDefault();
-                    if (saberRole > 0)
-                    {
-                        player.SetRarity(CommunityBot._saberRankValues[CommunityBot._rarityRoles.ToList().IndexOf(userRoleText)]);
-                    }
+                    //Add "registered" role
+                    await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
 
                     string reply = $"User `{player.GetDiscordName()}` successfully linked to `{player.GetSteamId()}` with timezone `{timezone}`";
-                    if (saberRole > 0) reply += $" and rarity `{userRoleText}`";
                     if (rank > 0) reply += $" and rank `{rank}`";
                     await ReplyAsync(reply);
                 }
                 else await ReplyAsync("Waiting for embedded content...");
             }
-            else if (new Player(steamId).GetDiscordMention() != Context.User.Mention)
+            else if (new Player(steamId).GetDiscordMention() != user.Mention)
             {
                 await ReplyAsync($"That steam account is already linked to `{new Player(steamId).GetDiscordName()}`, message an admin if you *really* need to relink it.");
             }
         }
 
         [Command("addSong")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
-        public async Task AddSongAsync(string songId)
+        public async Task AddSongAsync(string songId, string difficulty = "ExpertPlus")
         {
-            if (!Song.Exists(songId))
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            if (isAdmin)
             {
-                if (OstHelper.IsOst(songId))
+                //Parse the difficulty input, either as an int or a string
+                LevelDifficulty parsedDifficulty = LevelDifficulty.ExpertPlus;
+
+                //If the enum conversion doesn't succeed, try it as an int
+                if (!Enum.TryParse(difficulty, true, out parsedDifficulty))
                 {
-                    await ReplyAsync($"Added: {new Song(songId).GetSongName()}");
-                }
-                else
-                {
-                    await ReplyAsync("Downloading song...");
-                    string songPath = BeatSaver.BeatSaverDownloader.DownloadSong(songId);
-                    if (songPath != null)
+                    int parsedInt = 4;
+
+                    if (int.TryParse(difficulty, out parsedInt))
                     {
-                        string songName = new BeatSaver.Song(songId).SongName;
-                        new Song(songId);
-                        await ReplyAsync($"{songName} downloaded and added to song list!");
+                        parsedDifficulty = (LevelDifficulty)parsedInt;
                     }
-                    else await ReplyAsync("Could not download song.");
+                    else
+                    {
+                        await ReplyAsync("Could not parse difficulty parameter.\n" +
+                        "Usage: addSong [songId] [difficulty]");
+
+                        return;
+                    }
                 }
+
+                if (!Song.Exists(songId, parsedDifficulty))
+                {
+                    if (OstHelper.IsOst(songId))
+                    {
+                        await ReplyAsync($"Added: {new Song(songId, parsedDifficulty).GetSongName()}");
+                    }
+                    else
+                    {
+                        string songPath = BeatSaver.BeatSaverDownloader.DownloadSong(songId);
+                        if (songPath != null)
+                        {
+                            BeatSaver.Song song = new BeatSaver.Song(songId);
+                            string songName = song.SongName;
+
+                            if (!song.Difficulties.Contains(parsedDifficulty))
+                            {
+                                LevelDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(parsedDifficulty);
+
+                                if (Song.Exists(songId, nextBestDifficulty))
+                                {
+                                    await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, and {nextBestDifficulty} is already in the database.\n" +
+                                        $"Song not added.");
+                                }
+                                
+                                else
+                                {
+                                    new Song(songId, nextBestDifficulty).SetOld(false);
+                                    await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
+                                        $"Added to the song list!");
+                                }
+                            }
+
+                            else
+                            {
+                                new Song(songId, parsedDifficulty).SetOld(false);
+                                await ReplyAsync($"{songName} downloaded and added to song list!");
+                            }
+                        }
+                        else await ReplyAsync("Could not download song.");
+                    }
+                }
+                else await ReplyAsync("The song is already in the database");
             }
-            else await ReplyAsync("The song is already in the database");
         }
 
         [Command("endEvent")]
-        [RequireUserPermission(ChannelPermission.ManageChannel)]
         public async Task EndEventAsync()
         {
-            MarkAllOld();
-            await ReplyAsync("All songs and scores are marked as Old. You may now add new songs.");
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            if (isAdmin)
+            {
+                MarkAllOld();
+                await ReplyAsync("All songs and scores are marked as Old. You may now add new songs.");
+            }
         }
 
         [Command("rarity")]
@@ -144,6 +203,74 @@ namespace TeamSaberServer.Discord.Modules
             else await ReplyAsync("You are not authorized to assign that role");
         }
 
+        [Command("crunchRarities")]
+        public async Task CrunchRaritiesAsync()
+        {
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            if (isAdmin)
+            {
+                var players = GetAllPlayers()
+                    .Where(x => x.GetRarity() == -1 && Team.GetByDiscordMentionOfCaptain(x.GetDiscordMention()) == null)
+                    .OrderBy(x => x.GetRank())
+                    .ToList(); //Database complexity hell. Oh well.
+
+                int count = players.Count;
+                int threshold = count / 6; //Divide players by number of rarities for an even split
+
+                string reply = $"Registrant count: {players.Count}\n" +
+                    $"Tiers: 6\n" +
+                    $"Players per tier: {threshold}\n\n";
+
+                int index = 0;
+                Rarity currentRarity = Rarity.SSS;
+
+                players.ForEach(x =>
+                {
+                    x.SetRarity((int)currentRarity);
+
+                    //Increment current rarity based on how many players we've iterated over
+                    if (++index >= threshold)
+                    {
+                        index = 0;
+                        currentRarity--;
+                    }
+                });
+
+                reply += "Rarity Assignments:\n\n";
+
+                index = 0;
+                currentRarity = Rarity.SS;
+
+                players.ForEach(x =>
+                {
+                    reply += $"{x.GetDiscordName()} ({x.GetTimezone()}) - {(Rarity)x.GetRarity()}\n";
+
+                    //Increment current rarity based on how many players we've iterated over
+                    if (++index >= threshold)
+                    {
+                        reply += $"\n\n{currentRarity}:\n";
+                        index = 0;
+                        currentRarity--;
+                    }
+                });
+
+                //Deal with long messages
+                if (reply.Length > 2000)
+                {
+                    for (int i = 0; reply.Length > 2000; i++)
+                    {
+                        await ReplyAsync(reply.Substring(0, reply.Length > 2000 ? 2000 : reply.Length));
+                        reply = reply.Substring(2000);
+                    }
+                }
+                await ReplyAsync(reply);
+            }
+        }
+
         [Command("createTeam")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task CreateTeamAsync(string teamId, string name = "Default Team Name", string color = "#ffffff")
@@ -158,7 +285,7 @@ namespace TeamSaberServer.Discord.Modules
             {
                 if (!Team.Exists(teamId))
                 {
-                    AddTeam(teamId, name, "", color);
+                    AddTeam(teamId, name, "", color, 0);
 
                     //If the provided color can be parsed into a uint, we can use the provided color as the color for the dicsord role
                     Color discordColor = Color.Blue;
@@ -209,13 +336,13 @@ namespace TeamSaberServer.Discord.Modules
                     Color discordColor = Color.Blue;
                     if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
 
-                    if (currentRoles.Any(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9]", "") == Regex.Replace(name.ToLower(), "[^a-z0-9]", "")))
+                    if (currentRoles.Any(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == Regex.Replace(name.ToLower(), "[^a-z0-9 ]", "")))
                     {
                         await ReplyAsync("A role with that name already exists. Please use a different name");
                         return;
                     }
 
-                    currentRoles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9]", "") == currentTeam.GetTeamName().ToLower())?
+                    currentRoles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == currentTeam.GetTeamName().ToLower())?
                         .ModifyAsync(x =>
                             {
                                 x.Name = name;
@@ -301,7 +428,7 @@ namespace TeamSaberServer.Discord.Modules
 
                 if (scores[x].Count > 0) //Don't print if no one submitted scores
                 {
-                    var song = new Song(songId);
+                    var song = new Song(songId, x.Difficulty);
                     finalMessage += song.GetSongName() + ":\n";
 
                     foreach (KeyValuePair<string, ScoreConstruct> item in scores[x])
@@ -325,6 +452,26 @@ namespace TeamSaberServer.Discord.Modules
                     finalMessage = finalMessage.Substring(2000);
                 }
             }
+            await ReplyAsync(finalMessage);
+        }
+
+        [Command("listTeams")]
+        public async Task ListTeamsAsync()
+        {
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+            if (!isAdmin) return;
+
+            string finalMessage = "Teams:\n\n";
+            List<Team> teams = GetAllTeams();
+
+            teams.ForEach(x =>
+            {
+                finalMessage += $"{x.GetTeamId()}: {x.GetTeamName()} | {new Player(x.GetCaptain()).GetDiscordName()}\n";
+            });
+
             await ReplyAsync(finalMessage);
         }
 

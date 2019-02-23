@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Oculus.Platform;
+using Oculus.Platform.Models;
+using Steamworks;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -60,15 +64,15 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         {
             switch (rarity)
             {
-                case Rarity.Captain:
+                case Rarity.SSS:
                     return Color.red;
-                case Rarity.Epic:
+                case Rarity.A:
                     return Color.magenta;
-                case Rarity.Legendary:
+                case Rarity.S:
                     return Color.yellow;
-                case Rarity.Mythic:
+                case Rarity.SS:
                     return Color.cyan;
-                case Rarity.Rare:
+                case Rarity.B:
                     return Color.blue;
                 default:
                     return Color.white;
@@ -102,6 +106,42 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         {
             IDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
+        }
+
+        //User ID code, courtesy of Kyle and Beat Saber Utils//
+        public static void UpdateUserId()
+        {
+            if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR || Environment.CommandLine.Contains("-vrmode oculus"))
+            {
+                GetSteamUser();
+            }
+            else if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
+            {
+                GetOculusUser();
+            }
+            else if (Environment.CommandLine.Contains("fpfc") && VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Unknown)
+            {
+                GetSteamUser();
+            }
+        }
+
+        internal static void GetSteamUser()
+        {
+            if (SteamManager.Initialized)
+            {
+                Plugin.PlayerId = SteamUser.GetSteamID().m_SteamID;
+            }
+        }
+
+        internal static void GetOculusUser()
+        {
+            Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
+            {
+                if (!msg.IsError)
+                {
+                    Plugin.PlayerId = msg.Data.ID;
+                }
+            });
         }
     }
 }

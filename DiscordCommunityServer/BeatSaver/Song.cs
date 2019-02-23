@@ -16,12 +16,12 @@ using static TeamSaberShared.SharedConstructs;
 
 namespace TeamSaberServer.BeatSaver
 {
-    class Song
+    public class Song
     {
         public static readonly string currentDirectory = Directory.GetCurrentDirectory();
         public static readonly string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
 
-        public LevelDifficulty[] difficulties;
+        public LevelDifficulty[] Difficulties { get; private set; }
         public string SongName { get; }
 
         string SongId { get; set; }
@@ -35,13 +35,13 @@ namespace TeamSaberServer.BeatSaver
             if (!OstHelper.IsOst(SongId))
             {
                 _infoPath = GetInfoPath();
-                difficulties = GetLevelDifficulties();
+                Difficulties = GetLevelDifficulties();
                 SongName = GetSongName();
             }
             else
             {
                 SongName = OstHelper.GetOstSongNameFromLevelId(SongId);
-                difficulties = OstHelper.GetDifficultiesFromLevelId(songId);
+                Difficulties = OstHelper.GetDifficultiesFromLevelId(songId);
             }
         }
 
@@ -100,9 +100,9 @@ namespace TeamSaberServer.BeatSaver
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        private LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty)
+        public LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty)
         {
-            if (difficulties.Contains(difficulty)) return difficulty;
+            if (Difficulties.Contains(difficulty)) return difficulty;
 
             int ret = -1;
             if (ret == -1)
@@ -119,25 +119,29 @@ namespace TeamSaberServer.BeatSaver
         //Returns the next-lowest difficulty to the one provided
         private int GetLowerDifficulty(LevelDifficulty difficulty)
         {
-            return difficulties.Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
+            return Difficulties.Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
         }
 
         //Returns the next-highest difficulty to the one provided
         private int GetHigherDifficulty(LevelDifficulty difficulty)
         {
-            return difficulties.Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
+            return Difficulties.Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
         }
 
         private string GetInfoPath()
         {
-            var songFolder = Directory.GetDirectories($"{songDirectory}{SongId}").First(); //Assuming each id folder has only one song folder
-            return Directory.GetFiles(songFolder, "info.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+            var idFolder = $"{songDirectory}{SongId}";
+            var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
+            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
+            return Directory.GetFiles(subFolder, "info.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
 
         private string GetDifficultyPath(LevelDifficulty difficulty)
         {
-            var songFolder = Directory.GetDirectories($"{songDirectory}{SongId}").First(); //Assuming each id folder has only one song folder
-            return Directory.GetFiles(songFolder, $"{difficulty}.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+            var idFolder = $"{songDirectory}{SongId}";
+            var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
+            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
+            return Directory.GetFiles(subFolder, $"{difficulty}.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
     }
 }

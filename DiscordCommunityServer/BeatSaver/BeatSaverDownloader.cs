@@ -58,22 +58,22 @@ namespace TeamSaberServer.BeatSaver
                 //Clean up zip
                 File.Delete(zipPath);
             }
+            else Logger.Success("Song already downloaded! Skipping download!");
 
-            Logger.Success($"Downloaded {Directory.GetDirectories($"{Song.songDirectory}{id}").First()}!");
+            var idFolder = $"{Song.songDirectory}{id}";
+            var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
+            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
+            Logger.Success($"Downloaded {subFolder}!");
 
             return $@"{Song.songDirectory}{id}\";
         }
 
-        public static void UpdateSongInfoThreaded(Database.Song song)
+        public static void DownloadSongInfoThreaded(string songId, Action<bool> whenFinished)
         {
             new Thread(() =>
             {
-                string songDir = DownloadSong(song.GetSongId());
-                if (songDir != null)
-                {
-                    string songName = new Song(song.GetSongId()).SongName;
-                    song.SetSongName(songName);
-                }
+                string songDir = DownloadSong(songId);
+                whenFinished?.Invoke(songDir != null);
             })
             .Start();
         }

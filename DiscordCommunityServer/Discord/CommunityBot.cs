@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using static TeamSaberServer.Database.SimpleSql;
 using static TeamSaberShared.SharedConstructs;
 using TeamSaberServer.Database;
+using TeamSaberShared;
+using System.Text.RegularExpressions;
 
 namespace TeamSaberServer.Discord
 {
@@ -34,6 +36,11 @@ namespace TeamSaberServer.Discord
 
         public static void SendToScoreChannel(string message)
         {
+            SendToChannel("event-feed", message);
+        }
+
+        public static void SendToChannel(string channel, string message)
+        {
             if (_client.ConnectionState == ConnectionState.Connected)
             {
 #if DEBUG
@@ -41,7 +48,7 @@ namespace TeamSaberServer.Discord
 #else
                 var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
 #endif
-                guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First().SendMessageAsync(message);
+                guild.TextChannels.ToList().Where(x => x.Name == channel).First().SendMessageAsync(message);
             }
         }
 
@@ -90,7 +97,7 @@ namespace TeamSaberServer.Discord
 
             //Add the role of the team we're being switched to
             //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.
-            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == team.GetTeamName().ToLower()));
+            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == team.GetTeamName().ToLower()));
 
             player.SetTeam(team.GetTeamId());
 

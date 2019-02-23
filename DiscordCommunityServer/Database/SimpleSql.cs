@@ -34,8 +34,8 @@ namespace TeamSaberServer.Database
 
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', rank INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', difficultyLevel INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', score INTEGER DEFAULT 0, old BIT DEFAULT 0)");
             }
             else
             {
@@ -80,19 +80,19 @@ namespace TeamSaberServer.Database
             return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{timezone}\', {rartiy}, \'{team}\', {rank}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
         }
 
-        public static bool AddScore(string songId, string steamId, int rarity, string team, int difficultyLevel, bool fullCombo, long score)
+        public static bool AddScore(string songId, string steamId, int rarity, string team, LevelDifficulty levelDifficulty, bool fullCombo, long score)
         {
-            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songId}\', \'{steamId}\', {rarity}, \'{team}\', {difficultyLevel}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songId}\', \'{steamId}\', {rarity}, \'{team}\', {(int)levelDifficulty}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
         }
 
-        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songId)
+        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songId, LevelDifficulty difficulty)
         {
-            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', 0)") > 0;
+            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', {(int)difficulty}, 0)") > 0;
         }
 
-        public static bool AddTeam(string teamId, string teamName, string captainId, string color)
+        public static bool AddTeam(string teamId, string teamName, string captainId, string color, int score)
         {
-            return ExecuteCommand($"INSERT INTO teamTable VALUES (NULL, \'{teamId}\', \'{teamName}\', \'{captainId}\', \'{color}\', 0)") > 0;
+            return ExecuteCommand($"INSERT INTO teamTable VALUES (NULL, \'{teamId}\', \'{teamName}\', \'{captainId}\', \'{color}\', {score}, 0)") > 0;
         }
 
         //This marks all songs and scores as "old"
@@ -125,12 +125,33 @@ namespace TeamSaberServer.Database
             return ret;
         }
 
+        //Returns a list of all the teams
+        public static List<Player> GetAllPlayers()
+        {
+            List<Player> ret = new List<Player>();
+            SQLiteConnection db = OpenConnection();
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId FROM playerTable WHERE NOT liquidated = 1", db))
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        ret.Add(new Player(reader["steamId"].ToString()));
+                    }
+                }
+            }
+
+            db.Close();
+
+            return ret;
+        }
+
         //Returns a list of SongConstruct of the currently active songs
         public static List<SongConstruct> GetActiveSongs()
         {
             List<SongConstruct> ret = new List<SongConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, songName FROM songTable WHERE NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, songName, difficulty FROM songTable WHERE NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -139,7 +160,8 @@ namespace TeamSaberServer.Database
                         SongConstruct item = new SongConstruct()
                         {
                             SongId = reader["songId"].ToString(),
-                            Name = reader["songName"].ToString()
+                            Name = reader["songName"].ToString(),
+                            Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
                         };
                         ret.Add(item);
                     }
@@ -172,7 +194,7 @@ namespace TeamSaberServer.Database
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' {((Rarity)rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' AND difficultyLevel = {(int)s.Difficulty} {((Rarity)rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -212,6 +234,7 @@ namespace TeamSaberServer.Database
                             new SongConstruct()
                             {
                                 SongId = reader["songId"].ToString(),
+                                Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficultyLevel"].ToString())
                             },
                             new ScoreConstruct {
                                 Score = Convert.ToInt64(reader["score"].ToString()),
@@ -243,6 +266,7 @@ namespace TeamSaberServer.Database
         {
             public string SongId { get; set; }
             public string Name { get; set; }
+            public LevelDifficulty Difficulty { get; set; }
 
             //Necessary overrides for being used as a key in a Dictionary
             public static bool operator ==(SongConstruct a, SongConstruct b)
@@ -268,6 +292,7 @@ namespace TeamSaberServer.Database
             {
                 int hash = 13;
                 hash = (hash * 7) + SongId.GetHashCode();
+                hash = (hash * 7) + Difficulty.GetHashCode();
                 return hash;
             }
             //End necessary overrides
