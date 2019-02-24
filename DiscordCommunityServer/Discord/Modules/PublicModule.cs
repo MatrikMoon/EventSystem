@@ -121,11 +121,24 @@ namespace TeamSaberServer.Discord.Modules
                     }
                 }
 
+                //Sanitize input
+                if (songId.StartsWith("https://beatsaver.com/"))
+                {
+                    songId = songId.Substring(songId.LastIndexOf("/") + 1);
+                }
+
+                if (songId.Contains("&"))
+                {
+                    songId = songId.Substring(0, songId.IndexOf("&"));
+                }
+
                 if (!Song.Exists(songId, parsedDifficulty))
                 {
                     if (OstHelper.IsOst(songId))
                     {
-                        await ReplyAsync($"Added: {new Song(songId, parsedDifficulty).GetSongName()}");
+                        Song song = new Song(songId, parsedDifficulty);
+                        song.SetOld(false);
+                        await ReplyAsync($"Added: {song.GetSongName()}");
                     }
                     else
                     {
@@ -147,7 +160,7 @@ namespace TeamSaberServer.Discord.Modules
                                 
                                 else
                                 {
-                                    new Song(songId, nextBestDifficulty).SetOld(false);
+                                    new Song(songId, nextBestDifficulty);
                                     await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
                                         $"Added to the song list!");
                                 }
@@ -155,14 +168,13 @@ namespace TeamSaberServer.Discord.Modules
 
                             else
                             {
-                                new Song(songId, parsedDifficulty).SetOld(false);
+                                new Song(songId, parsedDifficulty);
                                 await ReplyAsync($"{songName} downloaded and added to song list!");
                             }
                         }
                         else await ReplyAsync("Could not download song.");
                     }
                 }
-                else await ReplyAsync("The song is already in the database");
             }
         }
 
@@ -473,6 +485,28 @@ namespace TeamSaberServer.Discord.Modules
             });
 
             await ReplyAsync(finalMessage);
+        }
+
+        [Command("help")]
+        public async Task HelpAsync()
+        {
+            string ret = "```Key:\n\n" +
+                "[] -> parameter\n" +
+                "<> -> optional parameter / admin-only parameter\n" +
+                "() -> Extra notes about command```\n\n" +
+                "```Commands:\n\n" +
+                "register [scoresaber link] [timezone] <@User>\n" +
+                "addSong [beatsaver url] <difficulty> (<difficulty> can be either a number or whole-word, such as 4 or ExpertPlus)\n" +
+                "endEvent\n" +
+                "rarity [rarity] <@User> (assigns a rarity to a user. Likely to remain unused)\n" +
+                "crunchRarities (looks at the ranks of all registered players and assigns rarities accordingly)\n" +
+                "createTeam [teamId] <name> <color> (teamId should be in the form of teamX, where X is the next teamId number in line, name must be no-spaces, and color must start with #)\n" +
+                "modifyTeam [name] [color] <teamId> (admins can override the teamId they're changing)\n" +
+                "assignTeam [@User] <teamId> <captain> (admins can assign users to a team specified in teamId, captains auto-assign to their own team. If the captain parameter is \"captain\", that user becomes the captain of the team)\n" +
+                "leaderboards (Shows leaderboards... Duh. Moderators only)\n" +
+                "listTeams (Shows a list of teams. Moderators only)\n" +
+                "help (This message!)```";
+            await ReplyAsync(ret);
         }
 
         [Command("cat")]

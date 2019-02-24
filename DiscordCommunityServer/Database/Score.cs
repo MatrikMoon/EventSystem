@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TeamSaberShared;
 using static TeamSaberShared.SharedConstructs;
 
 /*
@@ -41,13 +42,13 @@ namespace TeamSaberServer.Database
         
         public long GetScore()
         {
-            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}", "score").First();
+            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficultyLevel = {(int)_difficultyLevel} AND steamId = {player.GetSteamId()} AND OLD = 0", "score").First();
             return Convert.ToInt64(scoreString);
         }
 
         public bool SetScore(long score, bool fullCombo)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)}, old = 0 WHERE songId = \'{song.GetSongId()}\' AND steamId = {player.GetSteamId()}") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficultyLevel = {(int)_difficultyLevel} AND steamId = {player.GetSteamId()} AND OLD = 0") > 1;
         }
 
         public bool SetOld()
@@ -63,6 +64,14 @@ namespace TeamSaberServer.Database
         public static bool Exists(string songId, string steamId, LevelDifficulty difficultyLevel)
         {
             return SimpleSql.ExecuteQuery($"SELECT * FROM scoreTable WHERE songId = \'{songId}\' AND steamId = {steamId} AND difficultyLevel = {(int)difficultyLevel} AND OLD = 0", "songId").Any();
+        }
+
+        //KotH Event-specific
+        //Deletes scores on other songs
+        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.GetSongId(), player.GetSteamId(), _difficultyLevel);
+        public static bool DeleteOtherScoresForUser(string songId, string steamId, LevelDifficulty difficultyLevel)
+        {
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE NOT songId = \'{songId}\' AND steamId = {steamId}") > 1;
         }
     }
 }
