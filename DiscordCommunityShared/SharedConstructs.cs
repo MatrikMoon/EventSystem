@@ -8,8 +8,8 @@ namespace TeamSaberShared
     public static class SharedConstructs
     {
         public static string Name => "TeamSaberPlugin";
-        public static string Version => "0.0.6";
-        public static int VersionCode => 006;
+        public static string Version => "0.0.8";
+        public static int VersionCode => 008;
         public static string Changelog =
             "0.0.1: First attempt at fork from DiscordCommunityPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -17,7 +17,8 @@ namespace TeamSaberShared
             "0.0.4: Difficulties are now decided by the server, fixed isolation, unified oculus / steam versions\n" +
             "0.0.5: Various UI improvements: Fixed scroll buttons, made plugin button non-interactible until song load, added difficulty text view\n" +
             "0.0.6: Event 2: HoT, again tried to fix unification\n" +
-            "0.0.7: Fixed scroll button overlap! Thank almighty andruzzzhka for this miracle\n";
+            "0.0.7: Fixed scroll button overlap! Thank almighty andruzzzhka for this miracle\n" +
+            "0.0.8: Database changes, update for KotH!\n";
 
         public enum Rarity
         {
@@ -30,16 +31,6 @@ namespace TeamSaberShared
             SSS = 5,
             All = 6 //Not to be stored. Only use as "no filter necessary"
         }
-
-        /*
-        public enum Team
-        {
-            None = -1, //Only use as "does not exist"
-            Team1,
-            Team2,
-            All //Not to be stored. Only use as "no filter necessary"
-        }
-        */
 
         public enum LevelDifficulty
         {

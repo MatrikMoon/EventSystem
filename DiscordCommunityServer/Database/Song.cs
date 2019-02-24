@@ -27,7 +27,6 @@ namespace TeamSaberServer.Database
             {
                 //Add a placeholder, trigger song download from BeatSaver if it doesn't exist
                 SimpleSql.AddSong("", "", "", songId, difficulty);
-                SetOld(true); //Start off by setting the song to old, just in case we don't want to add it to the plugin list
                 if (OstHelper.IsOst(songId))
                 {
                     SetSongName(OstHelper.GetOstSongNameFromLevelId(songId));
@@ -52,22 +51,22 @@ namespace TeamSaberServer.Database
 
         public string GetSongName()
         {
-            return SimpleSql.ExecuteQuery($"SELECT songName FROM songTable WHERE songId = \'{songId}\'", "songName").First();
+            return SimpleSql.ExecuteQuery($"SELECT songName FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}", "songName").First();
         }
 
         public bool SetSongName(string name)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET songName = \'{name}\' WHERE songId = \'{songId}\'") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE songTable SET songName = \'{name}\' WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
         }
 
         public bool SetOld(bool old)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET old = \'{(old ? "1" : "0")}\' WHERE songId = \'{songId}\'") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE songTable SET old = \'{(old ? "1" : "0")}\' WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
         }
 
         public bool IsOld()
         {
-            return SimpleSql.ExecuteQuery($"SELECT old FROM songTable WHERE songId = \'{songId}\'", "old").First() == "1";
+            return SimpleSql.ExecuteQuery($"SELECT old FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}", "old").First() == "1";
         }
 
         public bool Exists()

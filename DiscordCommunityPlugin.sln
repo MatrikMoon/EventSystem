@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityServer", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityShared", "DiscordCommunityShared\DiscordCommunityShared.csproj", "{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityPluginOculus", "DiscordCommunityPluginOculus\DiscordCommunityPluginOculus.csproj", "{3FD17151-4548-4F72-8D0F-15306F9AFC71}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityPlugin", "DiscordCommunityPlugin\DiscordCommunityPlugin.csproj", "{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C} = {37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}
@@ -31,10 +29,6 @@ Global
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3FD17151-4548-4F72-8D0F-15306F9AFC71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3FD17151-4548-4F72-8D0F-15306F9AFC71}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3FD17151-4548-4F72-8D0F-15306F9AFC71}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3FD17151-4548-4F72-8D0F-15306F9AFC71}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -189,6 +189,23 @@ namespace TeamSaberServer.Database
             return scores;
         }
 
+        //Returns a list of songs with score data intact
+        //TODO: This basically does the same thing as GetAllActiveScoresForFilterOrTeam, except here we can specify no team. Re-address this and consolidate
+        public static List<SongConstruct> GetAllScores(long rarity = (long)Rarity.All, string teamId = "-1")
+        {
+            List<SongConstruct> ret = GetActiveSongs();
+
+            SQLiteConnection db = OpenConnection();
+            ret.ForEach(x =>
+            {
+                if (x.Scores == null) x.Scores = GetScoresForSong(x, rarity, teamId);
+            });
+
+            db.Close();
+
+            return ret;
+        }
+
         //Returns a dictionary of steamIds and scores for the designated song and rarity
         public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rarity = (long)Rarity.All, string teamId = "-1")
         {
@@ -267,6 +284,7 @@ namespace TeamSaberServer.Database
             public string SongId { get; set; }
             public string Name { get; set; }
             public LevelDifficulty Difficulty { get; set; }
+            public IDictionary<string, ScoreConstruct> Scores { get; set; }
 
             //Necessary overrides for being used as a key in a Dictionary
             public static bool operator ==(SongConstruct a, SongConstruct b)

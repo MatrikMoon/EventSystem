@@ -16,8 +16,6 @@ namespace TeamSaberServer
 {
     class Server
     {
-        private static Random rand = new Random();
-
         public static void StartHttpServer()
         {
             var route_config = new List<Route>() {
@@ -62,7 +60,7 @@ namespace TeamSaberServer
                             {
                                 Player player = new Player(s.SteamId);
 
-                                long oldScoreNumber = (long)oldScore?.GetScore();
+                                long oldScoreNumber = oldScore == null ? 0 : oldScore.GetScore();
                                 oldScore?.SetOld();
 
                                 //Player stats
@@ -70,8 +68,10 @@ namespace TeamSaberServer
                                 else player.IncrementSongsPlayed();
                                 player.IncrementTotalScore(s.Score_ - oldScoreNumber); //Increment total score only by the amount the score has increased
 
-                                new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel).SetScore(s.Score_, s.FullCombo);
-                                
+                                Database.Score newScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
+                                newScore.SetScore(s.Score_, s.FullCombo);
+                                newScore.DeleteOtherScoresForUser();
+
                                 //Only send message if player is registered
                                 if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).GetSongName()} ({(LevelDifficulty)s.DifficultyLevel})!");
                             }
@@ -194,46 +194,84 @@ namespace TeamSaberServer
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         string[] requestData = request.Path.Substring(1).Split('/');
-
                         string songId = requestData[1];
-                        int difficulty = Convert.ToInt32(requestData[2]);
-                        int rarity = Convert.ToInt32(requestData[3]);
-                        string teamId = requestData[4];
-                        songId = Regex.Replace(songId, "[^a-zA-Z0-9-]", "");
-                        teamId = Regex.Replace(teamId, "[^a-zA-Z0-9-]", "");
-
-                        SongConstruct songConstruct = new SongConstruct()
-                        {
-                            SongId = songId,
-                            Difficulty = (LevelDifficulty)difficulty
-                        };
-
-                        if (!Song.Exists(songId, (LevelDifficulty)difficulty))
-                        {
-                            Logger.Error($"Song doesn't exist for leaderboards: {songId}");
-                            return new HttpResponse()
-                            {
-                                ReasonPhrase = "Bad Request",
-                                StatusCode = "400"
-                            };
-                        }
-
-                        IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rarity, teamId);
                         JSONNode json = new JSONObject();
 
-                        int place = 1;
-                        scores.Take(10).ToList().ForEach(x =>
+                        if (songId == "all")
                         {
-                            JSONNode node = new JSONObject();
-                            node["score"] = x.Value.Score;
-                            node["player"] = new Player(x.Key).GetDiscordName();
-                            node["place"] = place;
-                            node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
-                            node["steamId"] = x.Key;
-                            node["rarity"] = (int)x.Value.Rarity;
-                            node["team"] = x.Value.TeamId;
-                            json.Add(Convert.ToString(place++), node);
-                        });
+                            int take = 10;
+                            int rarity = (int)Rarity.All;
+                            string teamId = "-1";
+
+                            if (requestData.Length > 3) take = Convert.ToInt32(requestData[2]);
+                            if (requestData.Length > 4) rarity = Convert.ToInt32(requestData[3]);
+                            if (requestData.Length > 5) teamId = requestData[4];
+
+                            List<SongConstruct> songs = GetAllScores(rarity, teamId);
+                            songs.ToList().ForEach(x =>
+                            {
+                                JSONNode songNode = new JSONObject();
+                                songNode["songId"] = x.SongId;
+                                songNode["difficulty"] = (int)x.Difficulty;
+                                songNode["scores"] = new JSONObject();
+
+                                int place = 1;
+                                x.Scores.Take(take).ToList().ForEach(y =>
+                                {
+                                    JSONNode scoreNode = new JSONObject();
+                                    scoreNode["score"] = y.Value.Score;
+                                    scoreNode["player"] = new Player(y.Key).GetDiscordName();
+                                    scoreNode["place"] = place;
+                                    scoreNode["fullCombo"] = y.Value.FullCombo ? "true" : "false";
+                                    scoreNode["steamId"] = y.Key;
+                                    scoreNode["rarity"] = (int)y.Value.Rarity;
+                                    scoreNode["team"] = y.Value.TeamId;
+                                    songNode["scores"].Add(Convert.ToString(place++), scoreNode);
+                                });
+
+                                json.Add(x.SongId + ":" + (int)x.Difficulty, songNode);
+                            });
+                        }
+                        else
+                        {
+                            int difficulty = Convert.ToInt32(requestData[2]);
+                            int rarity = Convert.ToInt32(requestData[3]);
+                            string teamId = requestData[4];
+                            songId = Regex.Replace(songId, "[^a-zA-Z0-9-]", "");
+                            teamId = Regex.Replace(teamId, "[^a-zA-Z0-9-]", "");
+
+                            SongConstruct songConstruct = new SongConstruct()
+                            {
+                                SongId = songId,
+                                Difficulty = (LevelDifficulty)difficulty
+                            };
+
+                            if (!Song.Exists(songId, (LevelDifficulty)difficulty))
+                            {
+                                Logger.Error($"Song doesn't exist for leaderboards: {songId}");
+                                return new HttpResponse()
+                                {
+                                    ReasonPhrase = "Bad Request",
+                                    StatusCode = "400"
+                                };
+                            }
+
+                            IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rarity, teamId);
+
+                            int place = 1;
+                            scores.Take(10).ToList().ForEach(x =>
+                            {
+                                JSONNode node = new JSONObject();
+                                node["score"] = x.Value.Score;
+                                node["player"] = new Player(x.Key).GetDiscordName();
+                                node["place"] = place;
+                                node["fullCombo"] = x.Value.FullCombo ? "true" : "false";
+                                node["steamId"] = x.Key;
+                                node["rarity"] = (int)x.Value.Rarity;
+                                node["team"] = x.Value.TeamId;
+                                json.Add(Convert.ToString(place++), node);
+                            });
+                        }
 
                         return new HttpResponse()
                         {
