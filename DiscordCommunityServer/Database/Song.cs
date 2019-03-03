@@ -36,7 +36,7 @@ namespace TeamSaberServer.Database
                     if (b)
                     {
                         string songName = new BeatSaver.Song(GetSongId()).SongName;
-                        songName = Regex.Replace(songName, "[^a-zA-Z0-9-]", "");
+                        songName = Regex.Replace(songName, "[^a-zA-Z0-9- ]", "");
                         SetSongName(songName);
                     }
                     else SetSongName("[Could not download song info]");
