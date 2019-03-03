@@ -56,7 +56,7 @@ namespace TeamSaberServer
                                 oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                             }
 
-                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
+                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() > s.Score_))
                             {
                                 Player player = new Player(s.SteamId);
 
@@ -70,7 +70,6 @@ namespace TeamSaberServer
 
                                 Database.Score newScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                                 newScore.SetScore(s.Score_, s.FullCombo);
-                                newScore.DeleteOtherScoresForUser();
 
                                 //Only send message if player is registered
                                 if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).GetSongName()} ({(LevelDifficulty)s.DifficultyLevel})!");
@@ -212,11 +211,12 @@ namespace TeamSaberServer
                             {
                                 JSONNode songNode = new JSONObject();
                                 songNode["songId"] = x.SongId;
+                                songNode["songName"] = x.Name;
                                 songNode["difficulty"] = (int)x.Difficulty;
                                 songNode["scores"] = new JSONObject();
 
                                 int place = 1;
-                                x.Scores.Take(take).ToList().ForEach(y =>
+                                x.Scores.OrderBy(y => y.Value.Score).Take(take).ToList().ForEach(y =>
                                 {
                                     JSONNode scoreNode = new JSONObject();
                                     scoreNode["score"] = y.Value.Score;
@@ -237,8 +237,8 @@ namespace TeamSaberServer
                             int difficulty = Convert.ToInt32(requestData[2]);
                             int rarity = Convert.ToInt32(requestData[3]);
                             string teamId = requestData[4];
-                            songId = Regex.Replace(songId, "[^a-zA-Z0-9-]", "");
-                            teamId = Regex.Replace(teamId, "[^a-zA-Z0-9-]", "");
+                            songId = Regex.Replace(songId, "[^a-zA-Z0-9- ]", "");
+                            teamId = Regex.Replace(teamId, "[^a-zA-Z0-9- ]", "");
 
                             SongConstruct songConstruct = new SongConstruct()
                             {
@@ -259,7 +259,7 @@ namespace TeamSaberServer
                             IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rarity, teamId);
 
                             int place = 1;
-                            scores.Take(10).ToList().ForEach(x =>
+                            scores.OrderBy(x => x.Value.Score).Take(10).ToList().ForEach(x =>
                             {
                                 JSONNode node = new JSONObject();
                                 node["score"] = x.Value.Score;
