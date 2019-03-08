@@ -22,6 +22,30 @@ namespace TeamSaberServer.Discord.Modules
         // Dependency Injection will fill this value in for us
         public PictureService PictureService { get; set; }
 
+        //Pull parameters out of an argument list string
+        //Note: argument specifiers are required to start with "-"
+        private static string ParseArgs(string argString, string argToGet)
+        {
+            //Return nothing if the parameter arg string is empty
+            if (string.IsNullOrWhiteSpace(argString) || string.IsNullOrWhiteSpace(argToGet)) return null;
+
+            string[] argArray = argString.Split(' ');
+
+            for (int i = 0; i < argArray.Length; i++)
+            {
+                if (argArray[i] == $"-{argToGet}")
+                {
+                    if (((i + 1) < (argArray.Length)) && !argArray[i + 1].StartsWith("-"))
+                    {
+                        return argArray[i + 1];
+                    }
+                    else return "true";
+                }
+            }
+
+            return null;
+        }
+
         [Command("register")]
         [RequireContext(ContextType.Guild)]
         public async Task RegisterAsync(string steamId, string timezone, IGuildUser user = null)
@@ -90,8 +114,30 @@ namespace TeamSaberServer.Discord.Modules
             }
         }
 
+        [Command("test")]
+        public async Task TestAsync([Remainder] string paramString)
+        {
+            GameOptions gameOptions = GameOptions.None;
+            PlayerOptions playerOptions = PlayerOptions.None;
+
+            //Load up the GameOptions and PlayerOptions
+            foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
+            {
+                if (ParseArgs(paramString, o.ToString()) == "true") gameOptions = (gameOptions | o);
+            }
+
+            foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
+            {
+                if (ParseArgs(paramString, o.ToString()) == "true") playerOptions = (playerOptions | o);
+            }
+
+            await ReplyAsync($"Enabled options:\n\n" +
+                $"{gameOptions.ToString()}\n\n" +
+                $"{playerOptions.ToString()}");
+        }
+
         [Command("addSong")]
-        public async Task AddSongAsync(string songId, string difficulty = "ExpertPlus")
+        public async Task AddSongAsync(string songId, [Remainder] string paramString)
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
@@ -103,22 +149,31 @@ namespace TeamSaberServer.Discord.Modules
                 //Parse the difficulty input, either as an int or a string
                 LevelDifficulty parsedDifficulty = LevelDifficulty.ExpertPlus;
 
-                //If the enum conversion doesn't succeed, try it as an int
-                if (!Enum.TryParse(difficulty, true, out parsedDifficulty))
+                string difficultyArg = ParseArgs(paramString, "difficulty");
+                if (difficultyArg != null)
                 {
-                    int parsedInt = 4;
-
-                    if (int.TryParse(difficulty, out parsedInt))
-                    {
-                        parsedDifficulty = (LevelDifficulty)parsedInt;
-                    }
-                    else
+                    //If the enum conversion doesn't succeed, try it as an int
+                    if (!Enum.TryParse(difficultyArg, true, out parsedDifficulty))
                     {
                         await ReplyAsync("Could not parse difficulty parameter.\n" +
                         "Usage: addSong [songId] [difficulty]");
 
                         return;
                     }
+                }
+
+                GameOptions gameOptions = GameOptions.None;
+                PlayerOptions playerOptions = PlayerOptions.None;
+
+                //Load up the GameOptions and PlayerOptions
+                foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
+                {
+                    if (ParseArgs(paramString, o.ToString()) == "true") gameOptions = (gameOptions | o);
+                }
+
+                foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
+                {
+                    if (ParseArgs(paramString, o.ToString()) == "true") playerOptions = (playerOptions | o);
                 }
 
                 //Sanitize input
@@ -160,15 +215,18 @@ namespace TeamSaberServer.Discord.Modules
                                 
                                 else
                                 {
-                                    new Song(songId, nextBestDifficulty);
+                                    var databaseSong = new Song(songId, parsedDifficulty);
+                                    databaseSong.SetGameOptions(gameOptions);
+                                    databaseSong.SetPlayerOptions(playerOptions);
                                     await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
                                         $"Added to the song list!");
                                 }
                             }
-
                             else
                             {
-                                new Song(songId, parsedDifficulty);
+                                var databaseSong = new Song(songId, parsedDifficulty);
+                                databaseSong.SetGameOptions(gameOptions);
+                                databaseSong.SetPlayerOptions(playerOptions);
                                 await ReplyAsync($"{songName} downloaded and added to song list!");
                             }
                         }

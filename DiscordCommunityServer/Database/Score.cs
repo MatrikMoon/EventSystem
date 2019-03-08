@@ -17,16 +17,16 @@ namespace TeamSaberServer.Database
     {
         private Song song;
         private Player player;
-        private LevelDifficulty _difficultyLevel;
+        private LevelDifficulty difficulty;
 
-        public Score(string songId, string steamId, LevelDifficulty levelDifficulty)
+        public Score(string songId, string steamId, LevelDifficulty difficulty)
         {
-            song = new Song(songId, levelDifficulty);
+            song = new Song(songId, difficulty);
             player = new Player(steamId);
-            _difficultyLevel = levelDifficulty;
+            this.difficulty = difficulty;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRarity(), player.GetTeam(), levelDifficulty, false, 0);
+                SimpleSql.AddScore(songId, steamId, player.GetRarity(), player.GetTeam(), difficulty, PlayerOptions.None, GameOptions.None, false, 0);
             }
         }
 
@@ -42,34 +42,34 @@ namespace TeamSaberServer.Database
         
         public long GetScore()
         {
-            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficultyLevel = {(int)_difficultyLevel} AND steamId = {player.GetSteamId()} AND OLD = 0", "score").First();
+            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND OLD = 0", "score").First();
             return Convert.ToInt64(scoreString);
         }
 
         public bool SetScore(long score, bool fullCombo)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficultyLevel = {(int)_difficultyLevel} AND steamId = {player.GetSteamId()} AND OLD = 0") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND OLD = 0") > 1;
         }
 
         public bool SetOld()
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId = \'{song.GetSongId()}\' AND difficultyLevel = {(int)_difficultyLevel} AND steamId = {player.GetSteamId()}") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()}") > 1;
         }
 
         public bool Exists()
         {
-            return Exists(song.GetSongId(), player.GetSteamId(), _difficultyLevel);
+            return Exists(song.GetSongId(), player.GetSteamId(), difficulty);
         }
 
-        public static bool Exists(string songId, string steamId, LevelDifficulty difficultyLevel)
+        public static bool Exists(string songId, string steamId, LevelDifficulty difficulty)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM scoreTable WHERE songId = \'{songId}\' AND steamId = {steamId} AND difficultyLevel = {(int)difficultyLevel} AND OLD = 0", "songId").Any();
+            return SimpleSql.ExecuteQuery($"SELECT * FROM scoreTable WHERE songId = \'{songId}\' AND steamId = {steamId} AND difficulty = {(int)difficulty} AND OLD = 0", "songId").Any();
         }
 
         //KotH Event-specific
         //Deletes scores on other songs
-        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.GetSongId(), player.GetSteamId(), _difficultyLevel);
-        public static bool DeleteOtherScoresForUser(string songId, string steamId, LevelDifficulty difficultyLevel)
+        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.GetSongId(), player.GetSteamId());
+        public static bool DeleteOtherScoresForUser(string songId, string steamId)
         {
             return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE NOT songId = \'{songId}\' AND steamId = {steamId}") > 1;
         }

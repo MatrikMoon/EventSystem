@@ -1,7 +1,9 @@
 ﻿/*
  * Created by Moon on 9/15/2018
  * Holds simple static variables and constructs needed by both sides of the plugin
- */ 
+ */
+
+using System;
 
 namespace TeamSaberShared
 {
@@ -39,6 +41,42 @@ namespace TeamSaberShared
             Hard = 2,
             Expert = 3,
             ExpertPlus = 4
+        }
+
+        [Flags]
+        public enum GameOptions
+        {
+            None = 0,
+
+            //Negative modifiers
+            NoFail = 1,
+            NoArrows = 2,
+            NoBombs = 4,
+            NoObstacles = 8,
+            NoWalls = 16,
+            SlowSong = 32,
+
+            //Positive Modifiers
+            InstaFail = 64,
+            FailOnClash = 128,
+            BatteryEnergy = 256,
+            FastNotes = 512,
+            FastSong = 1024,
+            DisappearingArrows = 2048,
+
+            //Other options
+            OneSaber = 4096
+        }
+
+        [Flags]
+        public enum PlayerOptions
+        {
+            None = 0,
+            Mirror = 1,
+            StaticLights = 2,
+            NoHud = 4,
+            AdvancedHud = 8,
+            ReduceDebris = 16
         }
     }
 }
