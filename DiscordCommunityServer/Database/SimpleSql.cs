@@ -33,8 +33,8 @@ namespace TeamSaberServer.Database
                 dbc.Open();
 
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', rank INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', difficultyLevel INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', score INTEGER DEFAULT 0, old BIT DEFAULT 0)");
             }
             else
@@ -80,14 +80,14 @@ namespace TeamSaberServer.Database
             return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{timezone}\', {rartiy}, \'{team}\', {rank}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
         }
 
-        public static bool AddScore(string songId, string steamId, int rarity, string team, LevelDifficulty levelDifficulty, bool fullCombo, long score)
+        public static bool AddScore(string songId, string steamId, int rarity, string team, LevelDifficulty difficulty, PlayerOptions playerOptions, GameOptions gameOptions, bool fullCombo, long score)
         {
-            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songId}\', \'{steamId}\', {rarity}, \'{team}\', {(int)levelDifficulty}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songId}\', \'{steamId}\', {rarity}, \'{team}\', {(int)difficulty}, {(int)playerOptions}, {(int)gameOptions}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
         }
 
-        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songId, LevelDifficulty difficulty)
+        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songId, LevelDifficulty difficulty, PlayerOptions playerOptions, GameOptions gameOptions)
         {
-            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', {(int)difficulty}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', {(int)difficulty}, {(int)playerOptions}, {(int)gameOptions}, 0)") > 0;
         }
 
         public static bool AddTeam(string teamId, string teamName, string captainId, string color, int score)
@@ -211,7 +211,7 @@ namespace TeamSaberServer.Database
         {
             Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficultyLevel, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' AND difficultyLevel = {(int)s.Difficulty} {((Rarity)rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficulty, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' AND difficulty = {(int)s.Difficulty} {((Rarity)rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -225,7 +225,7 @@ namespace TeamSaberServer.Database
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 Rarity = (Rarity)Convert.ToInt64(reader["rarity"].ToString()),
                                 TeamId = reader["team"].ToString(),
-                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
+                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficulty"].ToString())
                             });
                     }
                 }
@@ -241,7 +241,7 @@ namespace TeamSaberServer.Database
         {
             Dictionary<SongConstruct, ScoreConstruct> ret = new Dictionary<SongConstruct, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songId, rarity, team, difficultyLevel, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songId, rarity, team, difficulty, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -251,14 +251,14 @@ namespace TeamSaberServer.Database
                             new SongConstruct()
                             {
                                 SongId = reader["songId"].ToString(),
-                                Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficultyLevel"].ToString())
+                                Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
                             },
                             new ScoreConstruct {
                                 Score = Convert.ToInt64(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 Rarity = (Rarity)Convert.ToInt64(reader["rarity"].ToString()),
                                 TeamId = reader["team"].ToString(),
-                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficultyLevel"].ToString())
+                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficulty"].ToString())
                             });
                     }
                 }
