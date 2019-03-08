@@ -106,6 +106,8 @@ namespace TeamSaberServer
                             item["songName"] = x.Name;
                             item["songId"] = x.SongId;
                             item["difficulty"] = (int)x.Difficulty;
+                            item["gameOptions"] = (int)x.GameOptions;
+                            item["playerOptions"] = (int)x.PlayerOptions;
                             json.Add(x.SongId + (int)x.Difficulty, item);
                         });
 

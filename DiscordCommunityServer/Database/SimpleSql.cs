@@ -161,6 +161,8 @@ namespace TeamSaberServer.Database
                         {
                             SongId = reader["songId"].ToString(),
                             Name = reader["songName"].ToString(),
+                            GameOptions = (GameOptions)Convert.ToInt32(reader["gameOptions"].ToString()),
+                            PlayerOptions = (PlayerOptions)Convert.ToInt32(reader["playerOptions"].ToString()),
                             Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
                         };
                         ret.Add(item);
@@ -241,7 +243,7 @@ namespace TeamSaberServer.Database
         {
             Dictionary<SongConstruct, ScoreConstruct> ret = new Dictionary<SongConstruct, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songId, rarity, team, difficulty, fullCombo FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songId, rarity, team, difficulty, fullCombo, gameOptions, playerOptions FROM scoreTable WHERE steamId = \'{steamId}\' AND NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -251,6 +253,8 @@ namespace TeamSaberServer.Database
                             new SongConstruct()
                             {
                                 SongId = reader["songId"].ToString(),
+                                GameOptions = (GameOptions)Convert.ToInt32(reader["gameOptions"].ToString()),
+                                PlayerOptions = (PlayerOptions)Convert.ToInt32(reader["playerOptions"].ToString()),
                                 Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
                             },
                             new ScoreConstruct {
@@ -284,6 +288,8 @@ namespace TeamSaberServer.Database
             public string SongId { get; set; }
             public string Name { get; set; }
             public LevelDifficulty Difficulty { get; set; }
+            public GameOptions GameOptions { get; set; }
+            public PlayerOptions PlayerOptions { get; set; }
             public IDictionary<string, ScoreConstruct> Scores { get; set; }
 
             //Necessary overrides for being used as a key in a Dictionary

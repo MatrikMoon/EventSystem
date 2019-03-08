@@ -215,11 +215,13 @@ namespace TeamSaberServer.Discord.Modules
                                 
                                 else
                                 {
-                                    var databaseSong = new Song(songId, parsedDifficulty);
+                                    var databaseSong = new Song(songId, nextBestDifficulty);
                                     databaseSong.SetGameOptions(gameOptions);
                                     databaseSong.SetPlayerOptions(playerOptions);
                                     await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
-                                        $"Added to the song list!");
+                                        $"Added to the song list" +
+                                        $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
+                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                                 }
                             }
                             else
@@ -227,7 +229,9 @@ namespace TeamSaberServer.Discord.Modules
                                 var databaseSong = new Song(songId, parsedDifficulty);
                                 databaseSong.SetGameOptions(gameOptions);
                                 databaseSong.SetPlayerOptions(playerOptions);
-                                await ReplyAsync($"{songName} downloaded and added to song list!");
+                                await ReplyAsync($"{songName} downloaded and added to song list" +
+                                    $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
+                                    $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                             }
                         }
                         else await ReplyAsync("Could not download song.");

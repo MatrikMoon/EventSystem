@@ -25,8 +25,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
     {
         protected CustomLeaderboardTableView _leaderboard;
 
-        public event Action<IDifficultyBeatmap> PlayPressed;
-        public IDifficultyBeatmap selectedMap;
+        public event Action<Song> PlayPressed;
+        public Song selectedSong;
         public string selectedTeam = "-1";
         public int selectedTeamIndex = -1;
 
@@ -78,7 +78,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageLeftButton.interactable = true;
                 _pageLeftButton.onClick.AddListener(() =>
                 {
-                    SetSong(selectedMap, --selectedTeamIndex);
+                    SetSong(selectedSong, --selectedTeamIndex);
                     if (selectedTeamIndex <= -1) _pageLeftButton.interactable = false;
                     _pageRightButton.interactable = true;
                 });
@@ -93,7 +93,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 _pageRightButton.interactable = true;
                 _pageRightButton.onClick.AddListener(() =>
                 {
-                    SetSong(selectedMap, ++selectedTeamIndex);
+                    SetSong(selectedSong, ++selectedTeamIndex);
                     if (selectedTeamIndex >= Team.allTeams.Count - 1) _pageRightButton.interactable = false;
                     _pageLeftButton.interactable = true;
                 });
@@ -106,7 +106,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 (_playButton.transform as RectTransform).sizeDelta = new Vector2(28f, 10f);
                 _playButton.onClick.AddListener(() =>
                 {
-                    PlayPressed?.Invoke(selectedMap);
+                    PlayPressed?.Invoke(selectedSong);
                 });
 
                 if (selectedTeamIndex <= -1) _pageLeftButton.interactable = false;
@@ -132,10 +132,10 @@ namespace TeamSaberPlugin.UI.ViewControllers
             }
         }
 
-        public void SetSong(IDifficultyBeatmap map, int teamIndex)
+        public void SetSong(Song song, int teamIndex)
         {
             //Set globals
-            selectedMap = map;
+            selectedSong = song;
 
             if (teamIndex >= 0)
             {
@@ -153,8 +153,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
             _pageRightButton.gameObject.SetActive(true);
 
             //Set song name text and team text (and color)
-            _songName.SetText(map.level.songName);
-            _difficulty.SetText(map.difficulty.ToString());
+            _songName.SetText(song.Beatmap.level.songName);
+            _difficulty.SetText(song.Beatmap.difficulty.ToString());
 
             if (selectedTeam == "-1")
             {
@@ -169,12 +169,12 @@ namespace TeamSaberPlugin.UI.ViewControllers
             }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(map.level.levelID), (LevelDifficulty)map.difficulty, Rarity.All, selectedTeam, selectedTeam == "-1");
+            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(song.Beatmap.level.levelID), song.Difficulty, Rarity.All, selectedTeam, selectedTeam == "-1");
         }
 
         public void Refresh()
         {
-            if (selectedMap != null) SetSong(selectedMap, selectedTeamIndex);
+            if (selectedSong != null) SetSong(selectedSong, selectedTeamIndex);
         }
 
         public void SetScores(List<CustomLeaderboardTableView.CustomScoreData> scores, int myScorePos, bool useTeamColors = false)
