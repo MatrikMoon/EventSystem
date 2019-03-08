@@ -1,17 +1,14 @@
-﻿using HMUI;
+﻿using CustomUI.BeatSaber;
+using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TeamSaberPlugin.DiscordCommunityHelpers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using TeamSaberPlugin.DiscordCommunityHelpers;
-using Logger = TeamSaberShared.Logger;
-using TeamSaberPlugin.Misc;
-using static TeamSaberShared.SharedConstructs;
-using CustomUI.BeatSaber;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -23,7 +20,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource
     {
-        public event Action<IDifficultyBeatmap> SongListRowSelected;
+        public event Action<Song> SongListRowSelected;
         public event Action ReloadPressed;
         public event Action SongsDownloaded;
         public bool errorHappened = false;
@@ -38,7 +35,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
         TextMeshProUGUI _songsDownloadingText;
         TextMeshProUGUI _downloadErrorText;
 
-        List<IDifficultyBeatmap> availableSongs = new List<IDifficultyBeatmap>();
+        List<Song> availableSongs = new List<Song>();
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType type)
@@ -52,7 +49,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -8f);
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
-                _pageUpButton.onClick.AddListener(delegate ()
+                _pageUpButton.onClick.AddListener(() =>
                 {
                     songsTableView.PageScrollUp();
                 });
@@ -63,7 +60,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
-                _pageDownButton.onClick.AddListener(delegate ()
+                _pageDownButton.onClick.AddListener(() =>
                 {
                     songsTableView.PageScrollDown();
                 });
@@ -167,7 +164,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             selectWhenLoaded = levelId;
         }
 
-        public void SetSongs(List<IDifficultyBeatmap> levels)
+        public void SetSongs(List<Song> levels)
         {
             //Now that songs are being set, hide the "downloading" text
             if (_downloadErrorText.gameObject.activeSelf) return; //If there was an error earlier, don't continue
@@ -190,7 +187,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             songsTableView.ScrollToRow(0, false);
             if (selectWhenLoaded != null)
             {
-                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.level.levelID == selectWhenLoaded).First());
+                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.Beatmap.level.levelID == selectWhenLoaded).First());
                 songsTableView.SelectRow(songIndex, true);
             }
             SongsDownloaded?.Invoke();
@@ -205,7 +202,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
-            IBeatmapLevel song = availableSongs[row].level;
+            IBeatmapLevel song = availableSongs[row].Beatmap.level;
 
             cell.coverImage = song.coverImage;
             cell.songName = $"{song.songName}\n<size=80%>{song.songSubName}</size>";

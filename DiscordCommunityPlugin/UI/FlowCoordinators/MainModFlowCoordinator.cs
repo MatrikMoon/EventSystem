@@ -1,14 +1,13 @@
 ﻿using CustomUI.BeatSaber;
-using TeamSaberPlugin.DiscordCommunityHelpers;
-using TeamSaberPlugin.Misc;
-using TeamSaberPlugin.UI.ViewControllers;
-using HMUI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.Misc;
+using TeamSaberPlugin.UI.ViewControllers;
 using UnityEngine;
 using VRUI;
 using static TeamSaberShared.SharedConstructs;
@@ -74,7 +73,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             }
         }
 
-        private void SongListRowSelected(IDifficultyBeatmap level)
+        private void SongListRowSelected(Song song)
         {
             //Open up the custom/global leaderboard pane when we need to
             if (_communityLeaderboard == null)
@@ -92,13 +91,13 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             SetRightScreenViewController(_globalLeaderboard);
 
             //Change global leaderboard view
-            _globalLeaderboard.SetData(level);
+            _globalLeaderboard.SetData(song.Beatmap);
 
             //Change community leaderboard view
             //Use the currently selected team, if it exists
             int teamIndex = _communityLeaderboard.selectedTeamIndex;
             if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.team);
-            _communityLeaderboard.SetSong(level, teamIndex);
+            _communityLeaderboard.SetSong(song, teamIndex);
         }
 
         private void ReloadServerData()
@@ -114,7 +113,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             Logger.Success("Disabled game-modifying plugins through bs_utils :)");
         }
 
-        private void SongPlayPressed(IDifficultyBeatmap map)
+        private void SongPlayPressed(Song song)
         {
             if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
             {
@@ -123,46 +122,75 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             else Logger.Warning("BSUtils not installed, not disabling other plugins");
 
             //We're playing from the mod's menu
-            CommunityUI.instance.communitySongPlayed = map.level.levelID;
+            CommunityUI.instance.communitySongPlayed = song.Beatmap.level.levelID;
 
             //Callback for when the song is ready to be played
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
                 //If one-saber is enabled, we will forcefully add it to the level characteristics
                 //We need to grab the "characteristic" and use it for ourselves
-                /*
-                BeatmapCharacteristicSO oneSaberCharacteristic = null;
-                for (int i = 0; oneSaberCharacteristic == null && i < _levelCollection.levels.Length; i++)
+                if (song.GameOptions.HasFlag(GameOptions.OneSaber))
                 {
-                    oneSaberCharacteristic = _levelCollection.levels.ElementAt(i).beatmapCharacteristics.FirstOrDefault(x => x.characteristicName == "One Saber");
-                }
+                    BeatmapCharacteristicSO oneSaberCharacteristic = null;
+                    for (int i = 0; oneSaberCharacteristic == null && i < _levelCollection.levels.Length; i++)
+                    {
+                        oneSaberCharacteristic = _levelCollection.levels.ElementAt(i).beatmapCharacteristics.FirstOrDefault(x => x.characteristicName == "One Saber");
+                    }
 
-                //If we didn't end up finding it, just skip it
-                if (oneSaberCharacteristic != null)
-                {
-                    List<BeatmapCharacteristicSO> newCharacteristics = new List<BeatmapCharacteristicSO>();
-                    newCharacteristics.AddRange(loadedLevel.beatmapCharacteristics);
-                    newCharacteristics.Add(oneSaberCharacteristic);
-                    loadedLevel.SetField("_beatmapCharacteristics", newCharacteristics.ToArray());
+                    //If we didn't end up finding it, just skip it
+                    if (oneSaberCharacteristic != null)
+                    {
+                        List<BeatmapCharacteristicSO> newCharacteristics = new List<BeatmapCharacteristicSO>();
+                        newCharacteristics.AddRange(loadedLevel.beatmapCharacteristics);
+                        newCharacteristics.Add(oneSaberCharacteristic);
+                        loadedLevel.SetField("_beatmapCharacteristics", newCharacteristics.ToArray());
+                    }
                 }
-                */
 
                 MenuSceneSetupDataSO _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupDataSO>().FirstOrDefault();
                 var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
                     .FirstOrDefault()?
                     .currentLocalPlayer.playerSpecificSettings;
+
+                playerSettings.leftHanded = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
+                playerSettings.swapColors = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
+                playerSettings.staticLights = song.PlayerOptions.HasFlag(PlayerOptions.StaticLights);
+                playerSettings.noTextsAndHuds = song.PlayerOptions.HasFlag(PlayerOptions.NoHud);
+                playerSettings.advancedHud = song.PlayerOptions.HasFlag(PlayerOptions.AdvancedHud);
+                playerSettings.reduceDebris = song.PlayerOptions.HasFlag(PlayerOptions.ReduceDebris);
+
                 GameplayModifiers gameplayModifiers = new GameplayModifiers();
-                _menuSceneSetupData.StartStandardLevel(map, gameplayModifiers, playerSettings, null, null, SongFinished);
+                gameplayModifiers.noFail = song.GameOptions.HasFlag(GameOptions.NoFail);
+                //gameplayModifiers.noArrows = song.GameOptions.HasFlag(GameOptions.NoArrows);
+                gameplayModifiers.noBombs = song.GameOptions.HasFlag(GameOptions.NoBombs);
+                gameplayModifiers.noObstacles = song.GameOptions.HasFlag(GameOptions.NoObstacles);
+                //gameplayModifiers.noWalls = song.GameOptions.HasFlag(GameOptions.NoWalls);
+                if (song.GameOptions.HasFlag(GameOptions.SlowSong))
+                {
+                    gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
+                }
+                else if (song.GameOptions.HasFlag(GameOptions.FastSong))
+                {
+                    gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+                }
+
+                gameplayModifiers.instaFail = song.GameOptions.HasFlag(GameOptions.InstaFail);
+                gameplayModifiers.failOnSaberClash = song.GameOptions.HasFlag(GameOptions.FailOnClash);
+                gameplayModifiers.batteryEnergy = song.GameOptions.HasFlag(GameOptions.BatteryEnergy);
+                gameplayModifiers.fastNotes = song.GameOptions.HasFlag(GameOptions.FastNotes);
+                gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
+
+                _menuSceneSetupData.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, null, SongFinished);
             };
 
             //Load audio if it's custom
-            if (map.level is CustomLevel)
+            if (song.Beatmap.level is CustomLevel)
             {
-                SongLoader.Instance.LoadAudioClipForLevel((CustomLevel)map.level, SongLoaded);
+                SongLoader.Instance.LoadAudioClipForLevel((CustomLevel)song.Beatmap.level, SongLoaded);
             }
             else
             {
-                SongLoaded(map.level);
+                SongLoaded(song.Beatmap.level);
             }
         }
 
