@@ -33,7 +33,7 @@ namespace TeamSaberServer.Discord.Modules
 
             for (int i = 0; i < argArray.Length; i++)
             {
-                if (argArray[i] == $"-{argToGet}")
+                if (argArray[i].ToLower() == $"-{argToGet}".ToLower())
                 {
                     if (((i + 1) < (argArray.Length)) && !argArray[i + 1].StartsWith("-"))
                     {
@@ -114,28 +114,6 @@ namespace TeamSaberServer.Discord.Modules
             }
         }
 
-        [Command("test")]
-        public async Task TestAsync([Remainder] string paramString)
-        {
-            GameOptions gameOptions = GameOptions.None;
-            PlayerOptions playerOptions = PlayerOptions.None;
-
-            //Load up the GameOptions and PlayerOptions
-            foreach (GameOptions o in Enum.GetValues(typeof(GameOptions)))
-            {
-                if (ParseArgs(paramString, o.ToString()) == "true") gameOptions = (gameOptions | o);
-            }
-
-            foreach (PlayerOptions o in Enum.GetValues(typeof(PlayerOptions)))
-            {
-                if (ParseArgs(paramString, o.ToString()) == "true") playerOptions = (playerOptions | o);
-            }
-
-            await ReplyAsync($"Enabled options:\n\n" +
-                $"{gameOptions.ToString()}\n\n" +
-                $"{playerOptions.ToString()}");
-        }
-
         [Command("addSong")]
         public async Task AddSongAsync(string songId, [Remainder] string paramString)
         {
@@ -192,8 +170,11 @@ namespace TeamSaberServer.Discord.Modules
                     if (OstHelper.IsOst(songId))
                     {
                         Song song = new Song(songId, parsedDifficulty);
-                        song.SetOld(false);
-                        await ReplyAsync($"Added: {song.GetSongName()}");
+                        song.SetGameOptions(gameOptions);
+                        song.SetPlayerOptions(playerOptions);
+                        await ReplyAsync($"Added: {OstHelper.GetOstSongNameFromLevelId(songId)} ({parsedDifficulty})" +
+                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
+                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                     }
                     else
                     {
@@ -229,7 +210,7 @@ namespace TeamSaberServer.Discord.Modules
                                 var databaseSong = new Song(songId, parsedDifficulty);
                                 databaseSong.SetGameOptions(gameOptions);
                                 databaseSong.SetPlayerOptions(playerOptions);
-                                await ReplyAsync($"{songName} downloaded and added to song list" +
+                                await ReplyAsync($"{songName} ({parsedDifficulty}) downloaded and added to song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                             }

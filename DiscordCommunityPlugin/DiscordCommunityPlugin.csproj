@@ -77,7 +77,6 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
@@ -99,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DiscordCommunityHelpers\Player.cs" />
+    <Compile Include="DiscordCommunityHelpers\Song.cs" />
     <Compile Include="DiscordCommunityHelpers\Team.cs" />
     <Compile Include="Misc\Client.cs" />
     <Compile Include="Misc\Config.cs" />

@@ -78,6 +78,7 @@ namespace TeamSaberServer.Database
 
         public bool SetGameOptions(GameOptions options)
         {
+            Logger.Warning($"GAMEOPTIONS SET: {options.ToString()} : {(int)options}");
             return SimpleSql.ExecuteCommand($"UPDATE songTable SET gameOptions = {(int)options} WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
         }
 
@@ -99,7 +100,7 @@ namespace TeamSaberServer.Database
 
         public static bool Exists(string songId, LevelDifficulty difficulty)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty} AND OLD = 0", "songId").Any();
+            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty} AND old = 0", "songId").Any();
         }
     }
 }

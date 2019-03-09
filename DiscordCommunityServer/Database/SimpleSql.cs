@@ -151,7 +151,7 @@ namespace TeamSaberServer.Database
         {
             List<SongConstruct> ret = new List<SongConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, songName, difficulty FROM songTable WHERE NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand("SELECT songId, songName, difficulty, gameOptions, playerOptions FROM songTable WHERE NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -161,9 +161,9 @@ namespace TeamSaberServer.Database
                         {
                             SongId = reader["songId"].ToString(),
                             Name = reader["songName"].ToString(),
+                            Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString()),
                             GameOptions = (GameOptions)Convert.ToInt32(reader["gameOptions"].ToString()),
-                            PlayerOptions = (PlayerOptions)Convert.ToInt32(reader["playerOptions"].ToString()),
-                            Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
+                            PlayerOptions = (PlayerOptions)Convert.ToInt32(reader["playerOptions"].ToString())
                         };
                         ret.Add(item);
                     }
