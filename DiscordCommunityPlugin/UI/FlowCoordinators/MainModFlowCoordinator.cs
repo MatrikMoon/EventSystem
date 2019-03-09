@@ -8,6 +8,7 @@ using System.Reflection;
 using TeamSaberPlugin.DiscordCommunityHelpers;
 using TeamSaberPlugin.Misc;
 using TeamSaberPlugin.UI.ViewControllers;
+using TeamSaberShared;
 using UnityEngine;
 using VRUI;
 using static TeamSaberShared.SharedConstructs;
@@ -129,21 +130,36 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             {
                 //If one-saber is enabled, we will forcefully add it to the level characteristics
                 //We need to grab the "characteristic" and use it for ourselves
+                Logger.Warning($"SONG FLAGS: {song.GameOptions}");
+
                 if (song.GameOptions.HasFlag(GameOptions.OneSaber))
                 {
-                    BeatmapCharacteristicSO oneSaberCharacteristic = null;
-                    for (int i = 0; oneSaberCharacteristic == null && i < _levelCollection.levels.Length; i++)
+                    IBeatmapLevel oneSaberCounterpart = null;
+                    if (OstHelper.IsOst(song.SongId))
                     {
-                        oneSaberCharacteristic = _levelCollection.levels.ElementAt(i).beatmapCharacteristics.FirstOrDefault(x => x.characteristicName == "One Saber");
+                        oneSaberCounterpart = _levelCollection.levels.Where(x => x.levelID.Contains(song.SongId) && x.levelID.Contains("OneSaber")).FirstOrDefault();
                     }
 
-                    //If we didn't end up finding it, just skip it
-                    if (oneSaberCharacteristic != null)
+                    if (oneSaberCounterpart != null)
                     {
-                        List<BeatmapCharacteristicSO> newCharacteristics = new List<BeatmapCharacteristicSO>();
-                        newCharacteristics.AddRange(loadedLevel.beatmapCharacteristics);
-                        newCharacteristics.Add(oneSaberCharacteristic);
-                        loadedLevel.SetField("_beatmapCharacteristics", newCharacteristics.ToArray());
+                        song.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(oneSaberCounterpart, (BeatmapDifficulty)song.Difficulty);
+                    }
+                    else
+                    {
+                        BeatmapCharacteristicSO oneSaberCharacteristic = null;
+                        for (int i = 0; oneSaberCharacteristic == null && i < _levelCollection.levels.Length; i++)
+                        {
+                            oneSaberCharacteristic = _levelCollection.levels.ElementAt(i).beatmapCharacteristics.FirstOrDefault(x => x.characteristicName == "One Saber");
+                        }
+
+                        //If we didn't end up finding it, just skip it
+                        if (oneSaberCharacteristic != null)
+                        {
+                            List<BeatmapCharacteristicSO> newCharacteristics = new List<BeatmapCharacteristicSO>();
+                            newCharacteristics.AddRange(loadedLevel.beatmapCharacteristics);
+                            newCharacteristics.Add(oneSaberCharacteristic);
+                            loadedLevel.SetField("_beatmapCharacteristics", newCharacteristics.ToArray());
+                        }
                     }
                 }
 
@@ -203,49 +219,90 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
         {
             standardLevelSceneSetupData.didFinishEvent -= SongFinished;
 
-            try
+            bool wasForcedSingleSaber = false;
+
+            /*
+            if (results.levelEndStateType != LevelCompletionResults.LevelEndStateType.Restart)
             {
-                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Restart)
+                //If we incited a one-saber characteristic, we need to fix that now
+                //NOTE: At time of writing, no non-OSTs use this characteristic,
+                //and all OSTs that use this characteristic have ids that end in "OneSaber"
+                //This could potentially be dangerous.
+
+                BeatmapCharacteristicSO oneSaberCharacteristic = null;
+                for (int i = 0; oneSaberCharacteristic == null && i < _levelCollection.levels.Length; i++)
                 {
-                    SongPlayPressed(standardLevelSceneSetupData.difficultyBeatmap);
+                    oneSaberCharacteristic = _levelCollection.levels.ElementAt(i).beatmapCharacteristics.FirstOrDefault(x => x.characteristicName == "One Saber");
                 }
-                else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
+
+                //If we didn't end up finding it, just skip it
+                if (oneSaberCharacteristic != null)
                 {
-                    //If bs_utils disables score submission, we do too
-                    if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+                    if (oneSaberCharacteristic != null && 
+                        standardLevelSceneSetupData.difficultyBeatmap.level.beatmapCharacteristics.Contains(oneSaberCharacteristic) &&
+                        !standardLevelSceneSetupData.difficultyBeatmap.level.levelID.EndsWith("OneSaber"))
                     {
-                        if (BSUtilsScoreDisabled()) return;
+                        wasForcedSingleSaber = true;
+
+                        List<BeatmapCharacteristicSO> newCharacteristics = new List<BeatmapCharacteristicSO>();
+                        newCharacteristics.AddRange(standardLevelSceneSetupData.difficultyBeatmap.level.beatmapCharacteristics);
+                        newCharacteristics.Remove(oneSaberCharacteristic);
+                        standardLevelSceneSetupData.difficultyBeatmap.level.SetField("_beatmapCharacteristics", newCharacteristics.ToArray());
                     }
+                }
+            }
+            */
+            if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Restart)
+            {
+                MenuSceneSetupDataSO _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuSceneSetupDataSO>().FirstOrDefault();
+                _menuSceneSetupData.StartStandardLevel(
+                    standardLevelSceneSetupData.difficultyBeatmap,
+                    standardLevelSceneSetupData.gameplayCoreSetupData.gameplayModifiers,
+                    standardLevelSceneSetupData.gameplayCoreSetupData.playerSpecificSettings,
+                    null,
+                    null,
+                    SongFinished
+                );
+            }
+            else if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
+            {
+                //If bs_utils disables score submission, we do too
+                if (IllusionInjector.PluginManager.Plugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+                {
+                    if (BSUtilsScoreDisabled()) return;
+                }
 
-                    IBeatmapLevel level = standardLevelSceneSetupData.difficultyBeatmap.level;
-                    string songHash = level.levelID.Substring(0, Math.Min(32, level.levelID.Length));
-                    string songId = null;
+                IBeatmapLevel level = standardLevelSceneSetupData.difficultyBeatmap.level;
+                string songHash = level.levelID.Substring(0, Math.Min(32, level.levelID.Length));
+                string songId = null;
 
-                    //If the song is an OST, just send the hash
-                    if (TeamSaberShared.OstHelper.IsOst(songHash))
-                    {
-                        songId = songHash;
-                    }
-                    else
-                    {
-                        songId = SongIdHelper.GetSongIdFromLevelId(level.levelID);
-                    }
+                //If the song is an OST, just send the hash
+                if (TeamSaberShared.OstHelper.IsOst(songHash))
+                {
+                    songId = songHash;
+                }
+                else
+                {
+                    songId = SongIdHelper.GetSongIdFromLevelId(level.levelID);
+                }
 
-                    //Community leaderboards
-                    var d = standardLevelSceneSetupData.GetProperty("difficultyBeatmap");
-                    var rs = results.GetProperty("unmodifiedScore");
-                    var fc = results.GetProperty("fullCombo");
-                    var ms = typeof(TeamSaberShared.RSA);
-                    var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs);
+                //Community leaderboards
+                var d = standardLevelSceneSetupData.GetProperty("difficultyBeatmap");
+                var rs = results.GetProperty("unmodifiedScore");
+                var fc = results.GetProperty("fullCombo");
+                var ms = typeof(TeamSaberShared.RSA);
+                var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs);
 
-                    var c = typeof(Client);
-                    Action<bool> don = (b) =>
-                    {
-                        if (b && _communityLeaderboard) _communityLeaderboard.Refresh();
-                    };
-                    var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, don);
+                var c = typeof(Client);
+                Action<bool> don = (b) =>
+                {
+                    if (b && _communityLeaderboard) _communityLeaderboard.Refresh();
+                };
+                var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, don);
 
-                    //Scoresaber leaderboards
+                //Scoresaber leaderboards
+                if (!wasForcedSingleSaber)
+                {
                     var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
                     var pdmt = ReflectionUtil.GetStaticType("PlayerDataModelSO, Assembly-CSharp");
                     var plm = Resources.FindObjectsOfTypeAll(plmt).First();
@@ -268,42 +325,38 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                     var plsd = clp.InvokeMethod("GetPlayerLevelStatsData", lid, dif);
                     var res = (int)plsd.GetProperty("highScore") < (int)results.GetProperty("score");
                     plsd.InvokeMethod("IncreaseNumberOfGameplays");
-                    
+
                     if (cld && res)
                     {
                         plsd.InvokeMethod("UpdateScoreData", results.GetProperty("score"), results.GetProperty("maxCombo"), results.GetProperty("fullCombo"), results.GetProperty("rank"));
                         plm.InvokeMethod("AddScore", dbm, results.GetProperty("unmodifiedScore"), gm);
                     }
-
-                    //string signed = TeamSaberShared.RSA.SignScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore);
-                    //Client.SubmitScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore, signed);
-
-                    /*
-                    var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
-                    var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-                    playerDataModel.currentLocalPlayer.playerAllOverallStatsData.soloFreePlayOverallStatsData.UpdateWithLevelCompletionResults(results);
-                    playerDataModel.Save();
-
-                    PlayerDataModelSO.LocalPlayer currentLocalPlayer = playerDataModel.currentLocalPlayer;
-                    IDifficultyBeatmap difficultyBeatmap = standardLevelSceneSetupData.difficultyBeatmap;
-                    GameplayModifiers gameplayModifiers = standardLevelSceneSetupData.gameplayCoreSetupData.gameplayModifiers;
-                    bool cleared = results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
-                    string levelID = difficultyBeatmap.level.levelID;
-                    BeatmapDifficulty difficulty = difficultyBeatmap.difficulty;
-                    PlayerLevelStatsData playerLevelStatsData = currentLocalPlayer.GetPlayerLevelStatsData(levelID, difficulty);
-                    bool result = playerLevelStatsData.highScore < results.score;
-                    playerLevelStatsData.IncreaseNumberOfGameplays();
-                    if (cleared && result)
-                    {
-                        playerLevelStatsData.UpdateScoreData(results.score, results.maxCombo, results.fullCombo, results.rank);
-                        platformLeaderboardsModel.AddScore(difficultyBeatmap, results.unmodifiedScore, gameplayModifiers);
-                    }
-                    */
                 }
-            }
-            catch (Exception e)
-            {
-                Logger.Error($"SongFinished error: {e}");
+
+                //string signed = TeamSaberShared.RSA.SignScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore);
+                //Client.SubmitScore(Plugin.PlayerId, songId, (int)standardLevelSceneSetupData.difficultyBeatmap.difficulty, results.fullCombo, results.unmodifiedScore, signed);
+
+                /*
+                var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
+                var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+                playerDataModel.currentLocalPlayer.playerAllOverallStatsData.soloFreePlayOverallStatsData.UpdateWithLevelCompletionResults(results);
+                playerDataModel.Save();
+
+                PlayerDataModelSO.LocalPlayer currentLocalPlayer = playerDataModel.currentLocalPlayer;
+                IDifficultyBeatmap difficultyBeatmap = standardLevelSceneSetupData.difficultyBeatmap;
+                GameplayModifiers gameplayModifiers = standardLevelSceneSetupData.gameplayCoreSetupData.gameplayModifiers;
+                bool cleared = results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
+                string levelID = difficultyBeatmap.level.levelID;
+                BeatmapDifficulty difficulty = difficultyBeatmap.difficulty;
+                PlayerLevelStatsData playerLevelStatsData = currentLocalPlayer.GetPlayerLevelStatsData(levelID, difficulty);
+                bool result = playerLevelStatsData.highScore < results.score;
+                playerLevelStatsData.IncreaseNumberOfGameplays();
+                if (cleared && result)
+                {
+                    playerLevelStatsData.UpdateScoreData(results.score, results.maxCombo, results.fullCombo, results.rank);
+                    platformLeaderboardsModel.AddScore(difficultyBeatmap, results.unmodifiedScore, gameplayModifiers);
+                }
+                */
             }
         }
     }

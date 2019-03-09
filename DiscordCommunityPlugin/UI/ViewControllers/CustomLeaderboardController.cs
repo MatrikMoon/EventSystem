@@ -169,7 +169,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, SongIdHelper.GetSongIdFromLevelId(song.Beatmap.level.levelID), song.Difficulty, Rarity.All, selectedTeam, selectedTeam == "-1");
+            Client.GetSongLeaderboard(this, song.SongId, song.Difficulty, Rarity.All, selectedTeam, selectedTeam == "-1");
         }
 
         public void Refresh()

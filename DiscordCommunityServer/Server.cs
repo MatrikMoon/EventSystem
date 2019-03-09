@@ -56,7 +56,7 @@ namespace TeamSaberServer
                                 oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                             }
 
-                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() > s.Score_))
+                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
                             {
                                 Player player = new Player(s.SteamId);
 
@@ -218,7 +218,7 @@ namespace TeamSaberServer
                                 songNode["scores"] = new JSONObject();
 
                                 int place = 1;
-                                x.Scores.OrderBy(y => y.Value.Score).Take(take).ToList().ForEach(y =>
+                                x.Scores.Take(take).ToList().ForEach(y =>
                                 {
                                     JSONNode scoreNode = new JSONObject();
                                     scoreNode["score"] = y.Value.Score;
@@ -261,7 +261,7 @@ namespace TeamSaberServer
                             IDictionary<string, ScoreConstruct> scores = GetScoresForSong(songConstruct, rarity, teamId);
 
                             int place = 1;
-                            scores.OrderBy(x => x.Value.Score).Take(10).ToList().ForEach(x =>
+                            scores.Take(10).ToList().ForEach(x =>
                             {
                                 JSONNode node = new JSONObject();
                                 node["score"] = x.Value.Score;

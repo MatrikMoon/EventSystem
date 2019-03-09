@@ -42,13 +42,13 @@ namespace TeamSaberServer.Database
         
         public long GetScore()
         {
-            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND OLD = 0", "score").First();
+            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0", "score").First();
             return Convert.ToInt64(scoreString);
         }
 
         public bool SetScore(long score, bool fullCombo)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND OLD = 0") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0") > 1;
         }
 
         public bool SetOld()
@@ -63,7 +63,7 @@ namespace TeamSaberServer.Database
 
         public static bool Exists(string songId, string steamId, LevelDifficulty difficulty)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM scoreTable WHERE songId = \'{songId}\' AND steamId = {steamId} AND difficulty = {(int)difficulty} AND OLD = 0", "songId").Any();
+            return SimpleSql.ExecuteQuery($"SELECT * FROM scoreTable WHERE songId = \'{songId}\' AND steamId = {steamId} AND difficulty = {(int)difficulty} AND old = 0", "songId").Any();
         }
 
         //KotH Event-specific

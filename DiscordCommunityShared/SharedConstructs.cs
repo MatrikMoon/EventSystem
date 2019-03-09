@@ -10,8 +10,8 @@ namespace TeamSaberShared
     public static class SharedConstructs
     {
         public static string Name => "TeamSaberPlugin";
-        public static string Version => "0.0.8";
-        public static int VersionCode => 008;
+        public static string Version => "0.0.9";
+        public static int VersionCode => 009;
         public static string Changelog =
             "0.0.1: First attempt at fork from DiscordCommunityPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -20,7 +20,8 @@ namespace TeamSaberShared
             "0.0.5: Various UI improvements: Fixed scroll buttons, made plugin button non-interactible until song load, added difficulty text view\n" +
             "0.0.6: Event 2: HoT, again tried to fix unification\n" +
             "0.0.7: Fixed scroll button overlap! Thank almighty andruzzzhka for this miracle\n" +
-            "0.0.8: Database changes, update for KotH!\n";
+            "0.0.8: Database changes, update for KotH!\n" +
+            "0.0.9: Database changes for OneSaber!\n";
 
         public enum Rarity
         {
@@ -65,7 +66,7 @@ namespace TeamSaberShared
             DisappearingArrows = 2048,
 
             //Other options
-            OneSaber = 4096
+            OneSaber = 4096 //TODO: When using forced single-saber, the saber doesn't get returned afterwards when playing the same map. In other words, the setting sticks.
         }
 
         [Flags]
