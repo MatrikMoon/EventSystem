@@ -60,7 +60,7 @@ namespace TeamSaberPlugin.UI.Views
             _tableView.SetField("_pageDownButton", downArrowButton);
         }
 
-        public TableCell CellForRow(int row)
+        public TableCell CellForIdx(int row)
         {
             LeaderboardTableCell leaderboardTableCell = Instantiate(_cellInstance);
             leaderboardTableCell.reuseIdentifier = "Cell";
@@ -76,7 +76,7 @@ namespace TeamSaberPlugin.UI.Views
             return leaderboardTableCell;
         }
 
-        public int NumberOfRows()
+        public int NumberOfCells()
         {
             if (_scores == null)
             {
@@ -85,7 +85,7 @@ namespace TeamSaberPlugin.UI.Views
             return _scores.Count;
         }
 
-        public float RowHeight()
+        public float CellSize()
         {
             return _rowHeight;
         }

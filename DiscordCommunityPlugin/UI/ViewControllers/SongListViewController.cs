@@ -125,7 +125,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 songsTableView.SetField("_pageUpButton", _pageUpButton);
                 songsTableView.SetField("_pageDownButton", _pageDownButton);
 
-                songsTableView.didSelectRowEvent += SongsTableView_DidSelectRow;
+                songsTableView.didSelectCellWithIdxEvent += SongsTableView_didSelectCellWithIdxEvent;
                 songsTableView.dataSource = this;
 
                 //Set to view "Downloading weekly songs..." until the songs are set
@@ -154,7 +154,7 @@ namespace TeamSaberPlugin.UI.ViewControllers
             errorHappened = true;
         }
 
-        private void SongsTableView_DidSelectRow(TableView sender, int row)
+        private void SongsTableView_didSelectCellWithIdxEvent(TableView sender, int row)
         {
             SongListRowSelected?.Invoke(availableSongs[row]);
         }
@@ -184,11 +184,11 @@ namespace TeamSaberPlugin.UI.ViewControllers
                 songsTableView.ReloadData();
             }
 
-            songsTableView.ScrollToRow(0, false);
+            songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
             if (selectWhenLoaded != null)
             {
                 int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.Beatmap.level.levelID == selectWhenLoaded).First());
-                songsTableView.SelectRow(songIndex, true);
+                songsTableView.SelectCellWithIdx(songIndex, true);
             }
             SongsDownloaded?.Invoke();
         }
@@ -198,26 +198,30 @@ namespace TeamSaberPlugin.UI.ViewControllers
             return availableSongs.Count > 0;
         }
 
-        public TableCell CellForRow(int row)
+        public TableCell CellForIdx(int row)
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
             IBeatmapLevel song = availableSongs[row].Beatmap.level;
 
-            cell.coverImage = song.coverImage;
-            cell.songName = $"{song.songName}\n<size=80%>{song.songSubName}</size>";
-            cell.author = song.songAuthorName;
             cell.reuseIdentifier = "SongCell";
+            cell.GetField<UnityEngine.UI.Image>("_coverImage").sprite = song.coverImage;
+            cell.GetField<TextMeshProUGUI>("_songNameText").text = $"{song.songName}\n<size=80%>{song.songSubName}</size>";
+            cell.GetField<TextMeshProUGUI>("_authorText").text = song.songAuthorName;
+
+            cell.SetField("_beatmapCharacteristicAlphas", new float[0]);
+            cell.SetField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
+            cell.SetField("_bought", true);
 
             return cell;
         }
 
-        public int NumberOfRows()
+        public int NumberOfCells()
         {
             return availableSongs.Count;
         }
 
-        public float RowHeight()
+        public float CellSize()
         {
             return 10f;
         }

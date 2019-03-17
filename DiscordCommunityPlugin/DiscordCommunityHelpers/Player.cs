@@ -1,5 +1,6 @@
 ﻿using Oculus.Platform;
 using Oculus.Platform.Models;
+using SongLoaderPlugin.OverrideClasses;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
             Instance = this;
         }
 
+        /*
         //Gets a the player's locally stored score for a map
         public int GetLocalScore(string levelId, LevelDifficulty difficulty, PlayerDataModelSO dataModel = null)
         {
@@ -49,7 +51,9 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
             var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(levelId, (BeatmapDifficulty)difficulty);
             return playerLevelStatsData.validScore ? playerLevelStatsData.highScore : 0;
         }
+        */
 
+        /*
         //Gets a the player's locally stored rank for a map
         public RankModel.Rank GetLocalRank(string levelId, LevelDifficulty difficulty, PlayerDataModelSO dataModel = null)
         {
@@ -57,6 +61,7 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
             var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(levelId, (BeatmapDifficulty)difficulty);
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
         }
+        */
 
         //Returns the appropriate color for a rarity
         public Color GetColorForRarity() => GetColorForRarity(rarity);
@@ -80,31 +85,65 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty)
+        public IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
         {
-            IDifficultyBeatmap ret = level.GetDifficultyBeatmap(difficulty);
+            //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
+            //NOTE: x?.serializedName because songloader sometimes inserts a null value for a characteristic here
+            var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x?.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
+
+            IDifficultyBeatmap ret = level.beatmapLevelData.GetDifficultyBeatmap(desiredCharacteristic, difficulty);
+
+            //TODO: Once Songloader is fixed or Multiplayer is out, change this back to how it used to work.
+            //Right now we're having to work around the fact that custom levels don't seem to have inner level sets
+            if (level is CustomLevel)
+            {
+                var possibleCharacteristics = (level as CustomLevel).difficultyBeatmapSets.Select(x => x.beatmapCharacteristic);
+                desiredCharacteristic = desiredCharacteristic ?? possibleCharacteristics.FirstOrDefault(x => x?.serializedName == (characteristic?.serializedName ?? "Standard")) ?? possibleCharacteristics.First();
+
+                ret = (level as CustomLevel).difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic == desiredCharacteristic).difficultyBeatmaps.FirstOrDefault(X => X.difficulty == difficulty);
+            }
+
             if (ret == null)
             {
-                ret = GetLowerDifficulty(level, difficulty);
+                ret = GetLowerDifficulty(level, difficulty, desiredCharacteristic);
             }
             if (ret == null)
             {
-                ret = GetHigherDifficulty(level, difficulty);
+                ret = GetHigherDifficulty(level, difficulty, desiredCharacteristic);
             }
+
+            Logger.Warning($"GCD: {desiredCharacteristic} {level.songName} {difficulty} {ret}");
+
             return ret;
         }
 
         //Returns the next-lowest difficulty to the one provided
-        private IDifficultyBeatmap GetLowerDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty)
+        private IDifficultyBeatmap GetLowerDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
-            IDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
+            //TODO: Once Songloader is fixed or Multiplayer is out, change this back to how it used to work.
+            //Right now we're having to work around the fact that custom levels don't seem to have inner level sets
+            IDifficultyBeatmap[] availableMaps = null;
+            if (level is CustomLevel)
+            {
+                availableMaps = (level as CustomLevel).difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic == characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
+            }
+
+            availableMaps = availableMaps ?? level.beatmapLevelData.GetDifficultyBeatmapSet(characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
         }
 
         //Returns the next-highest difficulty to the one provided
-        private IDifficultyBeatmap GetHigherDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty)
+        private IDifficultyBeatmap GetHigherDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
-            IDifficultyBeatmap[] availableMaps = level.difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
+            //TODO: Once Songloader is fixed or Multiplayer is out, change this back to how it used to work.
+            //Right now we're having to work around the fact that custom levels don't seem to have inner level sets
+            IDifficultyBeatmap[] availableMaps = null;
+            if (level is CustomLevel)
+            {
+                availableMaps = (level as CustomLevel).difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic == characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
+            }
+
+            availableMaps = availableMaps ?? level.beatmapLevelData.GetDifficultyBeatmapSet(characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
         }
 

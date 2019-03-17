@@ -21,7 +21,8 @@ namespace TeamSaberShared
             "0.0.6: Event 2: HoT, again tried to fix unification\n" +
             "0.0.7: Fixed scroll button overlap! Thank almighty andruzzzhka for this miracle\n" +
             "0.0.8: Database changes, update for KotH!\n" +
-            "0.0.9: Database changes for OneSaber!\n";
+            "0.0.9: Database changes for OneSaber!\n" +
+            "0.1.0: Updated for Beat Saber 0.13.0\n";
 
         public enum Rarity
         {
@@ -65,8 +66,8 @@ namespace TeamSaberShared
             FastSong = 1024,
             DisappearingArrows = 2048,
 
-            //Other options
-            OneSaber = 4096 //TODO: When using forced single-saber, the saber doesn't get returned afterwards when playing the same map. In other words, the setting sticks.
+            //New options
+            GhostNotes = 4096
         }
 
         [Flags]
