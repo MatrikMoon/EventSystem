@@ -27,7 +27,7 @@ namespace TeamSaberPlugin.Misc
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client
     {
-        private static string discordCommunityUrl = "http://127.0.0.1";
+        private static string discordCommunityUrl = "http://networkauditor.org";
 #if DEBUG
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
 #else
