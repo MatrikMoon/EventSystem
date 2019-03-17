@@ -25,8 +25,10 @@ namespace TeamSaberPlugin.UI.ViewControllers
     {
         protected CustomLeaderboardTableView _leaderboard;
 
-        public event Action<Song> PlayPressed;
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         public Song selectedSong;
+
+        public event Action<Song> PlayPressed;
         public string selectedTeam = "-1";
         public int selectedTeamIndex = -1;
 
