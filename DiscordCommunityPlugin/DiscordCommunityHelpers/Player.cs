@@ -112,8 +112,6 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
                 ret = GetHigherDifficulty(level, difficulty, desiredCharacteristic);
             }
 
-            Logger.Warning($"GCD: {desiredCharacteristic} {level.songName} {difficulty} {ret}");
-
             return ret;
         }
 
