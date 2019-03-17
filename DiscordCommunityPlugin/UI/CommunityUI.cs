@@ -81,7 +81,6 @@ namespace TeamSaberPlugin
         private void CreateCommunitiyButton()
         {
             //CreateSettingsMenu();
-
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;

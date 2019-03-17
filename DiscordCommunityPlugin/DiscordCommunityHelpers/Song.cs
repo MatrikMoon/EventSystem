@@ -1,4 +1,5 @@
-﻿using static TeamSaberShared.SharedConstructs;
+﻿using TeamSaberShared;
+using static TeamSaberShared.SharedConstructs;
 
 /**
  * Created by Moon on 3/8/2019
@@ -40,7 +41,6 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         {
             int hash = 13;
             hash = (hash * 7) + SongId.GetHashCode();
-            hash = (hash * 7) + Beatmap.level.levelID.GetHashCode();
             hash = (hash * 7) + Difficulty.GetHashCode();
             return hash;
         }

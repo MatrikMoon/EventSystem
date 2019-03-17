@@ -18,14 +18,8 @@ namespace TeamSaberPlugin.UI.ViewControllers
         {
             if (firstActivation && activationType == ActivationType.AddedToHierarchy)
             {
-                _backButton = BeatSaberUI.CreateBackButton(rectTransform);
-                _backButton.onClick.AddListener(() => DismissButtonWasPressed());
+                _backButton = BeatSaberUI.CreateBackButton(rectTransform, () => didFinishEvent?.Invoke(this));
             }
-        }
-
-        public virtual void DismissButtonWasPressed()
-        {
-            didFinishEvent?.Invoke(this);
         }
     }
 }

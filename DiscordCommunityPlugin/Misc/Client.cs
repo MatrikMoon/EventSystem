@@ -15,6 +15,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using static TeamSaberShared.SharedConstructs;
 using Logger = TeamSaberShared.Logger;
+using SongLoaderPlugin.OverrideClasses;
 
 /*
  * Created by Moon on 9/9/2018
@@ -83,7 +84,7 @@ namespace TeamSaberPlugin.Misc
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetDataForDiscordCommunityPlugin(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
+        public static void GetDataForDiscordCommunityPlugin(BeatmapLevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId));
         }
@@ -91,7 +92,7 @@ namespace TeamSaberPlugin.Misc
         //Gets all relevant data for the mod to work
         //TODO: If I can parallelize this with song downloading AND get the songs not to try to display when getting
         //profile data fails, that'd be nice.
-        private static IEnumerator GetAllData(LevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
+        private static IEnumerator GetAllData(BeatmapLevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
@@ -227,7 +228,7 @@ namespace TeamSaberPlugin.Misc
 
         //GET the weekly songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetWeeklySongs(LevelCollectionSO lcfgm, SongListViewController slvc)
+        private static IEnumerator GetWeeklySongs(BeatmapLevelCollectionSO lcfgm, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
 #if DEBUG
@@ -285,6 +286,7 @@ namespace TeamSaberPlugin.Misc
                         slvc.DownloadErrorHappened($"Could not load level {x}. You probably have an older version ('{x.SongId.Substring(0, x.SongId.IndexOf("-"))}') already downloded. Please remove this or save it elsewhere to continue.");
                     }
 
+                    //TODO: add characteristic name field to the song data stored in the server
                     x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
                     availableSongs.Add(x);
                 });
@@ -294,7 +296,8 @@ namespace TeamSaberPlugin.Misc
 
                 osts.ToList().ForEach(x =>
                 {
-                    x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(lcfgm.levels.Where(y => y.levelID == x.SongId).First(), (BeatmapDifficulty)x.Difficulty);
+                    var level = lcfgm.beatmapLevels.FirstOrDefault(y => y.levelID == x.SongId) as BeatmapLevelSO;
+                    x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
                     availableSongs.Add(x);
                 });
 

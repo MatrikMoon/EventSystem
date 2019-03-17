@@ -29,7 +29,7 @@ namespace TeamSaberPlugin
 
         private void SceneManager_sceneLoaded(Scene scene, LoadSceneMode arg1)
         {
-            if (scene.name == "Menu")
+            if (scene.name == "MenuCore")
             {
                 CommunityUI.OnLoad();
             }

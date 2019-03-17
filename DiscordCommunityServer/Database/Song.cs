@@ -78,7 +78,6 @@ namespace TeamSaberServer.Database
 
         public bool SetGameOptions(GameOptions options)
         {
-            Logger.Warning($"GAMEOPTIONS SET: {options.ToString()} : {(int)options}");
             return SimpleSql.ExecuteCommand($"UPDATE songTable SET gameOptions = {(int)options} WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
         }
 

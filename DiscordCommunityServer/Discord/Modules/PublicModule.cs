@@ -115,7 +115,7 @@ namespace TeamSaberServer.Discord.Modules
         }
 
         [Command("addSong")]
-        public async Task AddSongAsync(string songId, [Remainder] string paramString)
+        public async Task AddSongAsync(string songId, [Remainder] string paramString = null)
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
