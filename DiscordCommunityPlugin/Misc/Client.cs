@@ -287,7 +287,7 @@ namespace TeamSaberPlugin.Misc
                     }
 
                     //TODO: add characteristic name field to the song data stored in the server
-                    x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
+                    x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level as BeatmapLevelSO, (BeatmapDifficulty)x.Difficulty);
                     availableSongs.Add(x);
                 });
 
@@ -316,8 +316,8 @@ namespace TeamSaberPlugin.Misc
                     //Wait for the all downloads to finish
                     yield return SharedCoroutineStarter.instance.StartCoroutine(new ParallelCoroutine().ExecuteCoroutines(downloadCoroutines.ToArray()));
 
-                    Action<SongLoader, List<SongLoaderPlugin.OverrideClasses.CustomLevel>> songsLoaded =
-                        (SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs) =>
+                    Action<SongLoader, List<CustomLevel>> songsLoaded =
+                        (SongLoader sender, List<CustomLevel> loadedSongs) =>
                         {
                             //Now that they're refreshed, we can add them to the available list
                             availableSongs.AddRange(songs);
