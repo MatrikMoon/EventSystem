@@ -85,63 +85,42 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
+        public IDifficultyBeatmap GetClosestDifficultyPreferLower(BeatmapLevelSO level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
         {
             //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
-            //NOTE: x?.serializedName because songloader sometimes inserts a null value for a characteristic here
-            var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x?.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
+            var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
 
             IDifficultyBeatmap ret = level.beatmapLevelData.GetDifficultyBeatmap(desiredCharacteristic, difficulty);
 
-            //TODO: Once Songloader is fixed or Multiplayer is out, change this back to how it used to work.
-            //Right now we're having to work around the fact that custom levels don't seem to have inner level sets
-            if (level is CustomLevel)
-            {
-                var possibleCharacteristics = (level as CustomLevel).difficultyBeatmapSets.Select(x => x.beatmapCharacteristic);
-                desiredCharacteristic = desiredCharacteristic ?? possibleCharacteristics.FirstOrDefault(x => x?.serializedName == (characteristic?.serializedName ?? "Standard")) ?? possibleCharacteristics.First();
-
-                ret = (level as CustomLevel).difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic == desiredCharacteristic).difficultyBeatmaps.FirstOrDefault(X => X.difficulty == difficulty);
-            }
+            IDifficultyBeatmap[] availableMaps =
+                level
+                .difficultyBeatmapSets
+                .FirstOrDefault(x => x.beatmapCharacteristic.serializedName == desiredCharacteristic.serializedName)
+                .difficultyBeatmaps
+                .OrderBy(x => x.difficulty)
+                .ToArray();
 
             if (ret == null)
             {
-                ret = GetLowerDifficulty(level, difficulty, desiredCharacteristic);
+                ret = GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
             }
             if (ret == null)
             {
-                ret = GetHigherDifficulty(level, difficulty, desiredCharacteristic);
+                ret = GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
             }
 
             return ret;
         }
 
         //Returns the next-lowest difficulty to the one provided
-        private IDifficultyBeatmap GetLowerDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
+        private IDifficultyBeatmap GetLowerDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
-            //TODO: Once Songloader is fixed or Multiplayer is out, change this back to how it used to work.
-            //Right now we're having to work around the fact that custom levels don't seem to have inner level sets
-            IDifficultyBeatmap[] availableMaps = null;
-            if (level is CustomLevel)
-            {
-                availableMaps = (level as CustomLevel).difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic == characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
-            }
-
-            availableMaps = availableMaps ?? level.beatmapLevelData.GetDifficultyBeatmapSet(characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
         }
 
         //Returns the next-highest difficulty to the one provided
-        private IDifficultyBeatmap GetHigherDifficulty(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
+        private IDifficultyBeatmap GetHigherDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
-            //TODO: Once Songloader is fixed or Multiplayer is out, change this back to how it used to work.
-            //Right now we're having to work around the fact that custom levels don't seem to have inner level sets
-            IDifficultyBeatmap[] availableMaps = null;
-            if (level is CustomLevel)
-            {
-                availableMaps = (level as CustomLevel).difficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic == characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
-            }
-
-            availableMaps = availableMaps ?? level.beatmapLevelData.GetDifficultyBeatmapSet(characteristic).difficultyBeatmaps.OrderBy(x => x.difficulty).ToArray();
             return availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
         }
 
