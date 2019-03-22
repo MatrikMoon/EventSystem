@@ -37,7 +37,7 @@ namespace TeamSaberPlugin.Misc
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, Action<bool> scoreUploadedCallback = null)
+        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, int speed, Action<bool> scoreUploadedCallback = null)
         {
             //Build score object
             Score s = new Score
@@ -47,7 +47,10 @@ namespace TeamSaberPlugin.Misc
                 Score_ = score,
                 DifficultyLevel = difficultyLevel,
                 FullCombo = fullCombo,
-                Signed = signed
+                Signed = signed,
+                PlayerOptions = playerOptions,
+                GameOptions = gameOptions,
+                Speed = speed
             };
 
             byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);

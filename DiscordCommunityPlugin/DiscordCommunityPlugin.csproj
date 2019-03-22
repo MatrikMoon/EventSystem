@@ -107,6 +107,7 @@
     <Compile Include="Misc\ParallelCoroutine.cs" />
     <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Misc\SongIdHelper.cs" />
+    <Compile Include="UI\ViewControllers\SpeedViewController.cs" />
     <Compile Include="UI\CommunityUI.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

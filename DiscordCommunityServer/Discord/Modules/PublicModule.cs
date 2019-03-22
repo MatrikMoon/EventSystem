@@ -492,7 +492,7 @@ namespace TeamSaberServer.Discord.Modules
                         //It's left this way because there seems to be no way to determine the difficulty in a higher
                         //scope. This is something to look into later.
                         var percentage = ((double)item.Value.Score / (double)new BeatSaver.Song(songId).GetMaxScore(item.Value.Difficulty)).ToString("P", CultureInfo.InvariantCulture);
-                        finalMessage += new Player(item.Key).GetDiscordName() + " - " + item.Value.Score + $" ({percentage})" + (item.Value.FullCombo ? " (Full Combo)" : "") + "\n";
+                        finalMessage += new Player(item.Key).GetDiscordName() + " - " + item.Value.Speed + $"% ({percentage})" + (item.Value.FullCombo ? " (Full Combo)" : "") + "\n";
                     }
                     finalMessage += "\n";
                 }

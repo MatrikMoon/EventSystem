@@ -10,8 +10,8 @@ namespace TeamSaberShared
     public static class SharedConstructs
     {
         public static string Name => "TeamSaberPlugin";
-        public static string Version => "0.0.9";
-        public static int VersionCode => 009;
+        public static string Version => "0.1.1";
+        public static int VersionCode => 011;
         public static string Changelog =
             "0.0.1: First attempt at fork from DiscordCommunityPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -22,7 +22,8 @@ namespace TeamSaberShared
             "0.0.7: Fixed scroll button overlap! Thank almighty andruzzzhka for this miracle\n" +
             "0.0.8: Database changes, update for KotH!\n" +
             "0.0.9: Database changes for OneSaber!\n" +
-            "0.1.0: Updated for Beat Saber 0.13.0\n";
+            "0.1.0: Updated for Beat Saber 0.13.0\n" +
+            "0.1.1: TeamSaber speed event!\n";
 
         public enum Rarity
         {

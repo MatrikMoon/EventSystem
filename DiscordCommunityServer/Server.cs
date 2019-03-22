@@ -32,7 +32,7 @@ namespace TeamSaberServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
-                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_) == s.Signed &&
+                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions, s.Speed) == s.Signed &&
                                 Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel) &&
                                 !new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).IsOld() &&
                                 Player.Exists(s.SteamId) &&
@@ -56,23 +56,25 @@ namespace TeamSaberServer
                                 oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                             }
 
-                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
+                            if (oldScore == null ^ (oldScore != null && oldScore.GetSpeed() < s.Speed))
                             {
                                 Player player = new Player(s.SteamId);
 
-                                long oldScoreNumber = oldScore == null ? 0 : oldScore.GetScore();
+                                long oldScoreNumber = oldScore == null ? 0 : oldScore.GetSpeed();
                                 oldScore?.SetOld();
 
                                 //Player stats
                                 if (oldScoreNumber > 0) player.IncrementPersonalBestsBeaten();
                                 else player.IncrementSongsPlayed();
-                                player.IncrementTotalScore(s.Score_ - oldScoreNumber); //Increment total score only by the amount the score has increased
+                                //player.IncrementTotalScore(s.Score_ - oldScoreNumber); //Increment total score only by the amount the score has increased
 
                                 Database.Score newScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                                 newScore.SetScore(s.Score_, s.FullCombo);
+                                newScore.SetSpeed(s.Speed);
 
                                 //Only send message if player is registered
-                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).GetSongName()} ({(LevelDifficulty)s.DifficultyLevel})!");
+                                //if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).GetSongName()} ({(LevelDifficulty)s.DifficultyLevel})!");
+                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.GetDiscordMention()}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).GetSongName()} ({(LevelDifficulty)s.DifficultyLevel}) at {s.Speed}%!");
                             }
 
                             return new HttpResponse()
@@ -221,7 +223,7 @@ namespace TeamSaberServer
                                 x.Scores.Take(take).ToList().ForEach(y =>
                                 {
                                     JSONNode scoreNode = new JSONObject();
-                                    scoreNode["score"] = y.Value.Score;
+                                    scoreNode["score"] = y.Value.Speed;
                                     scoreNode["player"] = new Player(y.Key).GetDiscordName();
                                     scoreNode["place"] = place;
                                     scoreNode["fullCombo"] = y.Value.FullCombo ? "true" : "false";
@@ -264,7 +266,7 @@ namespace TeamSaberServer
                             scores.Take(10).ToList().ForEach(x =>
                             {
                                 JSONNode node = new JSONObject();
-                                node["score"] = x.Value.Score;
+                                node["score"] = x.Value.Speed;
                                 node["player"] = new Player(x.Key).GetDiscordName();
                                 node["place"] = place;
                                 node["fullCombo"] = x.Value.FullCombo ? "true" : "false";

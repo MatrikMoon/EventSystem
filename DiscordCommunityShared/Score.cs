@@ -22,14 +22,15 @@ public static partial class ScoreReflection {
   static ScoreReflection() {
     byte[] descriptorData = global::System.Convert.FromBase64String(
         string.Concat(
-          "CgtzY29yZS5wcm90byJ3CgVTY29yZRIQCghzdGVhbV9pZBgBIAEoCRIPCgdz",
-          "b25nX2lkGAIgASgJEg0KBXNjb3JlGAMgASgFEhgKEGRpZmZpY3VsdHlfbGV2",
-          "ZWwYBCABKAUSEgoKZnVsbF9jb21ibxgFIAEoCBIOCgZzaWduZWQYBiABKAli",
-          "BnByb3RvMw=="));
+          "CgtzY29yZS5wcm90byK0AQoFU2NvcmUSEAoIc3RlYW1faWQYASABKAkSDwoH",
+          "c29uZ19pZBgCIAEoCRINCgVzY29yZRgDIAEoBRIYChBkaWZmaWN1bHR5X2xl",
+          "dmVsGAQgASgFEhIKCmZ1bGxfY29tYm8YBSABKAgSDgoGc2lnbmVkGAYgASgJ",
+          "EhYKDnBsYXllcl9vcHRpb25zGAcgASgFEhQKDGdhbWVfb3B0aW9ucxgIIAEo",
+          "BRINCgVzcGVlZBgJIAEoBWIGcHJvdG8z"));
     descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
         new pbr::FileDescriptor[] { },
         new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-          new pbr::GeneratedClrTypeInfo(typeof(global::Score), global::Score.Parser, new[]{ "SteamId", "SongId", "Score_", "DifficultyLevel", "FullCombo", "Signed" }, null, null, null)
+          new pbr::GeneratedClrTypeInfo(typeof(global::Score), global::Score.Parser, new[]{ "SteamId", "SongId", "Score_", "DifficultyLevel", "FullCombo", "Signed", "PlayerOptions", "GameOptions", "Speed" }, null, null, null)
         }));
   }
   #endregion
@@ -67,6 +68,9 @@ public sealed partial class Score : pb::IMessage<Score> {
     difficultyLevel_ = other.difficultyLevel_;
     fullCombo_ = other.fullCombo_;
     signed_ = other.signed_;
+    playerOptions_ = other.playerOptions_;
+    gameOptions_ = other.gameOptions_;
+    speed_ = other.speed_;
     _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
   }
 
@@ -141,6 +145,39 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
   }
 
+  /// <summary>Field number for the "player_options" field.</summary>
+  public const int PlayerOptionsFieldNumber = 7;
+  private int playerOptions_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public int PlayerOptions {
+    get { return playerOptions_; }
+    set {
+      playerOptions_ = value;
+    }
+  }
+
+  /// <summary>Field number for the "game_options" field.</summary>
+  public const int GameOptionsFieldNumber = 8;
+  private int gameOptions_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public int GameOptions {
+    get { return gameOptions_; }
+    set {
+      gameOptions_ = value;
+    }
+  }
+
+  /// <summary>Field number for the "speed" field.</summary>
+  public const int SpeedFieldNumber = 9;
+  private int speed_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public int Speed {
+    get { return speed_; }
+    set {
+      speed_ = value;
+    }
+  }
+
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
   public override bool Equals(object other) {
     return Equals(other as Score);
@@ -160,6 +197,9 @@ public sealed partial class Score : pb::IMessage<Score> {
     if (DifficultyLevel != other.DifficultyLevel) return false;
     if (FullCombo != other.FullCombo) return false;
     if (Signed != other.Signed) return false;
+    if (PlayerOptions != other.PlayerOptions) return false;
+    if (GameOptions != other.GameOptions) return false;
+    if (Speed != other.Speed) return false;
     return Equals(_unknownFields, other._unknownFields);
   }
 
@@ -172,6 +212,9 @@ public sealed partial class Score : pb::IMessage<Score> {
     if (DifficultyLevel != 0) hash ^= DifficultyLevel.GetHashCode();
     if (FullCombo != false) hash ^= FullCombo.GetHashCode();
     if (Signed.Length != 0) hash ^= Signed.GetHashCode();
+    if (PlayerOptions != 0) hash ^= PlayerOptions.GetHashCode();
+    if (GameOptions != 0) hash ^= GameOptions.GetHashCode();
+    if (Speed != 0) hash ^= Speed.GetHashCode();
     if (_unknownFields != null) {
       hash ^= _unknownFields.GetHashCode();
     }
@@ -209,6 +252,18 @@ public sealed partial class Score : pb::IMessage<Score> {
       output.WriteRawTag(50);
       output.WriteString(Signed);
     }
+    if (PlayerOptions != 0) {
+      output.WriteRawTag(56);
+      output.WriteInt32(PlayerOptions);
+    }
+    if (GameOptions != 0) {
+      output.WriteRawTag(64);
+      output.WriteInt32(GameOptions);
+    }
+    if (Speed != 0) {
+      output.WriteRawTag(72);
+      output.WriteInt32(Speed);
+    }
     if (_unknownFields != null) {
       _unknownFields.WriteTo(output);
     }
@@ -234,6 +289,15 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
     if (Signed.Length != 0) {
       size += 1 + pb::CodedOutputStream.ComputeStringSize(Signed);
+    }
+    if (PlayerOptions != 0) {
+      size += 1 + pb::CodedOutputStream.ComputeInt32Size(PlayerOptions);
+    }
+    if (GameOptions != 0) {
+      size += 1 + pb::CodedOutputStream.ComputeInt32Size(GameOptions);
+    }
+    if (Speed != 0) {
+      size += 1 + pb::CodedOutputStream.ComputeInt32Size(Speed);
     }
     if (_unknownFields != null) {
       size += _unknownFields.CalculateSize();
@@ -263,6 +327,15 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
     if (other.Signed.Length != 0) {
       Signed = other.Signed;
+    }
+    if (other.PlayerOptions != 0) {
+      PlayerOptions = other.PlayerOptions;
+    }
+    if (other.GameOptions != 0) {
+      GameOptions = other.GameOptions;
+    }
+    if (other.Speed != 0) {
+      Speed = other.Speed;
     }
     _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
   }
@@ -297,6 +370,18 @@ public sealed partial class Score : pb::IMessage<Score> {
         }
         case 50: {
           Signed = input.ReadString();
+          break;
+        }
+        case 56: {
+          PlayerOptions = input.ReadInt32();
+          break;
+        }
+        case 64: {
+          GameOptions = input.ReadInt32();
+          break;
+        }
+        case 72: {
+          Speed = input.ReadInt32();
           break;
         }
       }
