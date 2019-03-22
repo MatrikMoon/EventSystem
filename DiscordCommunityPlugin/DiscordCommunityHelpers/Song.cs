@@ -1,5 +1,4 @@
-﻿using TeamSaberShared;
-using static TeamSaberShared.SharedConstructs;
+﻿using static TeamSaberShared.SharedConstructs;
 
 /**
  * Created by Moon on 3/8/2019
@@ -16,6 +15,9 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         public IDifficultyBeatmap Beatmap { get; set; }
         public GameOptions GameOptions { get; set; }
         public PlayerOptions PlayerOptions { get; set; }
+
+        //TEMPORARY - TeamSaber
+        public float Speed { get; set; }
 
         //Necessary overrides for being used as a key in a Dictionary
         public static bool operator ==(Song a, Song b)

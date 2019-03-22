@@ -1,12 +1,6 @@
-﻿using CustomUI.BeatSaber;
-using TeamSaberPlugin.UI;
+﻿using IllusionPlugin;
 using TeamSaberShared;
-using IllusionPlugin;
-using System.Collections;
-using System.Linq;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using Logger = TeamSaberShared.Logger;
 
 namespace TeamSaberPlugin
 {

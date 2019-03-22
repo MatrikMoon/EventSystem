@@ -26,7 +26,7 @@ namespace TeamSaberServer.Database
             this.difficulty = difficulty;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRarity(), player.GetTeam(), difficulty, PlayerOptions.None, GameOptions.None, false, 0);
+                SimpleSql.AddScore(songId, steamId, player.GetRarity(), player.GetTeam(), difficulty, PlayerOptions.None, GameOptions.None, false, 0, 0);
             }
         }
 
@@ -39,7 +39,7 @@ namespace TeamSaberServer.Database
         {
             return player;
         }
-        
+
         public long GetScore()
         {
             string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0", "score").First();
@@ -49,6 +49,17 @@ namespace TeamSaberServer.Database
         public bool SetScore(long score, bool fullCombo)
         {
             return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0") > 1;
+        }
+
+        public long GetSpeed()
+        {
+            string speedString = SimpleSql.ExecuteQuery($"SELECT speed FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0", "speed").First();
+            return Convert.ToInt64(speedString);
+        }
+
+        public bool SetSpeed(long speed)
+        {
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET speed = {speed} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0") > 1;
         }
 
         public bool SetOld()

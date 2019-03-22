@@ -25,9 +25,10 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
 
         private GeneralNavigationController _mainModNavigationController;
         private BeatmapLevelCollectionSO _levelCollection;
+        private SpeedViewController _speedViewController;
 
         protected PlatformLeaderboardViewController _globalLeaderboard;
-        protected CustomLeaderboardController _communityLeaderboard;
+        public CustomLeaderboardController _communityLeaderboard; //TEMPORARILY PUBLIC
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
@@ -40,7 +41,9 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
                 _mainModNavigationController.didFinishEvent += (_) => mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
 
-                ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
+                _speedViewController = BeatSaberUI.CreateViewController<SpeedViewController>();
+
+                ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard, _speedViewController);
                 OpenSongsList();
             }
         }
@@ -164,7 +167,11 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                 gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
                 gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
 
-                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, null, SongFinished);
+                var practiceSettings = new PracticeSettings();
+                practiceSettings.songSpeedMul = Config.Speed;
+                song.Speed = Config.Speed;
+
+                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, practiceSettings, null, SongFinished);
             };
 
             //Load audio if it's custom
@@ -239,11 +246,17 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                 }
 
                 //Community leaderboards
-                var d = _communityLeaderboard.GetField("selectedSong").GetProperty("Beatmap");
+                var sn = _communityLeaderboard.GetField("selectedSong");
+                var po = sn.GetProperty("PlayerOptions");
+                var go = sn.GetProperty("GameOptions");
+                var ss = sn.GetProperty("Speed");
+
+                var d = sn.GetProperty("Beatmap");
                 var rs = results.GetProperty("unmodifiedScore");
                 var fc = results.GetProperty("fullCombo");
                 var ms = typeof(RSA);
-                var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs);
+
+                var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, (int)po, (int)go, (int)(((float)ss) * 100));
 
                 var c = typeof(Client);
                 Action<bool> don = (b) =>
@@ -251,9 +264,10 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                     //TODO: Fix refresh freeze issue
                     //if (b && _communityLeaderboard) _communityLeaderboard.Refresh();
                 };
-                var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, don);
+                var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, (int)(((float)ss) * 100), don);
 
                 //Scoresaber leaderboards
+                /*
                 var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
                 var pdmt = ReflectionUtil.GetStaticType("PlayerDataModelSO, Assembly-CSharp");
                 var plm = Resources.FindObjectsOfTypeAll(plmt).First();
@@ -280,10 +294,12 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                     plsd.InvokeMethod("UpdateScoreData", results.GetProperty("score"), results.GetProperty("maxCombo"), results.GetProperty("fullCombo"), results.GetProperty("rank"));
                     plm.InvokeMethod("AddScore", dbm, results.GetProperty("unmodifiedScore"), gm);
                 }
+                */
 
-                //string signed = RSA.SignScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore);
-                //Client.SubmitScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, signed);
-                
+                //var song = _communityLeaderboard.selectedSong;
+                //string signed = RSA.SignScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));
+                //Client.SubmitScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, signed, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));  
+
                 /*
                 var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
                 var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();

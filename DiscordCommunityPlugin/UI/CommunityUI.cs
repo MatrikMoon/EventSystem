@@ -37,7 +37,10 @@ namespace TeamSaberPlugin
         private RectTransform _mainMenuRectTransform;
         private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
-        private MenuButton _communityButton; //TODO: Find a way to grab the button instance so we can disable it
+        private MenuButton _communityButton;
+
+        //TEMPORARY - TeamSaber
+        public static SliderViewController _slider;
 
         //Called on Menu scene load (only once in lifetime)
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -70,7 +73,20 @@ namespace TeamSaberPlugin
 
         private void SceneManager_sceneLoaded(Scene next, LoadSceneMode mode)
         {
-            if (next.name == "Menu") CreateCommunitiyButton();
+            if (next.name == "MenuCore")
+            {
+                StartCoroutine(SetupUI());
+            }
+        }
+
+        //Waits for menu scenes to be loaded then creates UI elements
+        //Courtesy of BeatSaverDownloader
+        private IEnumerator SetupUI()
+        {
+            List<Scene> menuScenes = new List<Scene>() { SceneManager.GetSceneByName("MenuCore"), SceneManager.GetSceneByName("MenuViewControllers"), SceneManager.GetSceneByName("MainMenu") };
+            yield return new WaitUntil(() => { return menuScenes.All(x => x.isLoaded); });
+
+            CreateCommunitiyButton();
         }
 
         private void SongsLoaded(SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs)
@@ -80,7 +96,8 @@ namespace TeamSaberPlugin
 
         private void CreateCommunitiyButton()
         {
-            //CreateSettingsMenu();
+            CreateSettingsMenu();
+
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
@@ -109,6 +126,7 @@ namespace TeamSaberPlugin
 
         private void CreateSettingsMenu()
         {
+            /*
             var subMenu = SettingsUI.CreateSubMenu("Community Plugin");
             var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
             sooperSecretSetting.GetValue += () => Config.SooperSecretSetting;
@@ -121,6 +139,13 @@ namespace TeamSaberPlugin
             var staticSetting = subMenu.AddBool("Static Lights");
             mirrorSetting.GetValue += () => Config.StaticLights;
             mirrorSetting.SetValue += (b) => Config.StaticLights = b;
+            */
+
+            var mainSub = SettingsUI.CreateSubMenu("TeamSaber");
+            _slider = mainSub.AddSlider("", "Song Speed", 1f, 3f, .01f, false);
+            _slider.GetValue += () => Config.Speed;
+            _slider.SetValue += (f) => Config.Speed = f;
+            _slider.Init();
         }
     }
 }
