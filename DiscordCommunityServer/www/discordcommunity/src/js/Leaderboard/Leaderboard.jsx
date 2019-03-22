@@ -8,15 +8,17 @@ class Leaderboard extends React.Component {
     
     this.state = {
       songList: null,
+      teams: null,
       selectedSong: null,
-      selectedRank: null,
+      selectedDifficulty: null,
+      selectedTeam: null,
       leaderboardData: null
     };
   }
 
   componentDidMount() {
     //fetch('../weeklysongs')
-    fetch('/api/getweeklysongs/')
+    fetch('/api-teamsaber/getweeklysongs/')
       .then(response => {
         return response.json();
       })
@@ -25,7 +27,23 @@ class Leaderboard extends React.Component {
         //Help me. I have no idea how to grab a random item from this
         let item = null;
         for (item in json) {}
-        this.fetchLeaderboard(item, 6);
+        if (this.state.teams != null) this.fetchLeaderboard(json[item].songId, json[item].difficulty, "-1");
+      });
+    
+    //fetch('../getteams')
+    fetch('/api-teamsaber/getteams/')
+      .then(response => {
+        return response.json();
+      })
+      .then(json => {
+        this.setState({teams: json});
+
+        if (this.state.songList != null) {
+          //Help me. I have no idea how to grab a random item from this
+          let item = null;
+          for (item in this.state.songList) {}  
+          this.fetchLeaderboard(this.state.songList[item].songId, this.state.songList[item].difficulty, "-1");
+        }
       });
   }
 
@@ -33,22 +51,17 @@ class Leaderboard extends React.Component {
     return (
       <div className="Leaderboard transition-item">
         <header className="header">
-          <span>Discord Community Leaderboard</span>
+          <span>TeamSaber Leaderboard</span>
         </header>
         <div className="page">
-          <span>{`${this.getRankText(this.state.selectedRank)} Leaderboard`}</span>
+          <span>{`${this.state.selectedSong != null ? this.state.songList[this.state.selectedSong].songName : "Loading..."} Leaderboard`}</span>
           <div className="leaderboard-panel">
             <div className="song-button-panel">
               {this.renderSongButtons()}
             </div>
-            <div className="rank-button-panel">
-            <button class="btn white" onClick={() => this.fetchLeaderboard(null, 0)}><a>White</a></button>
-            <button class="btn brown" onClick={() => this.fetchLeaderboard(null, 1)}><a>Bronze</a></button>
-            <button class="btn gray" onClick={() => this.fetchLeaderboard(null, 2)}><a>Silver</a></button>
-            <button class="btn yellow" onClick={() => this.fetchLeaderboard(null, 3)}><a>Gold</a></button>
-            <button class="btn blue" onClick={() => this.fetchLeaderboard(null, 4)}><a>Blue</a></button>
-            <button class="btn purple" onClick={() => this.fetchLeaderboard(null, 5)}><a>Master</a></button>
-            <button class="btn" onClick={() => this.fetchLeaderboard(null, 6)}><a>Mixed</a></button>
+            <div className="team-button-panel">
+              {this.renderTeamButtons()}
+            <button className="btn" onClick={() => this.fetchLeaderboard(null, null, "-1")}><a>Mixed</a></button>
             </div>
             {this.renderLeaderboardItems()}
           </div>
@@ -71,7 +84,13 @@ class Leaderboard extends React.Component {
       let array = [];
       const leaderboardData = this.state.leaderboardData;
       for (let item in leaderboardData) array.push(item);
-      return array.map(x => <LeaderboardItem key={leaderboardData[x].place} place={leaderboardData[x].place} username={leaderboardData[x].player} rank={this.getRankText(leaderboardData[x].rank)} score={leaderboardData[x].score}/>);
+      return array.map(x => <LeaderboardItem
+                              key={leaderboardData[x].place}
+                              place={leaderboardData[x].place}
+                              username={leaderboardData[x].player}
+                              team={this.state.teams[leaderboardData[x].team].teamName}
+                              score={leaderboardData[x].score}/>
+                        );
     }
   }
 
@@ -82,43 +101,61 @@ class Leaderboard extends React.Component {
       let array = [];
       const songList = this.state.songList;
       for (let item in songList) array.push(item);
-      return array.map(x => <button className="btn blue" onClick={() => this.fetchLeaderboard(x, null)}><a>{songList[x].songName}</a></button>)
+      return array.map(x => <button className="btn blue" key={x} onClick={() => this.fetchLeaderboard(songList[x].songId, songList[x].difficulty, null)}><a>{songList[x].songName}</a></button>)
     }
   }
 
-  fetchLeaderboard(song, rank) {
-    let newRank, newSong;
-    newRank = (rank !== null) ? rank : this.state.selectedRank;
-    newSong = (song !== null) ? song : this.state.selectedSong;
+  renderTeamButtons() {
+    if (this.state.teams !== null) {
+      //Must be in array form so we can .map
+      //Gross time complexity, because this is in render(), I know
+      let array = [];
+      const teams = this.state.teams;
+      for (let item in teams) array.push(item);
+      return array.map(x => <button className="btn" key={x} style={{background: `${teams[x].color}`, color: `${this.getTextColor(teams[x].color)}`}} onClick={() => this.fetchLeaderboard(null, null, x)}><a>{teams[x].teamName}</a></button>)
+    }
+  }
+
+  fetchLeaderboard(song, difficulty, team) {
+    let newTeam, newDifficulty, newSong;
+    newTeam = (team !== null) ? team : this.state.selectedTeam;
+    newDifficulty = (difficulty !== null) ? difficulty : this.state.selectedDifficulty;
+    newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songId;
     
     //fetch('../leaderboard')
-    fetch(`/api/getsongleaderboards/${newSong}/${newRank}/0`)
+    fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
       .then(response => {
         return response.json();
       })
       .then(json => {
-        this.setState({leaderboardData: json, selectedSong: newSong, selectedRank: newRank});
+        this.setState({leaderboardData: json, selectedSong: newSong + newDifficulty, selectedDifficulty: newDifficulty, selectedTeam: newTeam});
       });
   }
 
-  getRankText(rank) {
-    switch (rank) {
-      case 0:
-        return "White";
-      case 1:
-        return "Bronze";
-      case 2:
-        return "Silver";
-      case 3:
-        return "Gold";
-      case 4:
-        return "Blue";
-      case 5:
-        return "Master";
-      case 6:
-        return "Mixed";
-    }
+  //Gets a suitable text color for a given background color 
+  getTextColor(color) {
+    var sum = Math.round(((parseInt(this.hexToRgb(color).r) * 299) + (parseInt(this.hexToRgb(color).g) * 587) + (parseInt(this.hexToRgb(color).b) * 114)) / 1000);
+    return (sum > 128) ? '#424242' : '#eeeeee';
   }
+  
+  componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+  }
+
+  rgbToHex(r, g, b) {
+      return "#" + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b);
+  }
+
+  hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+  }
+  //--End color methods
 }
 
 export default Leaderboard;

@@ -6,7 +6,7 @@ class LeaderboardItem extends Component {
     return (
       <div className="Leaderboard">
         <header className="item">
-          <span>#{this.props.place}: {this.props.username} ({this.props.rank}) - {this.props.score}</span>
+          <span>#{this.props.place}: {this.props.username} ({this.props.team}) - {this.props.score}</span>
         </header>
       </div>
     );
