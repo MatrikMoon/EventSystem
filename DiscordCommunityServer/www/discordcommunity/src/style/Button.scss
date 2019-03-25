@@ -1,0 +1,181 @@
+.btn {
+    position: relative;
+
+    display: block;
+    margin: 30px 10px;
+    padding: 0;
+
+    overflow: hidden;
+
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+
+    --background-highlight: #27ae60;
+    --background-color: #2ecc71;
+    background-color: var(--background-color);
+    color: #ecf0f1;
+
+    transition: background-color .3s;
+
+    &:hover, &:focus {
+        background-color: var(--background-highlight);
+    }
+    
+    & > * {
+        position: relative;
+    }
+    
+    & a {
+        text-decoration: none;
+
+        &:hover {
+            cursor: default;
+        }
+    }
+
+    & span, & a {
+        display: block;
+        padding: 12px 24px;
+    }
+    
+    &:before {
+        content: "";
+    
+        position: absolute;
+        top: 50%;
+        left: 50%;
+    
+        display: block;
+        width: 0;
+        padding-top: 0;
+    
+        border-radius: 100%;
+    
+        background-color: rgba(236, 240, 241, .3);
+    
+        -webkit-transform: translate(-50%, -50%);
+        -moz-transform: translate(-50%, -50%);
+        -ms-transform: translate(-50%, -50%);
+        -o-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+
+        transition: width .1s ease-in, padding-top .1s ease-in;
+    }
+    
+    &:active:before {
+        width: 120%;
+        padding-top: 120%;
+    
+        transition: width .2s ease-out, padding-top .2s ease-out;
+    }
+
+    &.green {
+        background-color: #2ecc71;
+    
+        & a {
+            color: #ecf0f1;
+        }
+        
+        &:hover, &:focus {
+            background-color: #27ae60;
+        }
+    }
+
+    &.blue {
+        background-color: #1565c0;
+
+        & a {
+            color: #ecf0f1;
+        }
+        
+        &:hover, &:focus {
+            background-color: #0d47a1;
+        }
+    }
+
+    &.orange {
+        background-color: #e67e22;
+    
+        & a {
+            color: #ecf0f1;
+        }
+
+        &:hover, &:focus {
+            background-color: #d35400;
+        }
+    }
+
+    &.red {
+        background-color: #e74c3c;
+
+        & a {
+            color: #ecf0f1;
+        }
+
+        &:hover, &:focus {
+            background-color: #c0392b;
+        }
+    }
+
+    &.purple {
+        background-color: #7b1fa2;
+
+        & a {
+            color: #ecf0f1;
+        }
+
+        &:hover, &:focus {
+            background-color: #6a1b9a;
+        }
+    }
+
+    &.yellow {
+        background-color: #fbc02d;
+
+        & a {
+            color: #ecf0f1;
+        }
+
+        &:hover, &:focus {
+            background-color: #f9a825;
+        }
+    }
+
+    &.brown {
+        background-color: #5d4037;
+
+        & a {
+            color: #ecf0f1;
+        }
+
+        &:hover, &:focus {
+            background-color: #321911;
+        }
+    }
+
+    &.gray {
+        background-color: #757575;
+
+        & a {
+            color: #ecf0f1;
+        }
+
+        &:hover, &:focus {
+            background-color: #494949;
+        }
+    }
+
+    &.white {
+        background-color: #fafafa;
+        
+        & a {
+            color: #000000;
+        }
+
+        &:hover, &:focus {
+            background-color: #c7c7c7;
+        }
+    }
+}

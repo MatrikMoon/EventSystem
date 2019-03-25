@@ -27,18 +27,39 @@
             padding: 20px;
             margin: 15px;
 
+            .leaderboard-item-panel {
+                .btn {
+                    width: 25%;
+                    margin: 0px;
+                    box-shadow: none;
+
+                    &.left {
+                        border-radius: 11px 0px 0px 11px;
+                    }
+
+                    &.middle {
+                        border-radius: 0px;
+                    }
+
+                    &.right {
+                        border-radius: 0px 11px 11px 0px;
+                    }
+                }
+                
+                .item {
+                    display: flex;
+                    font-size: calc(10px + 0.5vmin);
+                    border-radius: 15px;
+                    border: 2px solid #2ecc71;
+                    padding: 0px;
+                    margin-bottom: -2px;
+                }
+            }
+
             .song-button-panel, .team-button-panel {
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: center;
-            }
-
-            .item {
-                font-size: calc(10px + 0.5vmin);
-                border-radius: 5px;
-                border: 2px solid #2ecc71;
-                padding: 9px;
-                margin-bottom: -2px;
             }
         }
     }

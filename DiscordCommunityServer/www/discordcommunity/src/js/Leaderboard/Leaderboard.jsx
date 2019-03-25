@@ -1,5 +1,6 @@
 import * as React from 'react';
 import '../../style/Leaderboard.scss';
+import '../../style/Button.scss';
 import LeaderboardItem from './LeaderboardItem';
 
 class Leaderboard extends React.Component {
@@ -17,8 +18,8 @@ class Leaderboard extends React.Component {
   }
 
   componentDidMount() {
-    //fetch('../weeklysongs')
-    fetch('/api-teamsaber/getweeklysongs/')
+    fetch('../weeklysongs')
+    //fetch('/api-teamsaber/getweeklysongs/')
       .then(response => {
         return response.json();
       })
@@ -30,8 +31,8 @@ class Leaderboard extends React.Component {
         if (this.state.teams != null) this.fetchLeaderboard(json[item].songId, json[item].difficulty, "-1");
       });
     
-    //fetch('../getteams')
-    fetch('/api-teamsaber/getteams/')
+    fetch('../getteams')
+    //fetch('/api-teamsaber/getteams/')
       .then(response => {
         return response.json();
       })
@@ -63,7 +64,9 @@ class Leaderboard extends React.Component {
               {this.renderTeamButtons()}
             <button className="btn" onClick={() => this.fetchLeaderboard(null, null, "-1")}><a>Mixed</a></button>
             </div>
-            {this.renderLeaderboardItems()}
+            <div className="leaderboard-item-panel">
+              {this.renderLeaderboardItems()}
+            </div>
           </div>
         </div>
       </div>
@@ -112,7 +115,7 @@ class Leaderboard extends React.Component {
       let array = [];
       const teams = this.state.teams;
       for (let item in teams) array.push(item);
-      return array.map(x => <button className="btn" key={x} style={{background: `${teams[x].color}`, color: `${this.getTextColor(teams[x].color)}`}} onClick={() => this.fetchLeaderboard(null, null, x)}><a>{teams[x].teamName}</a></button>)
+      return array.map(x => <button className="btn" key={x} style={{'--background-color': `${teams[x].color}`, color: `${this.getTextColor(teams[x].color)}`, '--background-highlight': `${this.getHighlightColor(teams[x].color)}`}} onClick={() => this.fetchLeaderboard(null, null, x)}><a>{teams[x].teamName}</a></button>)
     }
   }
 
@@ -122,8 +125,8 @@ class Leaderboard extends React.Component {
     newDifficulty = (difficulty !== null) ? difficulty : this.state.selectedDifficulty;
     newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songId;
     
-    //fetch('../leaderboard')
-    fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
+    fetch('../leaderboard')
+    //fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
       .then(response => {
         return response.json();
       })
@@ -132,15 +135,19 @@ class Leaderboard extends React.Component {
       });
   }
 
-  //Gets a suitable text color for a given background color 
+  //COLOR HELPERS
   getTextColor(color) {
+    return this.shouldTextBeDarker(color) ? '#424242' : '#eeeeee';
+  }
+
+  shouldTextBeDarker(color) {
     var sum = Math.round(((parseInt(this.hexToRgb(color).r) * 299) + (parseInt(this.hexToRgb(color).g) * 587) + (parseInt(this.hexToRgb(color).b) * 114)) / 1000);
-    return (sum > 128) ? '#424242' : '#eeeeee';
+    return (sum > 128);
   }
   
   componentToHex(c) {
     var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
+    return hex.length === 1 ? "0" + hex : hex;
   }
 
   rgbToHex(r, g, b) {
@@ -154,6 +161,30 @@ class Leaderboard extends React.Component {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+  }
+
+  getHighlightColor(color) {
+    return this.shouldTextBeDarker(color) ? this.shadeColor(color, -20) : this.shadeColor(color, 20);
+  }
+
+  shadeColor(color, percent) {
+    var R = parseInt(color.substring(1,3),16);
+    var G = parseInt(color.substring(3,5),16);
+    var B = parseInt(color.substring(5,7),16);
+
+    R = parseInt(R * (100 + percent) / 100);
+    G = parseInt(G * (100 + percent) / 100);
+    B = parseInt(B * (100 + percent) / 100);
+
+    R = (R<255)?R:255;  
+    G = (G<255)?G:255;  
+    B = (B<255)?B:255;  
+
+    var RR = ((R.toString(16).length === 1) ? "0"+ R.toString(16):R.toString(16));
+    var GG = ((G.toString(16).length === 1) ? "0" + G.toString(16):G.toString(16));
+    var BB = ((B.toString(16).length === 1) ? "0" + B.toString(16):B.toString(16));
+
+    return "#"+RR+GG+BB;
   }
   //--End color methods
 }
