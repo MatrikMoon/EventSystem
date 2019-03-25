@@ -1,6 +1,9 @@
 ﻿using IllusionPlugin;
+using System.Linq;
 using TeamSaberShared;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = TeamSaberShared.Logger;
 
 namespace TeamSaberPlugin
 {

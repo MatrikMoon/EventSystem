@@ -30,7 +30,9 @@ namespace TeamSaberServer.Database
                 SimpleSql.AddSong("", "", "", songId, difficulty, PlayerOptions.None, GameOptions.None);
                 if (OstHelper.IsOst(songId))
                 {
-                    SetSongName(OstHelper.GetOstSongNameFromLevelId(songId));
+                    string songName = OstHelper.GetOstSongNameFromLevelId(songId);
+                    songName = Regex.Replace(songName, "[^a-zA-Z0-9- ]", "");
+                    SetSongName(songName);
                 }
                 else BeatSaver.BeatSaverDownloader.DownloadSongInfoThreaded(GetSongId(), (b) =>
                 {
