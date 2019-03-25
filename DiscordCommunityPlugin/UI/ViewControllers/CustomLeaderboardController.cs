@@ -1,5 +1,5 @@
 ﻿using CustomUI.BeatSaber;
-using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.Helpers;
 using TeamSaberPlugin.Misc;
 using TeamSaberPlugin.UI.Views;
 using System;

@@ -81,5 +81,13 @@ namespace TeamSaberShared
             AdvancedHud = 8,
             ReduceDebris = 16
         }
+
+        [Flags]
+        public enum ServerFeatures
+        {
+            None = 0,
+            Teams = 1,
+            Tokens = 2
+        }
     }
 }

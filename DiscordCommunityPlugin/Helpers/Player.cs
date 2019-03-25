@@ -16,7 +16,7 @@ using Logger = TeamSaberShared.Logger;
  * TODO: Add more relevant info later
  */
 
-namespace TeamSaberPlugin.DiscordCommunityHelpers
+namespace TeamSaberPlugin.Helpers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Player
@@ -87,10 +87,20 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
         public IDifficultyBeatmap GetClosestDifficultyPreferLower(BeatmapLevelSO level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
         {
+            Logger.Warning("START");
+            Logger.Warning($"DIFF {difficulty}");
+            Logger.Warning($"LEVEL {level?.songName}");
+            Logger.Warning($"char {characteristic}");
+            Logger.Warning($"GCD: {level.songName} {difficulty} {characteristic}");
+
             //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
             var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
 
+            Logger.Warning($"{desiredCharacteristic}");
+
             IDifficultyBeatmap ret = level.beatmapLevelData.GetDifficultyBeatmap(desiredCharacteristic, difficulty);
+
+            Logger.Warning($"{ret}");
 
             IDifficultyBeatmap[] availableMaps =
                 level
@@ -100,6 +110,8 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
                 .OrderBy(x => x.difficulty)
                 .ToArray();
 
+            Logger.Warning("HERE");
+
             if (ret == null)
             {
                 ret = GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
@@ -108,6 +120,8 @@ namespace TeamSaberPlugin.DiscordCommunityHelpers
             {
                 ret = GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
             }
+
+            Logger.Warning("RET");
 
             return ret;
         }

@@ -32,17 +32,35 @@ namespace TeamSaberServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
+                            Logger.Warning($"SUBMISSION INFO:\n" +
+                                $"{s.DifficultyLevel}\n" +
+                                $"{s.FullCombo}\n" +
+                                $"{s.GameOptions}\n" +
+                                $"{s.PlayerOptions}\n" +
+                                $"{s.Score_}\n" +
+                                $"{s.Signed}\n" +
+                                $"{s.SongId}\n" +
+                                $"{s.Speed}\n" +
+                                $"{s.SteamId}\n" +
+                                "-----\n" +
+                                $"{RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions, s.Speed) == s.Signed}\n" +
+                                $"{Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel)}\n" +
+                                $"{!new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).IsOld()}\n" +
+                                $"{Player.Exists(s.SteamId)}\n" +
+                                $"{(Player.Exists(s.SteamId) ? $"{Player.IsRegistered(s.SteamId)}" : "player did not exist in the first place")}" +
+                                $"\n\n");
+
                             if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions, s.Speed) == s.Signed &&
                                 Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel) &&
                                 !new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).IsOld() &&
                                 Player.Exists(s.SteamId) &&
                                 Player.IsRegistered(s.SteamId))
                             {
-                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {new Player(s.SteamId).GetDiscordName()} {s.SongId} {s.DifficultyLevel}");
+                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} {s.Speed}% FOR {new Player(s.SteamId).GetDiscordName()} {s.SongId} {s.DifficultyLevel}");
                             }
                             else
                             {
-                                Logger.Warning($"RECEIVED INVALID SCORE {s.Score_} FROM {new Player(s.SteamId).GetDiscordName()} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
+                                Logger.Warning($"RECEIVED INVALID SCORE {s.Score_} {s.Speed}% FROM {new Player(s.SteamId).GetDiscordName()} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
                                 return new HttpResponse()
                                 {
                                     ReasonPhrase = "Bad Request",

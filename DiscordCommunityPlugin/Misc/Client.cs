@@ -1,4 +1,4 @@
-﻿using TeamSaberPlugin.DiscordCommunityHelpers;
+﻿using TeamSaberPlugin.Helpers;
 using TeamSaberPlugin.UI.ViewControllers;
 using TeamSaberPlugin.UI.Views;
 using TeamSaberShared;
@@ -87,7 +87,7 @@ namespace TeamSaberPlugin.Misc
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetDataForDiscordCommunityPlugin(BeatmapLevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
+        public static void GetDataForDiscordCommunityPlugin(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId));
         }
@@ -95,7 +95,7 @@ namespace TeamSaberPlugin.Misc
         //Gets all relevant data for the mod to work
         //TODO: If I can parallelize this with song downloading AND get the songs not to try to display when getting
         //profile data fails, that'd be nice.
-        private static IEnumerator GetAllData(BeatmapLevelCollectionSO lcfgm, SongListViewController slvc, string steamId)
+        private static IEnumerator GetAllData(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
@@ -231,7 +231,7 @@ namespace TeamSaberPlugin.Misc
 
         //GET the weekly songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetWeeklySongs(BeatmapLevelCollectionSO lcfgm, SongListViewController slvc)
+        private static IEnumerator GetWeeklySongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
 #if DEBUG
@@ -299,7 +299,10 @@ namespace TeamSaberPlugin.Misc
 
                 osts.ToList().ForEach(x =>
                 {
-                    var level = lcfgm.beatmapLevels.FirstOrDefault(y => y.levelID == x.SongId) as BeatmapLevelSO;
+                    //TODO: Time complexity fix?
+                    var level = lcfgm
+                                    .FirstOrDefault(y => y.beatmapLevels.Any(z => z.levelID == x.SongId)).beatmapLevels
+                                    .FirstOrDefault(y => y.levelID == x.SongId) as BeatmapLevelSO;
                     x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
                     availableSongs.Add(x);
                 });

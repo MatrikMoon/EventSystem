@@ -8,6 +8,7 @@ namespace TeamSaberServer
     {
         public static string BotToken { get; set; }
         public static string BetaBotToken { get; set; }
+        public static int ServerFlags { get; set; }
 
         private static string ConfigLocation = $"{Environment.CurrentDirectory}/Config.txt";
 
@@ -18,6 +19,14 @@ namespace TeamSaberServer
                 JSONNode node = JSON.Parse(File.ReadAllText(ConfigLocation));
                 BotToken = node["BotToken"].Value;
                 BetaBotToken = node["BetaBotToken"].Value;
+                ServerFlags = Convert.ToInt32(node["ServerFlags"].Value);
+            }
+            else
+            {
+                BotToken = "[ReleaseToken]";
+                BetaBotToken = "[BetaToken]";
+                ServerFlags = 0;
+                SaveConfig();
             }
         }
 
@@ -26,6 +35,7 @@ namespace TeamSaberServer
             JSONNode node = new JSONObject();
             node["BotToken"] = BotToken;
             node["BetaBotToken"] = BetaBotToken;
+            node["ServerFlags"] = ServerFlags;
             File.WriteAllText(ConfigLocation, node.ToString());
         }
     }

@@ -5,7 +5,7 @@
  * Tiny helper class to hold together levels and desired options
  */
 
-namespace TeamSaberPlugin.DiscordCommunityHelpers
+namespace TeamSaberPlugin.Helpers
 {
     class Song
     {

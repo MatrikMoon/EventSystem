@@ -16,7 +16,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
 using Logger = TeamSaberShared.Logger;
-using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.Helpers;
 
 /**
  * Created by Moon on 8/23/2018

@@ -18,8 +18,8 @@ class Leaderboard extends React.Component {
   }
 
   componentDidMount() {
-    fetch('../weeklysongs')
-    //fetch('/api-teamsaber/getweeklysongs/')
+    //fetch('../weeklysongs')
+    fetch('/api-teamsaber/getweeklysongs/')
       .then(response => {
         return response.json();
       })
@@ -31,8 +31,8 @@ class Leaderboard extends React.Component {
         if (this.state.teams != null) this.fetchLeaderboard(json[item].songId, json[item].difficulty, "-1");
       });
     
-    fetch('../getteams')
-    //fetch('/api-teamsaber/getteams/')
+    //fetch('../getteams')
+    fetch('/api-teamsaber/getteams/')
       .then(response => {
         return response.json();
       })
@@ -125,8 +125,8 @@ class Leaderboard extends React.Component {
     newDifficulty = (difficulty !== null) ? difficulty : this.state.selectedDifficulty;
     newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songId;
     
-    fetch('../leaderboard')
-    //fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
+    //fetch('../leaderboard')
+    fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
       .then(response => {
         return response.json();
       })

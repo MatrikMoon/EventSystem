@@ -1,4 +1,4 @@
-﻿using TeamSaberPlugin.DiscordCommunityHelpers;
+﻿using TeamSaberPlugin.Helpers;
 using HMUI;
 using System.Collections.Generic;
 using System.Linq;

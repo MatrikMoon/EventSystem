@@ -193,7 +193,7 @@ namespace TeamSaberServer.Discord.Modules
                                     await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, and {nextBestDifficulty} is already in the database.\n" +
                                         $"Song not added.");
                                 }
-                                
+
                                 else
                                 {
                                     var databaseSong = new Song(songId, nextBestDifficulty);
@@ -218,6 +218,7 @@ namespace TeamSaberServer.Discord.Modules
                         else await ReplyAsync("Could not download song.");
                     }
                 }
+                else await ReplyAsync("Song is already active in the database");
             }
         }
 

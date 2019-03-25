@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TeamSaberPlugin.DiscordCommunityHelpers;
+using TeamSaberPlugin.Helpers;
 using TeamSaberPlugin.Misc;
 using TeamSaberPlugin.UI.ViewControllers;
 using TeamSaberShared;
@@ -24,7 +24,10 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
         public SongListViewController songListViewController;
 
         private GeneralNavigationController _mainModNavigationController;
-        private BeatmapLevelCollectionSO _levelCollection;
+        private AdditionalContentModelSO _additionalContentModel;
+        private BeatmapLevelCollectionSO _primaryLevelCollection;
+        private BeatmapLevelCollectionSO _secondaryLevelCollection;
+        private BeatmapLevelCollectionSO _extrasLevelCollection;
         private SpeedViewController _speedViewController;
 
         protected PlatformLeaderboardViewController _globalLeaderboard;
@@ -59,9 +62,21 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
             {
                 songListViewController = BeatSaberUI.CreateViewController<SongListViewController>();
             }
-            if (_levelCollection == null)
+            if (_additionalContentModel == null)
             {
-                _levelCollection = Resources.FindObjectsOfTypeAll<BeatmapLevelCollectionSO>().First();
+                _additionalContentModel = Resources.FindObjectsOfTypeAll<AdditionalContentModelSO>().First();
+            }
+            if (_primaryLevelCollection == null)
+            {
+                _primaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            }
+            if (_secondaryLevelCollection == null)
+            {
+                _secondaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            }
+            if (_extrasLevelCollection == null)
+            {
+                _extrasLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             }
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
@@ -103,7 +118,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
 
         private void ReloadServerData()
         {
-            Client.GetDataForDiscordCommunityPlugin(_levelCollection, songListViewController, Plugin.PlayerId.ToString());
+            Client.GetDataForDiscordCommunityPlugin(new BeatmapLevelCollectionSO[] { _primaryLevelCollection, _secondaryLevelCollection, _extrasLevelCollection }, songListViewController, Plugin.PlayerId.ToString());
         }
 
         //BSUtils: disable gameplay-modifying plugins
