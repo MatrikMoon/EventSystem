@@ -22,15 +22,15 @@ public static partial class ScoreReflection {
   static ScoreReflection() {
     byte[] descriptorData = global::System.Convert.FromBase64String(
         string.Concat(
-          "CgtzY29yZS5wcm90byK0AQoFU2NvcmUSEAoIc3RlYW1faWQYASABKAkSDwoH",
+          "CgtzY29yZS5wcm90byKlAQoFU2NvcmUSEAoIc3RlYW1faWQYASABKAkSDwoH",
           "c29uZ19pZBgCIAEoCRINCgVzY29yZRgDIAEoBRIYChBkaWZmaWN1bHR5X2xl",
           "dmVsGAQgASgFEhIKCmZ1bGxfY29tYm8YBSABKAgSDgoGc2lnbmVkGAYgASgJ",
           "EhYKDnBsYXllcl9vcHRpb25zGAcgASgFEhQKDGdhbWVfb3B0aW9ucxgIIAEo",
-          "BRINCgVzcGVlZBgJIAEoBWIGcHJvdG8z"));
+          "BWIGcHJvdG8z"));
     descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
         new pbr::FileDescriptor[] { },
         new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-          new pbr::GeneratedClrTypeInfo(typeof(global::Score), global::Score.Parser, new[]{ "SteamId", "SongId", "Score_", "DifficultyLevel", "FullCombo", "Signed", "PlayerOptions", "GameOptions", "Speed" }, null, null, null)
+          new pbr::GeneratedClrTypeInfo(typeof(global::Score), global::Score.Parser, new[]{ "SteamId", "SongId", "Score_", "DifficultyLevel", "FullCombo", "Signed", "PlayerOptions", "GameOptions" }, null, null, null)
         }));
   }
   #endregion
@@ -70,7 +70,6 @@ public sealed partial class Score : pb::IMessage<Score> {
     signed_ = other.signed_;
     playerOptions_ = other.playerOptions_;
     gameOptions_ = other.gameOptions_;
-    speed_ = other.speed_;
     _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
   }
 
@@ -167,17 +166,6 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
   }
 
-  /// <summary>Field number for the "speed" field.</summary>
-  public const int SpeedFieldNumber = 9;
-  private int speed_;
-  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-  public int Speed {
-    get { return speed_; }
-    set {
-      speed_ = value;
-    }
-  }
-
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
   public override bool Equals(object other) {
     return Equals(other as Score);
@@ -199,7 +187,6 @@ public sealed partial class Score : pb::IMessage<Score> {
     if (Signed != other.Signed) return false;
     if (PlayerOptions != other.PlayerOptions) return false;
     if (GameOptions != other.GameOptions) return false;
-    if (Speed != other.Speed) return false;
     return Equals(_unknownFields, other._unknownFields);
   }
 
@@ -214,7 +201,6 @@ public sealed partial class Score : pb::IMessage<Score> {
     if (Signed.Length != 0) hash ^= Signed.GetHashCode();
     if (PlayerOptions != 0) hash ^= PlayerOptions.GetHashCode();
     if (GameOptions != 0) hash ^= GameOptions.GetHashCode();
-    if (Speed != 0) hash ^= Speed.GetHashCode();
     if (_unknownFields != null) {
       hash ^= _unknownFields.GetHashCode();
     }
@@ -260,10 +246,6 @@ public sealed partial class Score : pb::IMessage<Score> {
       output.WriteRawTag(64);
       output.WriteInt32(GameOptions);
     }
-    if (Speed != 0) {
-      output.WriteRawTag(72);
-      output.WriteInt32(Speed);
-    }
     if (_unknownFields != null) {
       _unknownFields.WriteTo(output);
     }
@@ -295,9 +277,6 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
     if (GameOptions != 0) {
       size += 1 + pb::CodedOutputStream.ComputeInt32Size(GameOptions);
-    }
-    if (Speed != 0) {
-      size += 1 + pb::CodedOutputStream.ComputeInt32Size(Speed);
     }
     if (_unknownFields != null) {
       size += _unknownFields.CalculateSize();
@@ -333,9 +312,6 @@ public sealed partial class Score : pb::IMessage<Score> {
     }
     if (other.GameOptions != 0) {
       GameOptions = other.GameOptions;
-    }
-    if (other.Speed != 0) {
-      Speed = other.Speed;
     }
     _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
   }
@@ -378,10 +354,6 @@ public sealed partial class Score : pb::IMessage<Score> {
         }
         case 64: {
           GameOptions = input.ReadInt32();
-          break;
-        }
-        case 72: {
-          Speed = input.ReadInt32();
           break;
         }
       }

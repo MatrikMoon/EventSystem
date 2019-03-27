@@ -1,28 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using static TeamSaberServer.Database.SimpleSql;
-using static TeamSaberShared.SharedConstructs;
+using TeamSaberShared;
+using static EventServer.Database.SimpleSql;
 
 /*
  * Created by Moon on 9/11/2018
- * TODO: Use Properties (get/set) instead of getters and setters
  */
 
-namespace TeamSaberServer.Database
+namespace EventServer.Database
 {
     public class Player
     {
-        //Main SQL identification
-        private string steamId;
+        public string SteamId { get; private set; }
 
         public Player(string steamId)
         {
-            this.steamId = steamId;
+            SteamId = steamId;
             if (!Exists())
             {
                 //Default name is the steam id
-                AddPlayer(steamId, steamId, "", "", "", (int)Rarity.None, "-1", 0, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", "", (int)SharedConstructs.Rarity.None, "-1", 0, 0, 0, 0, 0, 0, 0, true);
             }
         }
 
@@ -32,119 +30,152 @@ namespace TeamSaberServer.Database
             return steamId != null ? new Player(steamId) : null;
         }
 
-        public string GetSteamId()
+        public string DiscordName
         {
-            return steamId;
+            get
+            {
+                return ExecuteQuery($"SELECT discordName FROM playerTable WHERE steamId = {SteamId}", "discordName").First();
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET discordName = \'{value}\' WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public string GetDiscordName()
+        public string DiscordExtension
         {
-            return ExecuteQuery($"SELECT discordName FROM playerTable WHERE steamId = {steamId}", "discordName").First();
+            get
+            {
+                return ExecuteQuery($"SELECT discordExtension FROM playerTable WHERE steamId = {SteamId}", "discordExtension").First();
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET discordExtension = \'{value}\' WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public string GetDiscordExtension()
+        public string DiscordMention
         {
-            return ExecuteQuery($"SELECT discordExtension FROM playerTable WHERE steamId = {steamId}", "discordExtension").First();
+            get
+            {
+                return ExecuteQuery($"SELECT discordMention FROM playerTable WHERE steamId = {SteamId}", "discordMention").First();
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET discordMention = \'{value}\' WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public string GetDiscordMention()
+        public string Timezone
         {
-            return ExecuteQuery($"SELECT discordMention FROM playerTable WHERE steamId = {steamId}", "discordMention").First();
+            get
+            {
+                return ExecuteQuery($"SELECT timezone FROM playerTable WHERE steamId = {SteamId}", "timezone").First();
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET timezone = \'{value}\' WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public string GetTimezone()
+        public int Rarity
         {
-            return ExecuteQuery($"SELECT timezone FROM playerTable WHERE steamId = {steamId}", "timezone").First();
+            get
+            {
+                return Convert.ToInt32(ExecuteQuery($"SELECT rarity FROM playerTable WHERE steamId = \'{SteamId}\'", "rarity").First());
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET rarity = {value} WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public bool SetDiscordName(string discordName)
+        public string Team
         {
-            return ExecuteCommand($"UPDATE playerTable SET discordName = \'{discordName}\' WHERE steamId = \'{steamId}\'") > 1;
+            get
+            {
+                return ExecuteQuery($"SELECT team FROM playerTable WHERE steamId = {SteamId}", "team").First();
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET team = \'{value}\' WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public bool SetDiscordExtension(string discordExtension)
+        public int Rank
         {
-            return ExecuteCommand($"UPDATE playerTable SET discordExtension = \'{discordExtension}\' WHERE steamId = \'{steamId}\'") > 1;
+            get
+            {
+                return Convert.ToInt32(ExecuteQuery($"SELECT rank FROM playerTable WHERE steamId = {SteamId}", "rank").First());
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET rank = {value} WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public bool SetDiscordMention(string discordMention)
+        public int Tokens
         {
-            return ExecuteCommand($"UPDATE playerTable SET discordMention = \'{discordMention}\' WHERE steamId = \'{steamId}\'") > 1;
+            get
+            {
+                return Convert.ToInt32(ExecuteQuery($"SELECT tokens FROM playerTable WHERE steamId = {SteamId}", "tokens").First());
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET tokens = \'{value}\' WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public bool SetTimezone(string timezone)
+        public long TotalScore
         {
-            return ExecuteCommand($"UPDATE playerTable SET timezone = \'{timezone}\' WHERE steamId = \'{steamId}\'") > 1;
+            get
+            {
+                return Convert.ToInt64(ExecuteQuery($"SELECT totalScore FROM playerTable WHERE steamId = {SteamId}", "totalScore").First());
+            }
+            set
+            {
+                ExecuteCommand($"UPDATE playerTable SET totalScore = {value} WHERE steamId = \'{SteamId}\'");
+            }
         }
 
-        public int GetRarity()
+        public bool IncrementPersonalBestsBeaten() => ExecuteCommand($"UPDATE playerTable SET personalBestsBeaten = personalBestsBeaten + 1 WHERE steamId = \'{SteamId}\'") > 1;
+
+        public bool IncrementSongsPlayed() => ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{SteamId}\'") > 1;
+
+        public static List<string> GetPlayersInRarity(int rarity) => ExecuteQuery($"SELECT steamId FROM playerTable WHERE rarity = {rarity}", "steamId");
+
+        public bool Exists() => Exists(SteamId);
+
+        public static bool Exists(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = {steamId}", "steamId").Any();
+
+        public static bool IsRegistered(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\'", "discordMention").Any(x => x.Length > 0);
+
+        //Necessary overrides for comparison
+        public static bool operator ==(Player a, Player b)
         {
-            return Convert.ToInt32(ExecuteQuery($"SELECT rarity FROM playerTable WHERE steamId = \'{steamId}\'", "rarity").First());
+            if (b == null) return false;
+            return a.GetHashCode() == b.GetHashCode();
         }
 
-        public bool SetRarity(int rarity)
+        public static bool operator !=(Player a, Player b)
         {
-            return ExecuteCommand($"UPDATE playerTable SET rarity = {rarity} WHERE steamId = \'{steamId}\'") > 1;
+            if (b == null) return false;
+            return a.GetHashCode() != b.GetHashCode();
         }
 
-        public string GetTeam()
+        public override bool Equals(object obj)
         {
-            return ExecuteQuery($"SELECT team FROM playerTable WHERE steamId = {steamId}", "team").First();
+            if (obj == null) return false;
+            if (!(obj is Player)) return false;
+            return GetHashCode() == obj.GetHashCode();
         }
 
-        public bool SetTeam(string team)
+        public override int GetHashCode()
         {
-            return ExecuteCommand($"UPDATE playerTable SET team = \'{team}\' WHERE steamId = \'{steamId}\'") > 1;
+            int hash = 13;
+            hash = (hash * 7) + SteamId.GetHashCode();
+            return hash;
         }
-
-        public int GetRank()
-        {
-            return Convert.ToInt32(ExecuteQuery($"SELECT rank FROM playerTable WHERE steamId = {steamId}", "rank").First());
-        }
-
-        public bool SetRank(int rank)
-        {
-            return ExecuteCommand($"UPDATE playerTable SET rank = {rank} WHERE steamId = \'{steamId}\'") > 1;
-        }
-
-        public int GetTotalScore()
-        {
-            return Convert.ToInt32(ExecuteQuery($"SELECT totalScore FROM playerTable WHERE steamId = {steamId}", "totalScore").First());
-        }
-
-        public bool IncrementTotalScore(long scoreToAdd)
-        {
-            return ExecuteCommand($"UPDATE playerTable SET totalScore = totalScore + {scoreToAdd} WHERE steamId = \'{steamId}\'") > 1;
-        }
-
-        public bool IncrementPersonalBestsBeaten()
-        {
-            return ExecuteCommand($"UPDATE playerTable SET personalBestsBeaten = personalBestsBeaten + 1 WHERE steamId = \'{steamId}\'") > 1;
-        }
-
-        public bool IncrementSongsPlayed()
-        {
-            return ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{steamId}\'") > 1;
-        }
-
-        public static List<string> GetPlayersInRarity(int rarity)
-        {
-            return ExecuteQuery($"SELECT steamId FROM playerTable WHERE rarity = {rarity}", "steamId");
-        }
-
-        public bool Exists()
-        {
-            return Exists(steamId);
-        }
-
-        public static bool Exists(string steamId)
-        {
-            return ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = {steamId}", "steamId").Any();
-        }
-
-        public static bool IsRegistered(string steamId)
-        {
-            return ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\'", "discordMention").Any(x => x.Length > 0);
-        }
+        //End necessary overrides
     }
 }

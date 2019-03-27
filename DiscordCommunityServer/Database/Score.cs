@@ -11,7 +11,7 @@ using static TeamSaberShared.SharedConstructs;
  * TODO: Use Properties (get/set) instead of getters and setters
  */
 
-namespace TeamSaberServer.Database
+namespace EventServer.Database
 {
     class Score
     {
@@ -26,7 +26,7 @@ namespace TeamSaberServer.Database
             this.difficulty = difficulty;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.GetRarity(), player.GetTeam(), difficulty, PlayerOptions.None, GameOptions.None, false, 0, 0);
+                SimpleSql.AddScore(songId, steamId, player.Rarity, player.Team, difficulty, PlayerOptions.None, GameOptions.None, false, 0, 0);
             }
         }
 
@@ -42,34 +42,23 @@ namespace TeamSaberServer.Database
 
         public long GetScore()
         {
-            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0", "score").First();
+            string scoreString = SimpleSql.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.SongId}\' AND difficulty = {(int)difficulty} AND steamId = {player.SteamId} AND old = 0", "score").First();
             return Convert.ToInt64(scoreString);
         }
 
         public bool SetScore(long score, bool fullCombo)
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0") > 1;
-        }
-
-        public long GetSpeed()
-        {
-            string speedString = SimpleSql.ExecuteQuery($"SELECT speed FROM scoreTable WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0", "speed").First();
-            return Convert.ToInt64(speedString);
-        }
-
-        public bool SetSpeed(long speed)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET speed = {speed} WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()} AND old = 0") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.SongId}\' AND difficulty = {(int)difficulty} AND steamId = {player.SteamId} AND old = 0") > 1;
         }
 
         public bool SetOld()
         {
-            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId = \'{song.GetSongId()}\' AND difficulty = {(int)difficulty} AND steamId = {player.GetSteamId()}") > 1;
+            return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId = \'{song.SongId}\' AND difficulty = {(int)difficulty} AND steamId = {player.SteamId}") > 1;
         }
 
         public bool Exists()
         {
-            return Exists(song.GetSongId(), player.GetSteamId(), difficulty);
+            return Exists(song.SongId, player.SteamId, difficulty);
         }
 
         public static bool Exists(string songId, string steamId, LevelDifficulty difficulty)
@@ -79,7 +68,7 @@ namespace TeamSaberServer.Database
 
         //KotH Event-specific
         //Deletes scores on other songs
-        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.GetSongId(), player.GetSteamId());
+        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.SongId, player.SteamId);
         public static bool DeleteOtherScoresForUser(string songId, string steamId)
         {
             return SimpleSql.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE NOT songId = \'{songId}\' AND steamId = {steamId}") > 1;

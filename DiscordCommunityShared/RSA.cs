@@ -31,7 +31,7 @@ namespace TeamSaberShared
                 ***REMOVED***
             ***REMOVED***
 
-        public static string SignScore(ulong userId, string songId, int difficultyLevel, bool fullCombo, int score, int playerOptions, int gameOptions, int speed)
+        public static string SignScore(ulong userId, string songId, int difficultyLevel, bool fullCombo, int score, int playerOptions, int gameOptions)
         {
             var sr = new StringReader(pubKey);
             var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
@@ -43,7 +43,7 @@ namespace TeamSaberShared
             var csp = new RSACryptoServiceProvider();
             csp.ImportParameters(privkey);
 
-            var plainTextData = userId + songId + difficultyLevel + fullCombo + score + playerOptions + gameOptions + speed + "<3";
+            var plainTextData = userId + songId + difficultyLevel + fullCombo + score + playerOptions + gameOptions + "<3";
             var bytesPlainTextData = System.Text.Encoding.Unicode.GetBytes(plainTextData);
 
             var bytesSignedText = csp.SignData(bytesPlainTextData, CryptoConfig.MapNameToOID("SHA512"));

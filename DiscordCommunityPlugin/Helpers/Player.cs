@@ -63,6 +63,32 @@ namespace TeamSaberPlugin.Helpers
         }
         */
 
+        //Returns the difficulty we *should* be using
+        //TODO: Store desired difficulty with team data
+        public LevelDifficulty GetPreferredDifficulty(bool isOst = false)
+        {
+            LevelDifficulty ret = LevelDifficulty.ExpertPlus;
+            switch (team)
+            {
+                case "master":
+                case "blue":
+                    ret = isOst ? LevelDifficulty.Expert : LevelDifficulty.ExpertPlus;
+                    break;
+                case "gold":
+                case "silver":
+                    ret = LevelDifficulty.Expert;
+                    break;
+                case "bronze":
+                    ret = LevelDifficulty.Hard;
+                    break;
+                case "white":
+                    ret = LevelDifficulty.Easy;
+                    break;
+            }
+
+            return ret;
+        }
+
         //Returns the appropriate color for a rarity
         public Color GetColorForRarity() => GetColorForRarity(rarity);
         public static Color GetColorForRarity(Rarity rarity)
@@ -87,20 +113,9 @@ namespace TeamSaberPlugin.Helpers
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
         public IDifficultyBeatmap GetClosestDifficultyPreferLower(BeatmapLevelSO level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
         {
-            Logger.Warning("START");
-            Logger.Warning($"DIFF {difficulty}");
-            Logger.Warning($"LEVEL {level?.songName}");
-            Logger.Warning($"char {characteristic}");
-            Logger.Warning($"GCD: {level.songName} {difficulty} {characteristic}");
-
             //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
             var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
-
-            Logger.Warning($"{desiredCharacteristic}");
-
             IDifficultyBeatmap ret = level.beatmapLevelData.GetDifficultyBeatmap(desiredCharacteristic, difficulty);
-
-            Logger.Warning($"{ret}");
 
             IDifficultyBeatmap[] availableMaps =
                 level
@@ -110,8 +125,6 @@ namespace TeamSaberPlugin.Helpers
                 .OrderBy(x => x.difficulty)
                 .ToArray();
 
-            Logger.Warning("HERE");
-
             if (ret == null)
             {
                 ret = GetLowerDifficulty(availableMaps, difficulty, desiredCharacteristic);
@@ -120,8 +133,6 @@ namespace TeamSaberPlugin.Helpers
             {
                 ret = GetHigherDifficulty(availableMaps, difficulty, desiredCharacteristic);
             }
-
-            Logger.Warning("RET");
 
             return ret;
         }
