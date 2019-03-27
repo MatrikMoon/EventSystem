@@ -46,7 +46,7 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
 
                 _speedViewController = BeatSaberUI.CreateViewController<SpeedViewController>();
 
-                ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard, _speedViewController);
+                ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
             }
         }
@@ -282,7 +282,6 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                 var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, (int)(((float)ss) * 100), don);
 
                 //Scoresaber leaderboards
-                /*
                 var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
                 var pdmt = ReflectionUtil.GetStaticType("PlayerDataModelSO, Assembly-CSharp");
                 var plm = Resources.FindObjectsOfTypeAll(plmt).First();
@@ -309,7 +308,6 @@ namespace TeamSaberPlugin.UI.FlowCoordinators
                     plsd.InvokeMethod("UpdateScoreData", results.GetProperty("score"), results.GetProperty("maxCombo"), results.GetProperty("fullCombo"), results.GetProperty("rank"));
                     plm.InvokeMethod("AddScore", dbm, results.GetProperty("unmodifiedScore"), gm);
                 }
-                */
 
                 //var song = _communityLeaderboard.selectedSong;
                 //string signed = RSA.SignScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));

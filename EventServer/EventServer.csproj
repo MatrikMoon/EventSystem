@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{9D239E83-BA87-4074-9AE7-CF9771CF0383}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TeamSaberServer</RootNamespace>
-    <AssemblyName>TeamSaberServer</AssemblyName>
+    <RootNamespace>EventServer</RootNamespace>
+    <AssemblyName>EventServer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -200,9 +200,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DiscordCommunityShared\DiscordCommunityShared.csproj">
+    <ProjectReference Include="..\EventShared\EventShared.csproj">
       <Project>{37b20d14-8113-478c-ad9f-0e7c7d9e6b3c}</Project>
-      <Name>DiscordCommunityShared</Name>
+      <Name>EventShared</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

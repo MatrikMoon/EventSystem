@@ -408,8 +408,12 @@ namespace EventServer.Discord.Modules
 
         [Command("modifyTeam")]
         [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task ModifyTeamAsync(string teamId = null, [Remainder]string args = null)
+        public async Task ModifyTeamAsync([Remainder]string args = null)
         {
+            var color = ParseArgs(args, "color");
+            var name = ParseArgs(args, "name");
+            var teamId = ParseArgs(args, "teamId");
+
             if (teamId == null)
             {
                 teamId = Team.GetByDiscordMentionOfCaptain(Context.User.Mention)?.TeamId;
@@ -419,9 +423,6 @@ namespace EventServer.Discord.Modules
                     return;
                 }
             }
-
-            var color = ParseArgs(args, "color");
-            var name = ParseArgs(args, "name");
 
             var currentRoles = Context.Guild.Roles;
 

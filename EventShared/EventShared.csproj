@@ -7,8 +7,8 @@
     <ProjectGuid>{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TeamSaberShared</RootNamespace>
-    <AssemblyName>TeamSaberShared</AssemblyName>
+    <RootNamespace>EventShared</RootNamespace>
+    <AssemblyName>EventShared</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -73,6 +73,6 @@
 xcopy /y "$(TargetPath)_confused" "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)protoc\protoc.exe" --proto_path="$(SolutionDir)DiscordCommunityShared" --csharp_out="$(SolutionDir)DiscordCommunityShared" "$(SolutionDir)DiscordCommunityShared\score.proto"</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)protoc\protoc.exe" --proto_path="$(SolutionDir)EventShared" --csharp_out="$(SolutionDir)EventShared" "$(SolutionDir)EventShared\score.proto"</PreBuildEvent>
   </PropertyGroup>
 </Project>
