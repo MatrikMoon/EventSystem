@@ -1,11 +1,11 @@
-﻿using static TeamSaberShared.SharedConstructs;
+﻿using static EventShared.SharedConstructs;
 
 /**
  * Created by Moon on 3/8/2019
  * Tiny helper class to hold together levels and desired options
  */
 
-namespace TeamSaberPlugin.Helpers
+namespace EventPlugin.Helpers
 {
     class Song
     {

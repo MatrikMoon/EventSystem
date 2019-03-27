@@ -12,7 +12,7 @@ using UnityEngine;
  * A list of these is downloaded by the plugin with player data and song data
  */
 
-namespace TeamSaberPlugin.Helpers
+namespace EventPlugin.Helpers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Team

@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf;
 using System;
 
-namespace TeamSaberShared
+namespace EventShared
 {
     public class ProtobufHelper
     {

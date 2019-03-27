@@ -1,10 +1,10 @@
 ﻿using CustomUI.BeatSaber;
 using CustomUI.MenuButton;
 using CustomUI.Settings;
-using TeamSaberPlugin.Misc;
-using TeamSaberPlugin.UI;
-using TeamSaberPlugin.UI.FlowCoordinators;
-using TeamSaberPlugin.UI.ViewControllers;
+using EventPlugin.Misc;
+using EventPlugin.UI;
+using EventPlugin.UI.FlowCoordinators;
+using EventPlugin.UI.ViewControllers;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -15,8 +15,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
-using Logger = TeamSaberShared.Logger;
-using TeamSaberPlugin.Helpers;
+using Logger = EventShared.Logger;
+using EventPlugin.Helpers;
 
 /**
  * Created by Moon on 8/23/2018
@@ -25,7 +25,7 @@ using TeamSaberPlugin.Helpers;
  * (https://github.com/andruzzzhka/BeatSaverDownloader/)
  */
 
-namespace TeamSaberPlugin
+namespace EventPlugin
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CommunityUI : MonoBehaviour

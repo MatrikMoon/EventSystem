@@ -2,14 +2,14 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/9/2018
  * Handles RSA signature generation of communications
  */
 
-namespace TeamSaberShared
+namespace EventShared
 {
     public class RSA
     {

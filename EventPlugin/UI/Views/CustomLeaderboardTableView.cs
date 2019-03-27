@@ -1,12 +1,12 @@
-﻿using TeamSaberPlugin.Helpers;
+﻿using EventPlugin.Helpers;
 using HMUI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
-using static TeamSaberShared.SharedConstructs;
-using Logger = TeamSaberShared.Logger;
+using static EventShared.SharedConstructs;
+using Logger = EventShared.Logger;
 using System;
 
 /*
@@ -15,7 +15,7 @@ using System;
  * so we can set custom colors on all the players
  */
 
-namespace TeamSaberPlugin.UI.Views
+namespace EventPlugin.UI.Views
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CustomLeaderboardTableView : MonoBehaviour, TableView.IDataSource

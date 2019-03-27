@@ -5,16 +5,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TeamSaberPlugin.Helpers;
-using TeamSaberPlugin.Misc;
-using TeamSaberPlugin.UI.ViewControllers;
-using TeamSaberShared;
+using EventPlugin.Helpers;
+using EventPlugin.Misc;
+using EventPlugin.UI.ViewControllers;
+using EventShared;
 using UnityEngine;
 using VRUI;
-using static TeamSaberShared.SharedConstructs;
-using Logger = TeamSaberShared.Logger;
+using static EventShared.SharedConstructs;
+using Logger = EventShared.Logger;
 
-namespace TeamSaberPlugin.UI.FlowCoordinators
+namespace EventPlugin.UI.FlowCoordinators
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class MainModFlowCoordinator : FlowCoordinator

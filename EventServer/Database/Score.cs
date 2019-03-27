@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TeamSaberShared;
-using static TeamSaberShared.SharedConstructs;
+using EventShared;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018

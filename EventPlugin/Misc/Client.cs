@@ -1,8 +1,8 @@
-﻿using TeamSaberPlugin.Helpers;
-using TeamSaberPlugin.UI.ViewControllers;
-using TeamSaberPlugin.UI.Views;
-using TeamSaberShared;
-using TeamSaberShared.SimpleJSON;
+﻿using EventPlugin.Helpers;
+using EventPlugin.UI.ViewControllers;
+using EventPlugin.UI.Views;
+using EventShared;
+using EventShared.SimpleJSON;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -13,8 +13,8 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
-using static TeamSaberShared.SharedConstructs;
-using Logger = TeamSaberShared.Logger;
+using static EventShared.SharedConstructs;
+using Logger = EventShared.Logger;
 using SongLoaderPlugin.OverrideClasses;
 
 /*
@@ -22,7 +22,7 @@ using SongLoaderPlugin.OverrideClasses;
  * Communicates with a running DiscordCommunityServer
  */
 
-namespace TeamSaberPlugin.Misc
+namespace EventPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client

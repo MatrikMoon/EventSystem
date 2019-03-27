@@ -1,7 +1,7 @@
 ﻿using CustomUI.BeatSaber;
 using CustomUI.UIElements;
 using System.Reflection;
-using TeamSaberPlugin.Misc;
+using EventPlugin.Misc;
 using UnityEngine;
 using VRUI;
 
@@ -10,7 +10,7 @@ using VRUI;
  * View controller designed to be a speed scale
  */
 
-namespace TeamSaberPlugin.UI.ViewControllers
+namespace EventPlugin.UI.ViewControllers
 {
     public class SpeedViewController : VRUIViewController
     {

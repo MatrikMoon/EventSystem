@@ -1,7 +1,7 @@
 ﻿using CustomUI.BeatSaber;
-using TeamSaberPlugin.Helpers;
-using TeamSaberPlugin.Misc;
-using TeamSaberPlugin.UI.Views;
+using EventPlugin.Helpers;
+using EventPlugin.Misc;
+using EventPlugin.UI.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,15 +10,15 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using static TeamSaberShared.SharedConstructs;
-using Logger = TeamSaberShared.Logger;
+using static EventShared.SharedConstructs;
+using Logger = EventShared.Logger;
 
 /*
  * Created by Moon on 9/22/2018
  * A ViewController allowing me to show a leaderboard and other player data
  */
 
-namespace TeamSaberPlugin.UI.ViewControllers
+namespace EventPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class CustomLeaderboardController : VRUIViewController

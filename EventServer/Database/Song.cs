@@ -1,10 +1,10 @@
-﻿using TeamSaberShared;
+﻿using EventShared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 using System.Text.RegularExpressions;
 
 /*
