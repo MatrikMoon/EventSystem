@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -8,7 +8,7 @@ using static TeamSaberShared.SharedConstructs;
  * TODO: Properly handle different map types like "OneSaber" and maps without all difficulties
  */
 
-namespace TeamSaberShared
+namespace EventShared
 {
     public class OstHelper
     {

@@ -1,7 +1,7 @@
-﻿using TeamSaberShared.SimpleJSON;
+﻿using EventShared.SimpleJSON;
 using System;
 using System.IO;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 
 namespace EventServer
 {

@@ -1,11 +1,11 @@
 ﻿using CustomUI.BeatSaber;
-using TeamSaberShared;
+using EventShared;
 using System;
 using System.Reflection;
 using UnityEngine.UI;
 using VRUI;
 
-namespace TeamSaberPlugin.UI.ViewControllers
+namespace EventPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class GeneralNavigationController : VRUINavigationController

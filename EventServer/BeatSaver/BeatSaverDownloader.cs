@@ -1,4 +1,4 @@
-﻿using TeamSaberShared;
+﻿using EventShared;
 using System;
 using System.Collections.Generic;
 using System.IO;

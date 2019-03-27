@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TeamSaberShared
+namespace EventShared
 {
     public class Logger
     {

@@ -111,7 +111,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TeamSaberShared.SimpleJSON
+namespace EventShared.SimpleJSON
 {
     public enum JSONNodeType
     {

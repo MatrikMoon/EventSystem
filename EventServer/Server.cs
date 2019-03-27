@@ -1,5 +1,5 @@
-﻿using TeamSaberShared;
-using TeamSaberShared.SimpleJSON;
+﻿using EventShared;
+using EventShared.SimpleJSON;
 using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using static EventServer.Database.SimpleSql;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 using System.Text.RegularExpressions;
 using EventServer.Database;
 

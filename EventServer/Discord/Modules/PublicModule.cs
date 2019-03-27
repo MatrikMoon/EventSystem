@@ -2,7 +2,7 @@
 using Discord.Commands;
 using EventServer.Database;
 using EventServer.Discord.Services;
-using TeamSaberShared;
+using EventShared;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static EventServer.Database.SimpleSql;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 using Discord.WebSocket;
 using System.Globalization;
 

@@ -9,9 +9,9 @@ using Discord.Commands;
 using EventServer.Discord.Services;
 using System.Collections.Generic;
 using static EventServer.Database.SimpleSql;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 using EventServer.Database;
-using TeamSaberShared;
+using EventShared;
 using System.Text.RegularExpressions;
 
 namespace EventServer.Discord

@@ -5,7 +5,7 @@
 
 using System;
 
-namespace TeamSaberShared
+namespace EventShared
 {
     public static class SharedConstructs
     {

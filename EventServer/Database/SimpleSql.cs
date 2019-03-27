@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018

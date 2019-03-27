@@ -1,12 +1,12 @@
-﻿using TeamSaberShared;
-using TeamSaberShared.SimpleJSON;
+﻿using EventShared;
+using EventShared.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static TeamSaberShared.SharedConstructs;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/25/2018

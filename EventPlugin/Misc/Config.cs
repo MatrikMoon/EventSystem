@@ -1,10 +1,10 @@
-﻿using TeamSaberShared.SimpleJSON;
+﻿using EventShared.SimpleJSON;
 using System;
 using System.IO;
 using System.Reflection;
-using TeamSaberShared;
+using EventShared;
 
-namespace TeamSaberPlugin.Misc
+namespace EventPlugin.Misc
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Config

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TeamSaberPlugin.Helpers;
+using EventPlugin.Helpers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +15,7 @@ using VRUI;
  * modified for the DiscordCommunityPlugin
  */
 
-namespace TeamSaberPlugin.UI.ViewControllers
+namespace EventPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class SongListViewController : VRUIViewController, TableView.IDataSource
@@ -202,13 +202,13 @@ namespace TeamSaberPlugin.UI.ViewControllers
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
-            TeamSaberShared.Logger.Warning($"{availableSongs}");
-            TeamSaberShared.Logger.Warning($"{availableSongs.Count}");
-            TeamSaberShared.Logger.Warning($"{row}");
-            TeamSaberShared.Logger.Warning($"{availableSongs[row]}");
-            TeamSaberShared.Logger.Warning($"{availableSongs[row].Beatmap}");
-            TeamSaberShared.Logger.Warning($"{availableSongs[row].Beatmap.level}");
-            TeamSaberShared.Logger.Warning("HERE");
+            EventShared.Logger.Warning($"{availableSongs}");
+            EventShared.Logger.Warning($"{availableSongs.Count}");
+            EventShared.Logger.Warning($"{row}");
+            EventShared.Logger.Warning($"{availableSongs[row]}");
+            EventShared.Logger.Warning($"{availableSongs[row].Beatmap}");
+            EventShared.Logger.Warning($"{availableSongs[row].Beatmap.level}");
+            EventShared.Logger.Warning("HERE");
 
             IBeatmapLevel song = availableSongs[row].Beatmap.level;
 

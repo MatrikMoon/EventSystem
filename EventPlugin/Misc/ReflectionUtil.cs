@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using Logger = TeamSaberShared.Logger;
+using Logger = EventShared.Logger;
 
 /**
  * Modified by Moon on 8/20/2018
@@ -11,7 +11,7 @@ using Logger = TeamSaberShared.Logger;
  * (https://github.com/xyonico/BeatSaberSongLoader/blob/master/SongLoaderPlugin/ReflectionUtil.cs)
  */
 
-namespace TeamSaberPlugin
+namespace EventPlugin
 {
     public static class ReflectionUtil
     {

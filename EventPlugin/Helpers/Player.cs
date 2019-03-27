@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using static TeamSaberShared.SharedConstructs;
-using Logger = TeamSaberShared.Logger;
+using static EventShared.SharedConstructs;
+using Logger = EventShared.Logger;
 
 /*
  * Created by Moon on 9/14/2018
@@ -16,7 +16,7 @@ using Logger = TeamSaberShared.Logger;
  * TODO: Add more relevant info later
  */
 
-namespace TeamSaberPlugin.Helpers
+namespace EventPlugin.Helpers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Player
