@@ -10,5 +10,4 @@ message Score {
 
   int32 player_options = 7;
   int32 game_options = 8;
-  int32 speed = 9;
 }

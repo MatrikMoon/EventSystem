@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using TeamSaberShared.SimpleJSON;
 
-namespace TeamSaberServer.Discord.Services
+namespace EventServer.Discord.Services
 {
     public class PictureService
     {

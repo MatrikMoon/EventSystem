@@ -1,14 +1,15 @@
 ﻿using TeamSaberShared.SimpleJSON;
 using System;
 using System.IO;
+using static TeamSaberShared.SharedConstructs;
 
-namespace TeamSaberServer
+namespace EventServer
 {
     class Config
     {
         public static string BotToken { get; set; }
         public static string BetaBotToken { get; set; }
-        public static int ServerFlags { get; set; }
+        public static ServerFeatures ServerFlags { get; set; }
 
         private static string ConfigLocation = $"{Environment.CurrentDirectory}/Config.txt";
 
@@ -19,7 +20,7 @@ namespace TeamSaberServer
                 JSONNode node = JSON.Parse(File.ReadAllText(ConfigLocation));
                 BotToken = node["BotToken"].Value;
                 BetaBotToken = node["BetaBotToken"].Value;
-                ServerFlags = Convert.ToInt32(node["ServerFlags"].Value);
+                ServerFlags = (ServerFeatures)Convert.ToInt32(node["ServerFlags"].Value);
             }
             else
             {
@@ -35,7 +36,7 @@ namespace TeamSaberServer
             JSONNode node = new JSONObject();
             node["BotToken"] = BotToken;
             node["BetaBotToken"] = BetaBotToken;
-            node["ServerFlags"] = ServerFlags;
+            node["ServerFlags"] = (int)ServerFlags;
             File.WriteAllText(ConfigLocation, node.ToString());
         }
     }

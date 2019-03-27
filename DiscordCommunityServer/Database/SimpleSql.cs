@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
-using TeamSaberShared;
+using System.Linq;
 using static TeamSaberShared.SharedConstructs;
 
 /*
@@ -14,12 +11,12 @@ using static TeamSaberShared.SharedConstructs;
  * TODO: Use Linq for SQL
  */
 
-namespace TeamSaberServer.Database
+namespace EventServer.Database
 {
     public class SimpleSql
     {
         private static string databaseLocation = Directory.GetCurrentDirectory();
-        private static string databaseName = "TeamSaberDatabase";
+        private static string databaseName = "EventDatabase";
         private static string databaseExtension = "db";
         private static string databaseFullPath = $@"{databaseLocation}\{databaseName}.{databaseExtension}";
 
@@ -32,7 +29,7 @@ namespace TeamSaberServer.Database
                 dbc = new SQLiteConnection($"Data Source={databaseName}.{databaseExtension};Version=3;");
                 dbc.Open();
 
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', rank INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', rank INTEGER DEFAULT 0, tokens INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, speed BIGINT DEFAULT 0, old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', score INTEGER DEFAULT 0, old BIT DEFAULT 0)");
@@ -75,9 +72,9 @@ namespace TeamSaberServer.Database
             return ret;
         }
 
-        public static bool AddPlayer(string steamId, string discordName, string discordExtension, string discordMention, string timezone, int rartiy, string team, int rank, long totalScore, long topScores, int songsPlayed, int personalBestsBeaten, int playersBeat, bool mentionMe)
+        public static bool AddPlayer(string steamId, string discordName, string discordExtension, string discordMention, string timezone, int rartiy, string team, int rank, int tokens, long totalScore, long topScores, int songsPlayed, int personalBestsBeaten, int playersBeat, bool mentionMe)
         {
-            return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{timezone}\', {rartiy}, \'{team}\', {rank}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{timezone}\', {rartiy}, \'{team}\', {rank}, {tokens}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
         }
 
         public static bool AddScore(string songId, string steamId, int rarity, string team, LevelDifficulty difficulty, PlayerOptions playerOptions, GameOptions gameOptions, bool fullCombo, long score, int speed)
@@ -147,7 +144,7 @@ namespace TeamSaberServer.Database
         }
 
         //Returns a list of SongConstruct of the currently active songs
-        public static List<SongConstruct> GetActiveSongs()
+        public static List<SongConstruct> GetActiveSongs(bool includeScores = false)
         {
             List<SongConstruct> ret = new List<SongConstruct>();
             SQLiteConnection db = OpenConnection();
@@ -172,46 +169,34 @@ namespace TeamSaberServer.Database
 
             db.Close();
 
+            if (includeScores)
+            {
+                ret.ForEach(x =>
+                {
+                    if (x.Scores == null) x.Scores = GetScoresForSong(x, Rarity.All, "-1");
+                });
+            }
+
             return ret;
         }
 
-        //These are in here and not the Scores.cs file because in here, we have direct access to the database and
-        //can grab what we need in less queries
-        //Returns a dictionary of <SongConstruct, Dictionary<steamId, ScoreConstruct>>
-        public static IDictionary<SongConstruct, IDictionary<string, ScoreConstruct>> GetAllActiveScoresForFilterOrTeam(Rarity r, Team t)
-        {
-            List<SongConstruct> songs = GetActiveSongs();
-
-            Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>> scores = new Dictionary<SongConstruct, IDictionary<string, ScoreConstruct>>();
-            songs.ForEach(x => {
-                string songId = x.SongId;
-                scores.Add(x, GetScoresForSong(x, (long)r, t.GetTeamId()));
-            });
-
-            return scores;
-        }
-
         //Returns a list of songs with score data intact
-        //TODO: This basically does the same thing as GetAllActiveScoresForFilterOrTeam, except here we can specify no team. Re-address this and consolidate
-        public static List<SongConstruct> GetAllScores(long rarity = (long)Rarity.All, string teamId = "-1")
+        public static List<SongConstruct> GetAllScores(Rarity rarity = Rarity.All, string teamId = "-1")
         {
             List<SongConstruct> ret = GetActiveSongs();
 
-            SQLiteConnection db = OpenConnection();
             ret.ForEach(x =>
             {
                 if (x.Scores == null) x.Scores = GetScoresForSong(x, rarity, teamId);
             });
 
-            db.Close();
-
             return ret;
         }
 
         //Returns a dictionary of steamIds and scores for the designated song and rarity
-        public static IDictionary<string, ScoreConstruct> GetScoresForSong(SongConstruct s, long rarity = (long)Rarity.All, string teamId = "-1")
+        public static List<ScoreConstruct> GetScoresForSong(SongConstruct s, Rarity rarity = Rarity.All, string teamId = "-1")
         {
-            Dictionary<string, ScoreConstruct> ret = new Dictionary<string, ScoreConstruct>();
+            List<ScoreConstruct> ret = new List<ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
             using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, speed, fullCombo, difficulty, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' AND difficulty = {(int)s.Difficulty} {((Rarity)rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY speed DESC", db))
             {
@@ -220,9 +205,9 @@ namespace TeamSaberServer.Database
                     while (reader.Read())
                     {
                         ret.Add(
-                            reader["steamId"].ToString(),
                             new ScoreConstruct
                             {
+                                PlayerId = reader["steamId"].ToString(),
                                 Score = Convert.ToInt64(reader["score"].ToString()),
                                 Speed = Convert.ToInt64(reader["speed"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
@@ -274,9 +259,37 @@ namespace TeamSaberServer.Database
             return ret;
         }
 
+        //<Player, tokens to be given>
+        public static IDictionary<Player, int> GetTokenDispersal()
+        {
+            Dictionary<Player, int> playersToGiveTokens = new Dictionary<Player, int>();
+
+            GetAllScores().ToList().ForEach(y =>
+            {
+                if (y.Scores.Count > 0)
+                {
+                    var player = new Player(y.Scores.ElementAt(0).PlayerId);
+                    playersToGiveTokens[player] += 3;
+                }
+                if (y.Scores.Count > 1)
+                {
+                    var player = new Player(y.Scores.ElementAt(1).PlayerId);
+                    playersToGiveTokens[player] += 2;
+                }
+                if (y.Scores.Count > 2)
+                {
+                    var player = new Player(y.Scores.ElementAt(2).PlayerId);
+                    playersToGiveTokens[player] += 1;
+                }
+            });
+
+            return playersToGiveTokens;
+        }
+
         //Tiny classes to help organize leaderboard commands and reduce strain on SQL
         public class ScoreConstruct
         {
+            public string PlayerId { get; set; }
             public long Score { get; set; }
             public bool FullCombo { get; set; }
             public Rarity Rarity { get; set; }
@@ -294,7 +307,7 @@ namespace TeamSaberServer.Database
             public LevelDifficulty Difficulty { get; set; }
             public GameOptions GameOptions { get; set; }
             public PlayerOptions PlayerOptions { get; set; }
-            public IDictionary<string, ScoreConstruct> Scores { get; set; }
+            public List<ScoreConstruct> Scores { get; set; }
 
             //Necessary overrides for being used as a key in a Dictionary
             public static bool operator ==(SongConstruct a, SongConstruct b)

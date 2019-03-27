@@ -31,7 +31,7 @@ namespace TeamSaberShared
                 "<Modulus>x23auv3xlc95P9QBuyJHt89zZfiSMLscQ0bhLx4eJ0lJoDPD6OKP/iy+qTHFyinTg/IFAC664oskB8w22P1wo3Wm/BQk412rSrtZju50t/TvxxD5pQ9bYpcK3rvH8reS6bNgTxkGSIW4hrPUkxlybY0/Xsoe2fIDB+dCEnLHWzbnSGIjJ/d3IfBls+l86phEMIBtEC9WjAS8GO49VHV0fj1RyqH8iPrx9yZFmSZekF5mDy53yYXvRGKGYVolGQUZ5PEJdJF2Xt8eawCQDaqAQljuv3qCV+MkkRRP9LcSx/g7Kw5sAC7KKdCl+AOF7UJ4u30QWN01++E7LaLMsne11Q==</Modulus>" +
             "</RSAParameters>";
 
-        public static string SignScore(ulong userId, string songId, int difficultyLevel, bool fullCombo, int score, int playerOptions, int gameOptions, int speed)
+        public static string SignScore(ulong userId, string songId, int difficultyLevel, bool fullCombo, int score, int playerOptions, int gameOptions)
         {
             var sr = new StringReader(pubKey);
             var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
@@ -43,7 +43,7 @@ namespace TeamSaberShared
             var csp = new RSACryptoServiceProvider();
             csp.ImportParameters(privkey);
 
-            var plainTextData = userId + songId + difficultyLevel + fullCombo + score + playerOptions + gameOptions + speed + "<3";
+            var plainTextData = userId + songId + difficultyLevel + fullCombo + score + playerOptions + gameOptions + "<3";
             var bytesPlainTextData = System.Text.Encoding.Unicode.GetBytes(plainTextData);
 
             var bytesSignedText = csp.SignData(bytesPlainTextData, CryptoConfig.MapNameToOID("SHA512"));

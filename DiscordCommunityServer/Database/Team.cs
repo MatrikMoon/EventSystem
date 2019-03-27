@@ -11,87 +11,93 @@ using System.Text.RegularExpressions;
  * TODO: Use Properties (get/set) instead of getters and setters
  */
 
-namespace TeamSaberServer.Database
+namespace EventServer.Database
 {
     public class Team
     {
-        private string teamId;
+        public string TeamId { get; private set; }
+
+        //DiscordCommunity rank progression
+        public int RequiredTokens {
+            get
+            {
+                return Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT requiredTokens FROM teamTable WHERE teamId = \'{TeamId}\'", "requiredTokens").First());
+            }
+            set
+            {
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET requiredTokens = \'{value}\' WHERE teamId = \'{TeamId}\'");
+            }
+        }
+        public string NextPromotion
+        {
+            get
+            {
+                return SimpleSql.ExecuteQuery($"SELECT nextPromotion FROM teamTable WHERE teamId = \'{TeamId}\'", "nextPromotion").First();
+            }
+            set
+            {
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET nextPromotion = \'{value}\' WHERE teamId = \'{TeamId}\'");
+            }
+        }
 
         public Team(string teamId)
         {
-            this.teamId = teamId;
+            TeamId = teamId;
             if (!Exists())
             {
                 SimpleSql.AddTeam(teamId, "", "", "", 0);
             }
         }
-        
-        public string GetTeamId()
+
+        public string TeamName
         {
-            return teamId;
+            get
+            {
+                return SimpleSql.ExecuteQuery($"SELECT teamName FROM teamTable WHERE teamId = \'{TeamId}\'", "teamName").First();
+            }
+            set
+            {
+                var name = Regex.Replace(value, "[^a-zA-Z0-9 ]", "");
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET teamName = \'{name}\' WHERE teamId = \'{TeamId}\'");
+            }
         }
 
-        public string GetTeamName()
+        public string Captain
         {
-            return SimpleSql.ExecuteQuery($"SELECT teamName FROM teamTable WHERE teamId = \'{teamId}\'", "teamName").First();
+            get
+            {
+                return SimpleSql.ExecuteQuery($"SELECT captainId FROM teamTable WHERE teamId = \'{TeamId}\'", "captainId").First();
+            }
+            set
+            {
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET captainId = \'{value}\' WHERE teamId = \'{TeamId}\'");
+            }
         }
 
-        public bool SetTeamName(string name)
+        public string Color
         {
-            name = Regex.Replace(name, "[^a-zA-Z0-9 ]", "");
-            return SimpleSql.ExecuteCommand($"UPDATE teamTable SET teamName = \'{name}\' WHERE teamId = \'{teamId}\'") > 1;
+            get
+            {
+                return SimpleSql.ExecuteQuery($"SELECT color FROM teamTable WHERE teamId = \'{TeamId}\'", "color").First();
+            }
+            set
+            {
+                var color = Regex.Replace(value, "[^a-zA-Z0-9#]", "");
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET color = \'{color}\' WHERE teamId = \'{TeamId}\'");
+            }
         }
 
-        public string GetCaptain()
-        {
-            return SimpleSql.ExecuteQuery($"SELECT captainId FROM teamTable WHERE teamId = \'{teamId}\'", "captainId").First();
-        }
-
-        public bool SetCaptain(string userId)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE teamTable SET captainId = \'{userId}\' WHERE teamId = \'{teamId}\'") > 1;
-        }
-
-        public string GetColor()
-        {
-            return SimpleSql.ExecuteQuery($"SELECT color FROM teamTable WHERE teamId = \'{teamId}\'", "color").First();
-        }
-
-        public bool SetColor(string color)
-        {
-            color = Regex.Replace(color, "[^a-zA-Z0-9#]", "");
-            return SimpleSql.ExecuteCommand($"UPDATE teamTable SET color = \'{color}\' WHERE teamId = \'{teamId}\'") > 1;
-        }
-
-        public int GetTeamScore()
-        {
-            string score = SimpleSql.ExecuteQuery($"SELECT score FROM teamTable WHERE teamId = \'{teamId}\'", "score").First();
-            return Convert.ToInt32(score);
-        }
-
-        public bool SetTeamScore(int score)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE teamTable SET score = {score} WHERE teamId = \'{teamId}\'") > 1;
-        }
-
-        public bool IsOld()
-        {
-            return SimpleSql.ExecuteQuery($"SELECT old FROM teamTable WHERE teamId = \'{teamId}\'", "old").First() == "1";
-        }
-
-        public bool Exists()
-        {
-            return Exists(teamId);
-        }
+        public bool IsOld() => SimpleSql.ExecuteQuery($"SELECT old FROM teamTable WHERE teamId = \'{TeamId}\'", "old").First() == "1";
 
         public static Team GetByDiscordMentionOfCaptain(string mention)
         {
             Player player = Player.GetByDiscordMetion(mention);
             if (player == null) return null; //If the player doesn't exist, we definitely don't need to continue; it's obviously an invalid request
 
-            return SimpleSql.GetAllTeams().FirstOrDefault(x => x.GetCaptain() == player.GetSteamId());
+            return SimpleSql.GetAllTeams().FirstOrDefault(x => x.Captain== player.SteamId);
         }
 
+        public bool Exists() => Exists(TeamId);
         public static bool Exists(string teamId)
         {
             teamId = Regex.Replace(teamId, "[^a-zA-Z0-9]", "");

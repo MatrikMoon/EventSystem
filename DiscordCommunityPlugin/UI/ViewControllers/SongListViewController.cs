@@ -202,6 +202,14 @@ namespace TeamSaberPlugin.UI.ViewControllers
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
+            TeamSaberShared.Logger.Warning($"{availableSongs}");
+            TeamSaberShared.Logger.Warning($"{availableSongs.Count}");
+            TeamSaberShared.Logger.Warning($"{row}");
+            TeamSaberShared.Logger.Warning($"{availableSongs[row]}");
+            TeamSaberShared.Logger.Warning($"{availableSongs[row].Beatmap}");
+            TeamSaberShared.Logger.Warning($"{availableSongs[row].Beatmap.level}");
+            TeamSaberShared.Logger.Warning("HERE");
+
             IBeatmapLevel song = availableSongs[row].Beatmap.level;
 
             cell.reuseIdentifier = "SongCell";

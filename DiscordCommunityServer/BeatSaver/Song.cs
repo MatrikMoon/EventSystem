@@ -14,7 +14,7 @@ using static TeamSaberShared.SharedConstructs;
  * songs downloaded from BeatSaver
  */
 
-namespace TeamSaberServer.BeatSaver
+namespace EventServer.BeatSaver
 {
     public class Song
     {

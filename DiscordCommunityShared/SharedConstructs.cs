@@ -39,6 +39,7 @@ namespace TeamSaberShared
 
         public enum LevelDifficulty
         {
+            Auto = -1,
             Easy = 0,
             Normal = 1,
             Hard = 2,
@@ -87,7 +88,8 @@ namespace TeamSaberShared
         {
             None = 0,
             Teams = 1,
-            Tokens = 2
+            Tokens = 2,
+            AutoPromotion = 4
         }
     }
 }

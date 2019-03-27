@@ -29,15 +29,17 @@ namespace TeamSaberPlugin.Misc
     {
         private static string discordCommunityUrl = "http://networkauditor.org";
 #if DEBUG
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
+        //private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
 #else
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
+        //private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, int speed, Action<bool> scoreUploadedCallback = null)
+        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
         {
             //Build score object
             Score s = new Score
@@ -50,7 +52,6 @@ namespace TeamSaberPlugin.Misc
                 Signed = signed,
                 PlayerOptions = playerOptions,
                 GameOptions = gameOptions,
-                Speed = speed
             };
 
             byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);
@@ -99,7 +100,7 @@ namespace TeamSaberPlugin.Misc
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
-            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetWeeklySongs(lcfgm, slvc));
+            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(lcfgm, slvc));
         }
 
         //GET the user's profile data from the server
@@ -231,7 +232,7 @@ namespace TeamSaberPlugin.Misc
 
         //GET the weekly songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetWeeklySongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc)
+        private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
 #if DEBUG
@@ -254,14 +255,18 @@ namespace TeamSaberPlugin.Misc
                     var node = JSON.Parse(www.downloadHandler.text);
                     foreach (var id in node)
                     {
-                        songs.Add(new Song()
+                        var newSong = new Song()
                         {
                             SongId = id.Value["songId"],
                             SongName = id.Value["songName"],
                             GameOptions = (GameOptions)Convert.ToInt32(id.Value["gameOptions"].ToString()),
                             PlayerOptions = (PlayerOptions)Convert.ToInt32(id.Value["playerOptions"].ToString()),
                             Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString())
-                        });
+                        };
+
+                        if (newSong.Difficulty == LevelDifficulty.Auto) newSong.Difficulty = Player.Instance.GetPreferredDifficulty(OstHelper.IsOst(newSong.SongId));
+
+                        songs.Add(newSong);
                     }
                 }
                 catch (Exception e)

@@ -6,7 +6,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace TeamSaberServer.Discord.Services
+namespace EventServer.Discord.Services
 {
     public class CommandHandlingService
 

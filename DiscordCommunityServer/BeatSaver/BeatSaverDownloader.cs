@@ -12,7 +12,7 @@ using System.Threading;
  * Handles the downloading and unzipping of songs from Beatsaver
  */
 
-namespace TeamSaberServer.BeatSaver
+namespace EventServer.BeatSaver
 {
     class BeatSaverDownloader
     {

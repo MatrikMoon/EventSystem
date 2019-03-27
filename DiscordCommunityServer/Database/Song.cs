@@ -9,94 +9,72 @@ using System.Text.RegularExpressions;
 
 /*
  * Created by Moon on 9/11/2018
- * TODO: Use Properties (get/set) instead of getters and setters
  * TODO: Formal identification for songs, not reliant upon some (but not other) properties of the song
  */
 
-namespace TeamSaberServer.Database
+namespace EventServer.Database
 {
     class Song
     {
-        private string songId;
-        private LevelDifficulty difficulty;
+        public string SongId { get; private set; }
+        public string SongName
+        {
+            get => SimpleSql.ExecuteQuery($"SELECT songName FROM songTable WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}", "songName").First();
+            set => SimpleSql.ExecuteCommand($"UPDATE songTable SET songName = \'{value}\' WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}");
+        }
+        public int GameOptions
+        {
+            get
+            {
+                var optionString = SimpleSql.ExecuteQuery($"SELECT gameOptions FROM songTable WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}", "gameOptions").First();
+                return Convert.ToInt32(optionString);
+            }
+            set => SimpleSql.ExecuteCommand($"UPDATE songTable SET gameOptions = {value} WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}");
+        }
+        public int PlayerOptions
+        {
+            get
+            {
+                var optionString = SimpleSql.ExecuteQuery($"SELECT playerOptions FROM songTable WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}", "playerOptions").First();
+                return Convert.ToInt32(optionString);
+            }
+            set => SimpleSql.ExecuteCommand($"UPDATE songTable SET playerOptions = {value} WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}");
+        }
+        public bool Old
+        {
+            get => SimpleSql.ExecuteQuery($"SELECT old FROM songTable WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}", "old").First() == "1";
+            set => SimpleSql.ExecuteCommand($"UPDATE songTable SET old = \'{(value ? "1" : "0")}\' WHERE songId = \'{SongId}\' AND difficulty = {(int)Difficulty}");
+        }
+        public LevelDifficulty Difficulty { get; private set; }
 
         public Song(string songId, LevelDifficulty difficulty)
         {
-            this.songId = songId;
-            this.difficulty = difficulty;
+            SongId = songId;
+            Difficulty = difficulty;
             if (!Exists())
             {
                 //Add a placeholder, trigger song download from BeatSaver if it doesn't exist
-                SimpleSql.AddSong("", "", "", songId, difficulty, PlayerOptions.None, GameOptions.None);
+                SimpleSql.AddSong("", "", "", songId, difficulty, SharedConstructs.PlayerOptions.None, SharedConstructs.GameOptions.None);
                 if (OstHelper.IsOst(songId))
                 {
                     string songName = OstHelper.GetOstSongNameFromLevelId(songId);
-                    songName = Regex.Replace(songName, "[^a-zA-Z0-9- ]", "");
-                    SetSongName(songName);
+                    SongName = Regex.Replace(songName, "[^a-zA-Z0-9- ]", "");
                 }
-                else BeatSaver.BeatSaverDownloader.DownloadSongInfoThreaded(GetSongId(), (b) =>
+                else BeatSaver.BeatSaverDownloader.DownloadSongInfoThreaded(SongId, (b) =>
                 {
                     if (b)
                     {
-                        string songName = new BeatSaver.Song(GetSongId()).SongName;
-                        songName = Regex.Replace(songName, "[^a-zA-Z0-9- ]", "");
-                        SetSongName(songName);
+                        string songName = new BeatSaver.Song(SongId).SongName;
+                        SongName = Regex.Replace(songName, "[^a-zA-Z0-9- ]", "");
                     }
-                    else SetSongName("[Could not download song info]");
+                    else SongName = "[Could not download song info]";
                 });
             }
-        }
-        
-        public string GetSongId()
-        {
-            return songId;
-        }
-
-        public string GetSongName()
-        {
-            return SimpleSql.ExecuteQuery($"SELECT songName FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}", "songName").First();
-        }
-
-        public bool SetSongName(string name)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET songName = \'{name}\' WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
-        }
-
-        public bool SetOld(bool old)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET old = \'{(old ? "1" : "0")}\' WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
-        }
-
-        public bool IsOld()
-        {
-            return SimpleSql.ExecuteQuery($"SELECT old FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}", "old").First() == "1";
-        }
-
-        public int GetGameOptions()
-        {
-            var optionString = SimpleSql.ExecuteQuery($"SELECT gameOptions FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}", "gameOptions").First();
-            return Convert.ToInt32(optionString);
-        }
-
-        public bool SetGameOptions(GameOptions options)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET gameOptions = {(int)options} WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
-        }
-
-        public int GetPlayerOptions()
-        {
-            var optionString = SimpleSql.ExecuteQuery($"SELECT playerOptions FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}", "playerOptions").First();
-            return Convert.ToInt32(optionString);
-        }
-
-        public bool SetPlayerOptions(PlayerOptions options)
-        {
-            return SimpleSql.ExecuteCommand($"UPDATE songTable SET playerOptions = {(int)options} WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty}") > 1;
         }
 
         public bool Exists()
         {
-            return Exists(songId, difficulty);
+            return Exists(SongId, Difficulty);
         }
 
         public static bool Exists(string songId, LevelDifficulty difficulty)
