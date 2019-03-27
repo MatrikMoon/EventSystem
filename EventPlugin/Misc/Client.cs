@@ -283,21 +283,25 @@ namespace TeamSaberPlugin.Misc
                 IEnumerable<Song> osts = songs.Where(x => OstHelper.IsOst(x.SongId));
                 IEnumerable<Song> alreadyHave = songs.Where(x => SongIdHelper.GetSongExistsBySongId(x.SongId));
 
-                //Of what we already have, add the Levels to the availableSongs list
-                alreadyHave.ToList().ForEach(x => {
-                    var level = SongIdHelper.GetLevelFromSongId(x.SongId);
+                //Loads a level from a song instance, populates the Beatmap property and adds to the available list
+                Action<Song> loadLevel = (song) =>
+                {
+                    var level = SongIdHelper.GetLevelFromSongId(song.SongId);
 
                     //If the directory exists, but isn't loaded in song loader,
                     //there's probably a conflict with another loaded song
                     if (level == null)
                     {
-                        slvc.DownloadErrorHappened($"Could not load level {x}. You probably have an older version ('{x.SongId.Substring(0, x.SongId.IndexOf("-"))}') already downloded. Please remove this or save it elsewhere to continue.");
+                        slvc.DownloadErrorHappened($"Could not load level {song.SongName}. You probably have an older version ('{song.SongId.Substring(0, song.SongId.IndexOf("-"))}') already downloded. Please remove this or save it elsewhere to continue.");
                     }
 
                     //TODO: add characteristic name field to the song data stored in the server
-                    x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level as BeatmapLevelSO, (BeatmapDifficulty)x.Difficulty);
-                    availableSongs.Add(x);
-                });
+                    song.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level as BeatmapLevelSO, (BeatmapDifficulty)song.Difficulty);
+                    availableSongs.Add(song);
+                };
+
+                //Of what we already have, add the Levels to the availableSongs list
+                alreadyHave.ToList().ForEach(x => loadLevel(x));
 
                 //If there's an error at this point, one of the levels failed to load. Do not continue.
                 if (slvc.errorHappened) yield break;
@@ -312,7 +316,7 @@ namespace TeamSaberPlugin.Misc
                     availableSongs.Add(x);
                 });
 
-                //Remove the id's of what we already have
+                //Remove what we already have
                 songs.RemoveAll(x => alreadyHave.Select(y => y.SongId).Contains(x.SongId) || osts.Contains(x)); //Don't redownload
 
                 //Download the things we don't have, or if we have everything, show the menu
@@ -321,7 +325,7 @@ namespace TeamSaberPlugin.Misc
                     List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
                     songs.ForEach(x =>
                     {
-                        downloadCoroutines.Add(DownloadWeeklySongs(x.SongId, slvc));
+                        downloadCoroutines.Add(DownloadSongs(x.SongId, slvc));
                     });
 
                     //Wait for the all downloads to finish
@@ -330,9 +334,9 @@ namespace TeamSaberPlugin.Misc
                     Action<SongLoader, List<CustomLevel>> songsLoaded =
                         (SongLoader sender, List<CustomLevel> loadedSongs) =>
                         {
-                            //Now that they're refreshed, we can add them to the available list
+                            //Now that they're refreshed, we can populate their beatmaps and add them to the available list
+                            songs.ForEach(x => loadLevel(x));
                             availableSongs.AddRange(songs);
-
                             slvc.SetSongs(availableSongs);
                         };
 
@@ -353,7 +357,7 @@ namespace TeamSaberPlugin.Misc
         //completedDownloads: List of beatsaver ids representing songs that have successfully downloaded
         //songId: The song this instance of the Coroutine is supposed to download
         //slvc: The song list view controller to display the downloaded songs to
-        private static IEnumerator DownloadWeeklySongs(string songId, SongListViewController slvc)
+        private static IEnumerator DownloadSongs(string songId, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
 #if DEBUG

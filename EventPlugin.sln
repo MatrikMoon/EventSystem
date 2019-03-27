@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2011
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityServer", "DiscordCommunityServer\DiscordCommunityServer.csproj", "{9D239E83-BA87-4074-9AE7-CF9771CF0383}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventServer", "EventServer\EventServer.csproj", "{9D239E83-BA87-4074-9AE7-CF9771CF0383}"
 	ProjectSection(ProjectDependencies) = postProject
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C} = {37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityShared", "DiscordCommunityShared\DiscordCommunityShared.csproj", "{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventShared", "EventShared\EventShared.csproj", "{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordCommunityPlugin", "DiscordCommunityPlugin\DiscordCommunityPlugin.csproj", "{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventPlugin", "EventPlugin\EventPlugin.csproj", "{E9E3E3EA-DD75-46ED-8026-845C0CCDAE2B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{37B20D14-8113-478C-AD9F-0E7C7D9E6B3C} = {37B20D14-8113-478C-AD9F-0E7C7D9E6B3C}
 	EndProjectSection
