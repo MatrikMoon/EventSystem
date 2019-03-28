@@ -1,9 +1,6 @@
-﻿using IllusionPlugin;
-using System.Linq;
-using EventShared;
-using UnityEngine;
+﻿using EventShared;
+using IllusionPlugin;
 using UnityEngine.SceneManagement;
-using Logger = EventShared.Logger;
 
 namespace EventPlugin
 {
@@ -17,7 +14,6 @@ namespace EventPlugin
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-            //SharedCoroutineStarter.instance.StartCoroutine(WaitForBuildMode());
         }
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
@@ -28,7 +24,7 @@ namespace EventPlugin
         {
             if (scene.name == "MenuCore")
             {
-                CommunityUI.OnLoad();
+                EventUI.OnLoad();
             }
         }
 
