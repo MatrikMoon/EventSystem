@@ -28,7 +28,7 @@ namespace EventPlugin.UI.FlowCoordinators
         private BeatmapLevelCollectionSO _primaryLevelCollection;
         private BeatmapLevelCollectionSO _secondaryLevelCollection;
         private BeatmapLevelCollectionSO _extrasLevelCollection;
-        private SpeedViewController _speedViewController;
+        private BottomViewController _speedViewController;
 
         protected PlatformLeaderboardViewController _globalLeaderboard;
         public CustomLeaderboardController _communityLeaderboard; //TEMPORARILY PUBLIC
@@ -44,7 +44,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
                 _mainModNavigationController.didFinishEvent += (_) => mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
 
-                _speedViewController = BeatSaberUI.CreateViewController<SpeedViewController>();
+                _speedViewController = BeatSaberUI.CreateViewController<BottomViewController>();
 
                 ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
@@ -138,7 +138,7 @@ namespace EventPlugin.UI.FlowCoordinators
             else Logger.Warning("BSUtils not installed, not disabling other plugins");
 
             //We're playing from the mod's menu
-            CommunityUI.instance.communitySongPlayed = song.Beatmap.level.levelID;
+            EventUI.instance.songPlayed = song.Beatmap.level.levelID;
 
             //Callback for when the song is ready to be played
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
