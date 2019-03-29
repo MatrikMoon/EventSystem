@@ -1,14 +1,14 @@
 ﻿using CustomUI.BeatSaber;
+using EventPlugin.Helpers;
+using EventPlugin.Misc;
+using EventPlugin.UI.ViewControllers;
+using EventShared;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using EventPlugin.Helpers;
-using EventPlugin.Misc;
-using EventPlugin.UI.ViewControllers;
-using EventShared;
 using UnityEngine;
 using VRUI;
 using static EventShared.SharedConstructs;
@@ -23,28 +23,37 @@ namespace EventPlugin.UI.FlowCoordinators
         public MainMenuViewController mmvc;
         public SongListViewController songListViewController;
 
-        private GeneralNavigationController _mainModNavigationController;
         private AdditionalContentModelSO _additionalContentModel;
         private BeatmapLevelCollectionSO _primaryLevelCollection;
         private BeatmapLevelCollectionSO _secondaryLevelCollection;
         private BeatmapLevelCollectionSO _extrasLevelCollection;
-        private BottomViewController _speedViewController;
 
-        protected PlatformLeaderboardViewController _globalLeaderboard;
-        public CustomLeaderboardController _communityLeaderboard; //TEMPORARILY PUBLIC
+        private PlayerDataModelSO _playerDataModel;
+        private MenuLightsManager _menuLightsManager;
+        private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
+        private CampaignFlowCoordinator _campaignFlowCoordinator;
+
+        private GeneralNavigationController _mainModNavigationController;
+        private PlatformLeaderboardViewController _globalLeaderboard;
+        private CustomLeaderboardController _communityLeaderboard;
+        //private BottomViewController _bottomViewController;
+        private TeamSelectionViewController _teamSelectionViewController;
+        private ResultsViewController _resultsViewController;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
             if (activationType == ActivationType.AddedToHierarchy)
             {
+                title = "TeamSaber";
+
                 //TODO: The following is a potential memory leak...????
                 //If the navigation controller has previously been dismissd, it will cause
                 //an error if something tries to dismiss it again
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
                 _mainModNavigationController.didFinishEvent += (_) => mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
 
-                _speedViewController = BeatSaberUI.CreateViewController<BottomViewController>();
+                //_bottomViewController = BeatSaberUI.CreateViewController<BottomViewController>();
 
                 ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
@@ -58,26 +67,17 @@ namespace EventPlugin.UI.FlowCoordinators
 
         public void OpenSongsList(string songToSelectWhenLoaded = null)
         {
-            if (songListViewController == null)
-            {
-                songListViewController = BeatSaberUI.CreateViewController<SongListViewController>();
-            }
-            if (_additionalContentModel == null)
-            {
-                _additionalContentModel = Resources.FindObjectsOfTypeAll<AdditionalContentModelSO>().First();
-            }
-            if (_primaryLevelCollection == null)
-            {
-                _primaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            }
-            if (_secondaryLevelCollection == null)
-            {
-                _secondaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            }
-            if (_extrasLevelCollection == null)
-            {
-                _extrasLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            }
+            if (songListViewController == null) songListViewController = BeatSaberUI.CreateViewController<SongListViewController>();
+            if (_resultsViewController == null) _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
+            if (_playerDataModel == null) _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+            if (_menuLightsManager == null) _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
+            if (_soloFreePlayFlowCoordinator == null) _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+            if (_campaignFlowCoordinator == null) _campaignFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
+            if (_additionalContentModel == null) _additionalContentModel = Resources.FindObjectsOfTypeAll<AdditionalContentModelSO>().First();
+            if (_primaryLevelCollection == null) _primaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_extrasLevelCollection == null) _extrasLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_teamSelectionViewController == null) _teamSelectionViewController = BeatSaberUI.CreateViewController<TeamSelectionViewController>();
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
                 SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
@@ -118,7 +118,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void ReloadServerData()
         {
-            Client.GetDataForDiscordCommunityPlugin(new BeatmapLevelCollectionSO[] { _primaryLevelCollection, _secondaryLevelCollection, _extrasLevelCollection }, songListViewController, Plugin.PlayerId.ToString());
+            Client.GetData(new BeatmapLevelCollectionSO[] { _primaryLevelCollection, _secondaryLevelCollection, _extrasLevelCollection }, songListViewController, Plugin.PlayerId.ToString());
         }
 
         //BSUtils: disable gameplay-modifying plugins
@@ -144,9 +144,7 @@ namespace EventPlugin.UI.FlowCoordinators
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
                 MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
-                var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
-                    .FirstOrDefault()?
-                    .currentLocalPlayer.playerSpecificSettings;
+                var playerSettings = _playerDataModel.currentLocalPlayer.playerSpecificSettings;
 
                 //Override defaults if we have forced options enabled
                 if (song.PlayerOptions != PlayerOptions.None)
@@ -182,11 +180,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
                 gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
 
-                var practiceSettings = new PracticeSettings();
-                practiceSettings.songSpeedMul = Config.Speed;
-                song.Speed = Config.Speed;
-
-                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, practiceSettings, null, SongFinished);
+                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, null, SongFinished);
             };
 
             //Load audio if it's custom
@@ -208,6 +202,16 @@ namespace EventPlugin.UI.FlowCoordinators
         private void SongFinished(StandardLevelScenesTransitionSetupDataSO standardLevelScenesTransitionSetupData, LevelCompletionResults results)
         {
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
+
+            var map = _communityLeaderboard.selectedSong.Beatmap;
+            var localPlayer = _playerDataModel.currentLocalPlayer;
+            var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var highScore = localResults.highScore < results.unmodifiedScore;
+
+            var scoreLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_resultsLightsPreset");
+            var redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
+            var defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
+
 
             if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Restart)
             {
@@ -264,24 +268,25 @@ namespace EventPlugin.UI.FlowCoordinators
                 var sn = _communityLeaderboard.GetField("selectedSong");
                 var po = sn.GetProperty("PlayerOptions");
                 var go = sn.GetProperty("GameOptions");
-                var ss = sn.GetProperty("Speed");
 
                 var d = sn.GetProperty("Beatmap");
                 var rs = results.GetProperty("unmodifiedScore");
                 var fc = results.GetProperty("fullCombo");
                 var ms = typeof(RSA);
 
-                var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, (int)po, (int)go, (int)(((float)ss) * 100));
+                var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, (int)po, (int)go);
 
                 var c = typeof(Client);
                 Action<bool> don = (b) =>
                 {
                     //TODO: Fix refresh freeze issue
+                    Logger.Success("Score upload compete!");
                     //if (b && _communityLeaderboard) _communityLeaderboard.Refresh();
                 };
-                var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, (int)(((float)ss) * 100), don);
+                var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
 
                 //Scoresaber leaderboards
+                /*
                 var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
                 var pdmt = ReflectionUtil.GetStaticType("PlayerDataModelSO, Assembly-CSharp");
                 var plm = Resources.FindObjectsOfTypeAll(plmt).First();
@@ -308,6 +313,25 @@ namespace EventPlugin.UI.FlowCoordinators
                     plsd.InvokeMethod("UpdateScoreData", results.GetProperty("score"), results.GetProperty("maxCombo"), results.GetProperty("fullCombo"), results.GetProperty("rank"));
                     plm.InvokeMethod("AddScore", dbm, results.GetProperty("unmodifiedScore"), gm);
                 }
+                */
+
+                //Sabotage
+                Action<string> teamSelected = null;
+                teamSelected = (team) =>
+                {
+                    var signed = RSA.SignSabotage(Plugin.PlayerId, team, results.unmodifiedScore);
+                    Client.SubmitSabotage(Plugin.PlayerId, team, results.unmodifiedScore, signed, (b) =>
+                    {
+                        Logger.Success("Sabotage submitted successfully!");
+                    });
+                    _teamSelectionViewController.TeamSelected -= teamSelected;
+                    _menuLightsManager.SetColorPreset(defaultLights, true);
+                    DismissViewController(_teamSelectionViewController);
+                    title = "TeamSaber";
+                };
+
+                _teamSelectionViewController.TeamSelected += teamSelected;
+                PresentViewController(_teamSelectionViewController, immediately: true);
 
                 //var song = _communityLeaderboard.selectedSong;
                 //string signed = RSA.SignScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));
@@ -335,6 +359,24 @@ namespace EventPlugin.UI.FlowCoordinators
                 }
                 */
             }
+
+            Action<ResultsViewController> resultsContinuePressed = null;
+            resultsContinuePressed = (e) =>
+            {
+                _resultsViewController.continueButtonPressedEvent -= resultsContinuePressed;
+                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
+                {
+                    title = "Who will you sabotage?";
+                    _menuLightsManager.SetColorPreset(redLights, true);
+                }
+                else _menuLightsManager.SetColorPreset(defaultLights, true);
+                DismissViewController(_resultsViewController);
+            };
+
+            _menuLightsManager.SetColorPreset(scoreLights, true);
+            _resultsViewController.Init(results, map, highScore);
+            _resultsViewController.continueButtonPressedEvent += resultsContinuePressed;
+            PresentViewController(_resultsViewController, null, true);
         }
     }
 }

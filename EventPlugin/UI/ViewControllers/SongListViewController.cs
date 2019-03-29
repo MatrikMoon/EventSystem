@@ -86,7 +86,7 @@ namespace EventPlugin.UI.ViewControllers
                 (songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 0f);
                 (songsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, 0f);
 
-                _songsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading weekly songs...", new Vector2(0f, -25f));
+                _songsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading songs...", new Vector2(0f, -25f));
                 _songsDownloadingText.fontSize = 8f;
                 _songsDownloadingText.alignment = TextAlignmentOptions.Center;
                 _songsDownloadingText.rectTransform.anchorMin = new Vector2(.5f, .7f);
@@ -128,7 +128,7 @@ namespace EventPlugin.UI.ViewControllers
                 songsTableView.didSelectCellWithIdxEvent += SongsTableView_didSelectCellWithIdxEvent;
                 songsTableView.dataSource = this;
 
-                //Set to view "Downloading weekly songs..." until the songs are set
+                //Set to view "Downloading songs..." until the songs are set
                 songsTableView.gameObject.SetActive(false);
                 _pageUpButton.gameObject.SetActive(false);
                 _pageDownButton.gameObject.SetActive(false);
@@ -201,14 +201,6 @@ namespace EventPlugin.UI.ViewControllers
         public TableCell CellForIdx(int row)
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
-
-            EventShared.Logger.Warning($"{availableSongs}");
-            EventShared.Logger.Warning($"{availableSongs.Count}");
-            EventShared.Logger.Warning($"{row}");
-            EventShared.Logger.Warning($"{availableSongs[row]}");
-            EventShared.Logger.Warning($"{availableSongs[row].Beatmap}");
-            EventShared.Logger.Warning($"{availableSongs[row].Beatmap.level}");
-            EventShared.Logger.Warning("HERE");
 
             IBeatmapLevel song = availableSongs[row].Beatmap.level;
 

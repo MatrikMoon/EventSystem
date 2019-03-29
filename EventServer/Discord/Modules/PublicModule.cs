@@ -540,7 +540,7 @@ namespace EventServer.Discord.Modules
                     foreach (ScoreConstruct item in x.Scores)
                     {
                         var percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
-                        finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Speed + $"% ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
+                        finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
                         if (Config.ServerFlags.HasFlag(ServerFeatures.Tokens))
                         {
                             if (place == 1) finalMessage += " (+3 Tokens)";
