@@ -29,11 +29,11 @@ namespace EventPlugin.Misc
     {
         private static string discordCommunityUrl = "http://networkauditor.org";
 #if DEBUG
-        //private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
+        //private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
 #else
-        //private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
+        //private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
@@ -56,28 +56,44 @@ namespace EventPlugin.Misc
 
             byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);
 
-            SharedCoroutineStarter.instance.StartCoroutine(SubmitScoreCoroutine(scoreData, scoreUploadedCallback));
+            SharedCoroutineStarter.instance.StartCoroutine(PostProtoCoroutine(scoreData, $"{discordCommunityApi}/submit/", scoreUploadedCallback));
+        }
+
+        [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
+        public static void SubmitSabotage(ulong playerId, string teamId, int score, string signed, Action<bool> sabotagedCallback = null)
+        {
+            //Build score object
+            Sabotage s = new Sabotage
+            {
+                PlayerId = playerId.ToString(),
+                TeamId = teamId,
+                Score = score,
+                Signed = signed
+            };
+
+            byte[] sabotageData = ProtobufHelper.SerializeProtobuf(s);
+
+            SharedCoroutineStarter.instance.StartCoroutine(PostProtoCoroutine(sabotageData, $"{discordCommunityApi}/sabotage/", sabotagedCallback));
         }
 
         //Post a score to the server
-        private static IEnumerator SubmitScoreCoroutine(byte[] proto, Action<bool> scoreUploadedCallback = null)
+        private static IEnumerator PostProtoCoroutine(byte[] proto, string address, Action<bool> postCompleteCallback = null)
         {
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
 
-            UnityWebRequest www = UnityWebRequest.Post($"{discordCommunityApi}/submit/", o.ToString());
+            UnityWebRequest www = UnityWebRequest.Post(address, o.ToString());
             www.timeout = 30;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error(www.error);
-                scoreUploadedCallback?.Invoke(false);
+                postCompleteCallback?.Invoke(false);
             }
             else
             {
-                Logger.Success("Score upload complete!");
-                scoreUploadedCallback?.Invoke(true);
+                postCompleteCallback?.Invoke(true);
             }
         }
 
@@ -88,7 +104,7 @@ namespace EventPlugin.Misc
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetDataForDiscordCommunityPlugin(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
+        public static void GetData(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
         {
             SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId));
         }
@@ -106,9 +122,9 @@ namespace EventPlugin.Misc
         //GET the user's profile data from the server
         private static IEnumerator GetUserData(SongListViewController slvc, string steamId)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getplayerstats/{steamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/playerstats/{steamId}");
 #if DEBUG
-            Logger.Info($"GETTING PLAYER DATA: {discordCommunityApi}/getplayerstats/{steamId}");
+            Logger.Info($"GETTING PLAYER DATA: {discordCommunityApi}/playerstats/{steamId}");
 #endif
             www.timeout = 30;
             yield return www.SendWebRequest();
@@ -142,15 +158,15 @@ namespace EventPlugin.Misc
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error parsing getplayerstats data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing getplayerstats data: {e}");
+                    Logger.Error($"Error parsing playerstats data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing playerstats data: {e}");
                 }
             }
         }
 
         private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, Rarity rarity, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getsongleaderboards/{songId}/{(int)difficulty}/{(int)rarity}/{teamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songId}/{(int)difficulty}/{(int)rarity}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -191,13 +207,12 @@ namespace EventPlugin.Misc
             }
         }
 
-        //GET the weekly songs from the server, then start the Download coroutine to download and display them
-        //TODO: Time complexity here is a mess.
+        //GET the teams from the server
         private static IEnumerator GetTeams(SongListViewController slvc)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getteams/");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/teams/");
 #if DEBUG
-            Logger.Info($"REQUESTING TEAMS: {discordCommunityApi}/getteams/");
+            Logger.Info($"REQUESTING TEAMS: {discordCommunityApi}/teams/");
 #endif
             www.timeout = 30;
             yield return www.SendWebRequest();
@@ -218,33 +233,35 @@ namespace EventPlugin.Misc
                     var node = JSON.Parse(www.downloadHandler.text);
                     foreach (var team in node)
                     {
-                        Team.allTeams.Add(new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]));
+                        var teamObject = new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]);
+                        teamObject.Score = team.Value["score"];
+                        Team.allTeams.Add(teamObject);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error parsing getteams data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing getteams data: {e}");
+                    Logger.Error($"Error parsing teams data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing teams data: {e}");
                     yield break;
                 }
             }
         }
 
-        //GET the weekly songs from the server, then start the Download coroutine to download and display them
+        //GET the songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
         private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/getweeklysongs/");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/songs/");
 #if DEBUG
-            Logger.Info($"REQUESTING WEEKLY SONGS: {discordCommunityApi}/getweeklysongs/");
+            Logger.Info($"REQUESTING SONGS: {discordCommunityApi}/songs/");
 #endif
             www.timeout = 30;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logger.Error($"Error getting weekly songs: {www.error}");
-                slvc.DownloadErrorHappened($"Error getting weekly songs: {www.error}");
+                Logger.Error($"Error getting songs: {www.error}");
+                slvc.DownloadErrorHappened($"Error getting songs: {www.error}");
             }
             else
             {
@@ -266,13 +283,15 @@ namespace EventPlugin.Misc
 
                         if (newSong.Difficulty == LevelDifficulty.Auto) newSong.Difficulty = Player.Instance.GetPreferredDifficulty(OstHelper.IsOst(newSong.SongId));
 
+                        Logger.Warning($"ADDING SONG: {newSong.SongName} {newSong.Difficulty}");
+
                         songs.Add(newSong);
                     }
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Error parsing getweeklysong data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing getweeklysong data: {e}");
+                    Logger.Error($"Error parsing getsong data: {e}");
+                    slvc.DownloadErrorHappened($"Error parsing getsong data: {e}");
                     yield break;
                 }
 

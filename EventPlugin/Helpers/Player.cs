@@ -115,7 +115,6 @@ namespace EventPlugin.Helpers
         {
             //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
             var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
-            IDifficultyBeatmap ret = level.beatmapLevelData.GetDifficultyBeatmap(desiredCharacteristic, difficulty);
 
             IDifficultyBeatmap[] availableMaps =
                 level
@@ -124,6 +123,8 @@ namespace EventPlugin.Helpers
                 .difficultyBeatmaps
                 .OrderBy(x => x.difficulty)
                 .ToArray();
+
+            IDifficultyBeatmap ret = availableMaps.FirstOrDefault(x => x.difficulty == difficulty);
 
             if (ret == null)
             {

@@ -16,9 +16,6 @@ namespace EventPlugin.Helpers
         public GameOptions GameOptions { get; set; }
         public PlayerOptions PlayerOptions { get; set; }
 
-        //TEMPORARY - TeamSaber
-        public float Speed { get; set; }
-
         //Necessary overrides for being used as a key in a Dictionary
         public static bool operator ==(Song a, Song b)
         {

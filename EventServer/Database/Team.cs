@@ -61,7 +61,6 @@ namespace EventServer.Database
                 SimpleSql.ExecuteCommand($"UPDATE teamTable SET teamName = \'{name}\' WHERE teamId = \'{TeamId}\'");
             }
         }
-
         public string Captain
         {
             get
@@ -73,7 +72,6 @@ namespace EventServer.Database
                 SimpleSql.ExecuteCommand($"UPDATE teamTable SET captainId = \'{value}\' WHERE teamId = \'{TeamId}\'");
             }
         }
-
         public string Color
         {
             get
@@ -84,6 +82,17 @@ namespace EventServer.Database
             {
                 var color = Regex.Replace(value, "[^a-zA-Z0-9#]", "");
                 SimpleSql.ExecuteCommand($"UPDATE teamTable SET color = \'{color}\' WHERE teamId = \'{TeamId}\'");
+            }
+        }
+        public int Score
+        {
+            get
+            {
+                return Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT score FROM teamTable WHERE teamId = \'{TeamId}\'", "score").First());
+            }
+            set
+            {
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET score = \'{value}\' WHERE teamId = \'{TeamId}\'");
             }
         }
 

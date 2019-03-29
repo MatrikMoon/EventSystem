@@ -1,8 +1,4 @@
-﻿using CustomUI.BeatSaber;
-using CustomUI.UIElements;
-using System.Reflection;
-using EventPlugin.Misc;
-using UnityEngine;
+﻿using System.Reflection;
 using VRUI;
 
 /**
@@ -11,6 +7,7 @@ using VRUI;
 
 namespace EventPlugin.UI.ViewControllers
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     public class BottomViewController : VRUIViewController
     {
         [Obfuscation(Exclude = false, Feature = "-rename;")]
