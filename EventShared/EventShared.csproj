@@ -75,9 +75,15 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o "$(TargetPath)_confused" "$(TargetPath)"
-xcopy /y "$(TargetPath)_confused" "$(TargetPath)"</PostBuildEvent>
+xcopy /y "$(TargetPath)_confused" "$(TargetPath)"
+"$(SolutionDir)rebrand.bat TeamSaberPlugin EventPlugin"
+"$(SolutionDir)rebrand.bat TeamSaberServer EventServer"
+"$(SolutionDir)rebrand.bat TeamSaberShared EventShared"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)protoc\protoc.exe" --proto_path="$(SolutionDir)EventShared" --csharp_out="$(SolutionDir)EventShared" "$(SolutionDir)EventShared\score.proto" "$(SolutionDir)EventShared\sabotage.proto"</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)protoc\protoc.exe" --proto_path="$(SolutionDir)EventShared" --csharp_out="$(SolutionDir)EventShared" "$(SolutionDir)EventShared\score.proto" "$(SolutionDir)EventShared\sabotage.proto"
+"$(SolutionDir)rebrand.bat EventPlugin TeamSaberPlugin"
+"$(SolutionDir)rebrand.bat EventServer TeamSaberServer"
+"$(SolutionDir)rebrand.bat EventShared TeamSaberShared"</PreBuildEvent>
   </PropertyGroup>
 </Project>
