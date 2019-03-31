@@ -1,6 +1,7 @@
 ﻿using CustomUI.BeatSaber;
 using EventPlugin.Helpers;
 using System;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using VRUI;
@@ -22,7 +23,7 @@ namespace EventPlugin.UI.ViewControllers
         {
             if (firstActivation && activationType == ActivationType.AddedToHierarchy)
             {
-                var teams = Team.allTeams;
+                var teams = Team.allTeams.OrderBy(x => x.Score).ToList();
 
                 float buttonWidth = 50f;
                 float buttonHeight = 10f;
