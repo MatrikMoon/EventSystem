@@ -9,9 +9,13 @@ EXIT /B 0
     for /r "%~dp0" %%P in ("*.cs") do (
         set PATHS=!PATHS! "%%~fP"
         set NAMES=!NAMES! "%%~nP%%~xP"
+		set currentPath=%%~fP
+		set currentPathNoObj=!currentPath:\obj\=!
 		
-		echo REPLACING IN "%%~fP"
-		call :replace-in-file %~1 %~2 "%%~fP"
+		if !currentPath!==!currentPathNoObj! (
+			echo REPLACING IN "%%~fP"
+			call :replace-in-file %~1 %~2 "%%~fP"
+		)
     )
 EXIT /B 0
 
