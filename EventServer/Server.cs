@@ -140,7 +140,7 @@ namespace EventServer
                                 newScore.SetScore(s.Score_, s.FullCombo);
 
                                 //Only send message if player is registered
-                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
+                                //if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
                             }
 
                             return new HttpResponse()
@@ -355,12 +355,18 @@ namespace EventServer
             
             Logger.Info($"HTTP Server listening on {Dns.GetHostName()}");
 
-#if DEBUG
+#if (DEBUG && TEAMSABER)
             int port = 3708; //My vhost is set up to direct to 3708 when the /api-teamsaber-beta/ route is followed
-            //int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
-#else
+#elif (!DEBUG && TEAMSABER)
             int port = 3707;
-            //int port = 3703;
+#elif (DEBUG && DISCORDCOMMUNITY)
+            int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
+#elif (!DEBUG && DISCORDCOMMUNITY)
+            int port = 3703;
+#elif DEBUG
+            int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
+#elif !DEBUG
+            int port = 3703;
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);
             httpServer.Listen();

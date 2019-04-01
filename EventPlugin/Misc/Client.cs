@@ -28,13 +28,20 @@ namespace EventPlugin.Misc
     class Client
     {
         private static string discordCommunityUrl = "http://networkauditor.org";
-#if DEBUG
+#if (DEBUG && TEAMSABER)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
-        //private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
-#else
+#elif (!DEBUG && TEAMSABER)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
-        //private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+#elif (DEBUG && DISCORDCOMMUNITY)
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
+#elif (!DEBUG && DISCORDCOMMUNITY)
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+#elif DEBUG
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
+#elif !DEBUG
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
+
         private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
