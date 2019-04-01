@@ -506,7 +506,7 @@ namespace EventServer.Discord.Modules
                 {
                     Player player = Player.GetByDiscordMetion(user.Mention);
                     if (player == null) await ReplyAsync("That user has not registered with the bot yet");
-                    else if ((isCaptain && !isAdmin) && player.Team!= "-1") await ReplyAsync("This person is already on a team");
+                    else if (isCaptain && !isAdmin && player.Team!= "-1") await ReplyAsync("This person is already on a team");
                     else CommunityBot.ChangeTeam(player, currentTeam, setToCaptain);
                 }
                 else await ReplyAsync("You are not authorized to assign that role");
