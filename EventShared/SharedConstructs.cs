@@ -9,7 +9,7 @@ namespace EventShared
 {
     public static class SharedConstructs
     {
-        public static string Name => "TeamSaberPlugin";
+        public static string Name => "EventPlugin";
         public static string Version => "0.1.4";
         public static int VersionCode => 014;
         public static string Changelog =

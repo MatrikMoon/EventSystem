@@ -36,7 +36,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TeamSaber|AnyCPU'">
     <OutputPath>bin\TeamSaber\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TEAMSABER</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -226,13 +226,13 @@
   <Import Project="..\packages\Fody.3.1.3\build\Fody.targets" Condition="Exists('..\packages\Fody.3.1.3\build\Fody.targets')" />
   <Import Project="..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets')" />
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)rebrand.bat" EventPlugin TeamSaberPlugin
-"$(SolutionDir)rebrand.bat" EventServer TeamSaberServer
-"$(SolutionDir)rebrand.bat" EventShared TeamSaberShared</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)rebrand.bat" EventPlugin $(ConfigurationName)Plugin
+"$(SolutionDir)rebrand.bat" EventServer $(ConfigurationName)Server
+"$(SolutionDir)rebrand.bat" EventShared $(ConfigurationName)Shared</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)rebrand.bat" TeamSaberPlugin EventPlugin
-"$(SolutionDir)rebrand.bat" TeamSaberServer EventServer
-"$(SolutionDir)rebrand.bat" TeamSaberShared EventShared</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)rebrand.bat" $(ConfigurationName)Plugin EventPlugin
+"$(SolutionDir)rebrand.bat" $(ConfigurationName)Server EventServer
+"$(SolutionDir)rebrand.bat" $(ConfigurationName)Shared EventShared</PostBuildEvent>
   </PropertyGroup>
 </Project>
