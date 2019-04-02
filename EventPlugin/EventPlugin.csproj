@@ -142,9 +142,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)rebrand.bat" EventPlugin TeamSaberPlugin
-"$(SolutionDir)rebrand.bat" EventServer TeamSaberServer
-"$(SolutionDir)rebrand.bat" EventShared TeamSaberShared</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)rebrand.bat" EventPlugin $(ConfigurationName)Plugin
+"$(SolutionDir)rebrand.bat" EventServer $(ConfigurationName)Server
+"$(SolutionDir)rebrand.bat" EventShared $(ConfigurationName)Shared</PreBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.3.1.3\build\Fody.targets" Condition="Exists('..\packages\Fody.3.1.3\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -157,8 +157,8 @@
   <Import Project="..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets')" />
   <PropertyGroup>
     <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o Confused\ "$(TargetPath)"
-"$(SolutionDir)rebrand.bat" TeamSaberPlugin EventPlugin
-"$(SolutionDir)rebrand.bat" TeamSaberServer EventServer
-"$(SolutionDir)rebrand.bat" TeamSaberShared EventShared</PostBuildEvent>
+"$(SolutionDir)rebrand.bat" $(ConfigurationName)Plugin EventPlugin
+"$(SolutionDir)rebrand.bat" $(ConfigurationName)Server EventServer
+"$(SolutionDir)rebrand.bat" $(ConfigurationName)Shared EventShared</PostBuildEvent>
   </PropertyGroup>
 </Project>

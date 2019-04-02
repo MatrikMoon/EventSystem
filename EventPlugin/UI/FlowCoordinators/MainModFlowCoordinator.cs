@@ -125,7 +125,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void BSUtilsDisableOtherPlugins()
         {
-            BS_Utils.Gameplay.Gamemode.NextLevelIsIsolated("TeamSaberPlugin");
+            BS_Utils.Gameplay.Gamemode.NextLevelIsIsolated("EventPlugin");
             Logger.Success("Disabled game-modifying plugins through bs_utils :)");
         }
 

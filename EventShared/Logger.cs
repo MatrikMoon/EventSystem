@@ -4,7 +4,7 @@ namespace EventShared
 {
     public class Logger
     {
-        private const string prefix = "[TeamSaberPlugin]: ";
+        private const string prefix = "[EventPlugin]: ";
 
         public static void Error(string message)
         {

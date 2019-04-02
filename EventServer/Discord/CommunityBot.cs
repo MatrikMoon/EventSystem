@@ -43,10 +43,12 @@ namespace EventServer.Discord
         {
             if (_client.ConnectionState == ConnectionState.Connected)
             {
-#if DEBUG
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
-#else
+#if (!DEBUG && TEAMSABER)
                 var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
+#elif (!DEBUG && DISCORDCOMMUNITY)
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+#elif DEBUG
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
 #endif
                 guild.TextChannels.ToList().Where(x => x.Name == channel).First().SendMessageAsync(message);
             }
@@ -54,10 +56,12 @@ namespace EventServer.Discord
 
         public static async void ChangeRarity(Player player, Rarity rarity)
         {
-#if DEBUG
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
-#else
+#if (!DEBUG && TEAMSABER)
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
+#elif (!DEBUG && DISCORDCOMMUNITY)
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+#elif DEBUG
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
 #endif
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
@@ -87,10 +91,12 @@ namespace EventServer.Discord
 
         public static async void ChangeTeam(Player player, Team team, bool captain = false)
         {
-#if DEBUG
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
-#else
+#if (!DEBUG && TEAMSABER)
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
+#elif (!DEBUG && DISCORDCOMMUNITY)
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
+#elif DEBUG
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
 #endif
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
             var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
