@@ -20,6 +20,7 @@ EXIT /B 0
 EXIT /B 0
 
 :replace-in-file
+	setlocal disabledelayedexpansion
 	set search=%~1
     set replace=%~2
     set textFile=%~3
@@ -27,6 +28,7 @@ EXIT /B 0
 	
 	for /f "delims=" %%i in ('findstr /n "^" "%textFile%"') do (
 		set "line=%%i"
+		
 		setlocal enabledelayedexpansion
 		set "line=!line:*:=!"
 		if ["!line!"]==[""] (
