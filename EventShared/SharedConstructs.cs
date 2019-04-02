@@ -26,7 +26,8 @@ namespace EventShared
             "0.1.1: TeamSaber speed event!\n" +
             "0.1.2: Speed restart exploit hotfix\n" +
             "0.1.3: First beta for unified event plugin\n" +
-            "0.1.4: Sabotage update!\n";
+            "0.1.4: Sabotage update!\n" +
+            "0.1.5: Updated to BS 0.13.1\n";
 
         public enum Rarity
         {

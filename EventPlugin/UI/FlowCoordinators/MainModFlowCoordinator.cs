@@ -180,7 +180,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
                 gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
 
-                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, null, SongFinished);
+                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, false, null, SongFinished);
             };
 
             //Load audio if it's custom
@@ -238,6 +238,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     results.gameplayModifiers,
                     playerSettings,
                     null,
+                    false,
                     null,
                     SongFinished
                 );
