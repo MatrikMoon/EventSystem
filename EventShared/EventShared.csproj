@@ -76,14 +76,9 @@
   <PropertyGroup>
     <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o "$(TargetPath)_confused" "$(TargetPath)"
 xcopy /y "$(TargetPath)_confused" "$(TargetPath)"
-"$(SolutionDir)rebrand.bat" $(ConfigurationName)Plugin EventPlugin
-"$(SolutionDir)rebrand.bat" $(ConfigurationName)Server EventServer
-"$(SolutionDir)rebrand.bat" $(ConfigurationName)Shared EventShared</PostBuildEvent>
+"$(SolutionDir)rebrand.bat" "$(ConfigurationName)Plugin,$(ConfigurationName)Server,$(ConfigurationName)Shared" "EventPlugin,EventServer,EventShared"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)protoc\protoc.exe" --proto_path="$(SolutionDir)EventShared" --csharp_out="$(SolutionDir)EventShared" "$(SolutionDir)EventShared\score.proto" "$(SolutionDir)EventShared\sabotage.proto"
-"$(SolutionDir)rebrand.bat" EventPlugin $(ConfigurationName)Plugin
-"$(SolutionDir)rebrand.bat" EventServer $(ConfigurationName)Server
-"$(SolutionDir)rebrand.bat" EventShared $(ConfigurationName)Shared</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)rebrand.bat" "EventPlugin,EventServer,EventShared" "$(ConfigurationName)Plugin,$(ConfigurationName)Server,$(ConfigurationName)Shared"</PreBuildEvent>
   </PropertyGroup>
 </Project>
