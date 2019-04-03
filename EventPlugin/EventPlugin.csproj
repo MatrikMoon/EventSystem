@@ -142,7 +142,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)rebrand.bat" "EventPlugin,EventServer,EventShared" "$(ConfigurationName)Plugin,$(ConfigurationName)Server,$(ConfigurationName)Shared"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.3.1.3\build\Fody.targets" Condition="Exists('..\packages\Fody.3.1.3\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -154,7 +155,6 @@
   </Target>
   <Import Project="..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.3.1.0\build\Costura.Fody.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o Confused\ "$(TargetPath)"
-"$(SolutionDir)rebrand.bat" "$(ConfigurationName)Plugin,$(ConfigurationName)Server,$(ConfigurationName)Shared" "EventPlugin,EventServer,EventShared"</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o Confused\ "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

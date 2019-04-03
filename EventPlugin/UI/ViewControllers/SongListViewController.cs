@@ -12,7 +12,7 @@ using VRUI;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
- * modified for the DiscordCommunityPlugin
+ * modified for the EventPlugin
  */
 
 namespace EventPlugin.UI.ViewControllers
