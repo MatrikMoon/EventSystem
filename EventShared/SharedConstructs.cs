@@ -13,7 +13,7 @@ namespace EventShared
         public static string Version => "0.1.4";
         public static int VersionCode => 014;
         public static string Changelog =
-            "0.0.1: First attempt at fork from DiscordCommunityPlugin\n" +
+            "0.0.1: First attempt at fork from EventPlugin\n" +
             "0.0.2: Sample update\n" +
             "0.0.3: Made Teams dynamically loaded from server\n" +
             "0.0.4: Difficulties are now decided by the server, fixed isolation, unified oculus / steam versions\n" +

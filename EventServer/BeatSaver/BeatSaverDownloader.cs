@@ -36,7 +36,7 @@ namespace EventServer.BeatSaver
                 //Download zip
                 using (var client = new WebClient())
                 {
-                    client.Headers.Add("user-agent", "DiscordCommunityServer");
+                    client.Headers.Add("user-agent", "EventServer");
 
                     try
                     {

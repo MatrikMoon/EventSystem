@@ -19,7 +19,7 @@ using SongLoaderPlugin.OverrideClasses;
 
 /*
  * Created by Moon on 9/9/2018
- * Communicates with a running DiscordCommunityServer
+ * Communicates with a running EventServer
  */
 
 namespace EventPlugin.Misc

@@ -48,7 +48,7 @@ namespace EventPlugin.Misc
                 string songId = null;
 
                 //If the song is an OST, just send the hash
-                if (DiscordCommunityShared.OstHelper.IsOst(songHash))
+                if (EventShared.OstHelper.IsOst(songHash))
                 {
                     songId = songHash;
                 }
@@ -62,7 +62,7 @@ namespace EventPlugin.Misc
                 var g = b.GetProperty("gameplayMode");
                 var rs = e.GetProperty("score");
                 var fc = e.GetProperty("fullCombo");
-                var ms = typeof(DiscordCommunityShared.RSA);
+                var ms = typeof(EventShared.RSA);
                 var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), (int)g, fc, rs);
 
                 var c = typeof(Misc.Client);

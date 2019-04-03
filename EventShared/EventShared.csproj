@@ -75,10 +75,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o "$(TargetPath)_confused" "$(TargetPath)"
-xcopy /y "$(TargetPath)_confused" "$(TargetPath)"
-"$(SolutionDir)rebrand.bat" "$(ConfigurationName)Plugin,$(ConfigurationName)Server,$(ConfigurationName)Shared" "EventPlugin,EventServer,EventShared"</PostBuildEvent>
+xcopy /y "$(TargetPath)_confused" "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)rebrand.bat" "EventPlugin,EventServer,EventShared" "$(ConfigurationName)Plugin,$(ConfigurationName)Server,$(ConfigurationName)Shared"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>
