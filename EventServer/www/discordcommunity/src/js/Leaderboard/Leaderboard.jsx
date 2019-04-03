@@ -18,8 +18,8 @@ class Leaderboard extends React.Component {
   }
 
   componentDidMount() {
-    //fetch('../weeklysongs')
-    fetch('/api-teamsaber/getweeklysongs/')
+    fetch('../weeklysongs')
+    //fetch('/api-teamsaber/getweeklysongs/')
       .then(response => {
         return response.json();
       })
@@ -31,8 +31,8 @@ class Leaderboard extends React.Component {
         if (this.state.teams != null) this.fetchLeaderboard(json[item].songId, json[item].difficulty, "-1");
       });
     
-    //fetch('../getteams')
-    fetch('/api-teamsaber/getteams/')
+    fetch('../getteams')
+    //fetch('/api-teamsaber/getteams/')
       .then(response => {
         return response.json();
       })
@@ -49,6 +49,12 @@ class Leaderboard extends React.Component {
   }
 
   render() {
+    /*
+    let teamButtons = <div className="team-button-panel">
+                        {this.renderTeamButtons()}
+                        <button className="btn" onClick={() => this.fetchLeaderboard(null, null, "-1")}><a>Mixed</a></button>
+                      </div>;
+    */
     return (
       <div className="Leaderboard transition-item">
         <header className="header">
@@ -59,12 +65,15 @@ class Leaderboard extends React.Component {
           <div className="leaderboard-panel">
             <div className="song-button-panel">
               {this.renderSongButtons()}
-            </div>
-            <div className="team-button-panel">
-              {this.renderTeamButtons()}
-            <button className="btn" onClick={() => this.fetchLeaderboard(null, null, "-1")}><a>Mixed</a></button>
-            </div>
+            </div> 
             <div className="leaderboard-item-panel">
+              <LeaderboardItem
+                key="header"
+                header="true"
+                place="Place"
+                username="Username"
+                team="Team"
+                score="Score"/>
               {this.renderLeaderboardItems()}
             </div>
           </div>
@@ -92,7 +101,10 @@ class Leaderboard extends React.Component {
                               place={leaderboardData[x].place}
                               username={leaderboardData[x].player}
                               team={this.state.teams[leaderboardData[x].team].teamName}
-                              score={leaderboardData[x].score}/>
+                              score={leaderboardData[x].score}
+                              textColor={this.getTextColor(this.state.teams[leaderboardData[x].team].color)}
+                              backgroundColor={this.state.teams[leaderboardData[x].team].color}
+                              backgroundHighlight={this.getHighlightColor(this.state.teams[leaderboardData[x].team].color)}/>
                         );
     }
   }
@@ -125,8 +137,8 @@ class Leaderboard extends React.Component {
     newDifficulty = (difficulty !== null) ? difficulty : this.state.selectedDifficulty;
     newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songId;
     
-    //fetch('../leaderboard')
-    fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
+    fetch('../leaderboard')
+    //fetch(`/api-teamsaber/getsongleaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
       .then(response => {
         return response.json();
       })

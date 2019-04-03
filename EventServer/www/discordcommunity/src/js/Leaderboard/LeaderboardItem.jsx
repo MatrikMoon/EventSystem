@@ -13,11 +13,17 @@ class LeaderboardItem extends Component {
       </div>
     );
     */
+    
+    let teamButton = <button className="btn red middle"><span>{this.props.team}</span></button>;
+    if (this.props.backgroundColor != null && this.props.backgroundHighlight != null && this.props.textColor != null) {
+      teamButton = <button className="btn middle" style={{'--background-color': `${this.props.backgroundColor}`, color: `${this.props.textColor}`, '--background-highlight': `${this.props.backgroundHighlight}`}}><span>{this.props.team}</span></button>;
+    }
+
     return (
-      <header className="item">
+      <header className={this.props.header === "true" ? "item titlebar" : "item"}>
         <button className="btn purple left"><span>#{this.props.place}</span></button>
         <button className="btn blue middle"><span>{this.props.username}</span></button>
-        <button className="btn red middle"><span>({this.props.team})</span></button>
+        {teamButton}
         <button className="btn orange right"><span>{this.props.score}</span></button>
       </header>
     );
