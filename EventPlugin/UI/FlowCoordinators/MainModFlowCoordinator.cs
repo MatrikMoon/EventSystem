@@ -37,7 +37,7 @@ namespace EventPlugin.UI.FlowCoordinators
         private PlatformLeaderboardViewController _globalLeaderboard;
         private CustomLeaderboardController _communityLeaderboard;
         //private BottomViewController _bottomViewController;
-        private TeamSelectionViewController _teamSelectionViewController;
+        //private TeamSelectionViewController _teamSelectionViewController;
         private ResultsViewController _resultsViewController;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -77,7 +77,7 @@ namespace EventPlugin.UI.FlowCoordinators
             if (_primaryLevelCollection == null) _primaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_secondaryLevelCollection == null) _secondaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_extrasLevelCollection == null) _extrasLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_teamSelectionViewController == null) _teamSelectionViewController = BeatSaberUI.CreateViewController<TeamSelectionViewController>();
+            //if (_teamSelectionViewController == null) _teamSelectionViewController = BeatSaberUI.CreateViewController<TeamSelectionViewController>();
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
                 SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
@@ -287,7 +287,6 @@ namespace EventPlugin.UI.FlowCoordinators
                 var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
 
                 //Scoresaber leaderboards
-                /*
                 var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
                 var pdmt = ReflectionUtil.GetStaticType("PlayerDataModelSO, Assembly-CSharp");
                 var plm = Resources.FindObjectsOfTypeAll(plmt).First();
@@ -314,25 +313,6 @@ namespace EventPlugin.UI.FlowCoordinators
                     plsd.InvokeMethod("UpdateScoreData", results.GetProperty("score"), results.GetProperty("maxCombo"), results.GetProperty("fullCombo"), results.GetProperty("rank"));
                     plm.InvokeMethod("AddScore", dbm, results.GetProperty("unmodifiedScore"), gm);
                 }
-                */
-
-                //Sabotage
-                Action<string> teamSelected = null;
-                teamSelected = (team) =>
-                {
-                    var signed = RSA.SignSabotage(Plugin.PlayerId, team, results.unmodifiedScore);
-                    Client.SubmitSabotage(Plugin.PlayerId, team, results.unmodifiedScore, signed, (b) =>
-                    {
-                        Logger.Success("Sabotage submitted successfully!");
-                    });
-                    _teamSelectionViewController.TeamSelected -= teamSelected;
-                    _menuLightsManager.SetColorPreset(defaultLights, true);
-                    DismissViewController(_teamSelectionViewController);
-                    title = "TeamSaber";
-                };
-
-                _teamSelectionViewController.TeamSelected += teamSelected;
-                PresentViewController(_teamSelectionViewController, immediately: true);
 
                 //var song = _communityLeaderboard.selectedSong;
                 //string signed = RSA.SignScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));
@@ -365,12 +345,7 @@ namespace EventPlugin.UI.FlowCoordinators
             resultsContinuePressed = (e) =>
             {
                 _resultsViewController.continueButtonPressedEvent -= resultsContinuePressed;
-                if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared)
-                {
-                    title = "Who will you sabotage?";
-                    _menuLightsManager.SetColorPreset(redLights, true);
-                }
-                else _menuLightsManager.SetColorPreset(defaultLights, true);
+                _menuLightsManager.SetColorPreset(defaultLights, true);
                 DismissViewController(_resultsViewController);
             };
 
