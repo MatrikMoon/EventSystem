@@ -506,7 +506,7 @@ namespace EventServer.Discord.Modules
                 {
                     Player player = Player.GetByDiscordMetion(user.Mention);
                     if (player == null) await ReplyAsync("That user has not registered with the bot yet");
-                    else if ((isCaptain && !isAdmin) && player.Team!= "-1") await ReplyAsync("This person is already on a team");
+                    else if (isCaptain && !isAdmin && player.Team!= "-1") await ReplyAsync("This person is already on a team");
                     else CommunityBot.ChangeTeam(player, currentTeam, setToCaptain);
                 }
                 else await ReplyAsync("You are not authorized to assign that role");
@@ -540,7 +540,7 @@ namespace EventServer.Discord.Modules
                     foreach (ScoreConstruct item in x.Scores)
                     {
                         var percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
-                        finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Speed + $"% ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
+                        finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
                         if (Config.ServerFlags.HasFlag(ServerFeatures.Tokens))
                         {
                             if (place == 1) finalMessage += " (+3 Tokens)";

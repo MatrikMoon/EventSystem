@@ -42,17 +42,6 @@ namespace EventPlugin.Misc
             }
         }
 
-        private static float _speed;
-        public static float Speed
-        {
-            get { return _speed; }
-            set
-            {
-                _speed = value;
-                SaveConfig();
-            }
-        }
-
         private static string ConfigLocation = $"{Environment.CurrentDirectory}/UserData/TeamSaber.txt";
 
         public static void LoadConfig()
@@ -63,7 +52,6 @@ namespace EventPlugin.Misc
                 SooperSecretSetting = Convert.ToBoolean(node["SooperSecretSetting"].Value);
                 MirrorMode = Convert.ToBoolean(node["Mirror"].Value);
                 StaticLights = Convert.ToBoolean(node["StaticLights"].Value);
-                Speed = float.Parse(node["Speed"].Value);
             }
             else
             {
@@ -71,7 +59,6 @@ namespace EventPlugin.Misc
                 SooperSecretSetting = false;
                 MirrorMode = false;
                 StaticLights = false;
-                Speed = 1f;
             }
         }
 
@@ -81,7 +68,6 @@ namespace EventPlugin.Misc
             node["SooperSecretSetting"] = SooperSecretSetting;
             node["Mirror"] = MirrorMode;
             node["StaticLights"] = StaticLights;
-            node["Speed"] = Speed;
             File.WriteAllText(ConfigLocation, node.ToString());
         }
     }

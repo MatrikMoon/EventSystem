@@ -1,4 +1,5 @@
-﻿using static EventShared.SharedConstructs;
+﻿using System.Reflection;
+using static EventShared.SharedConstructs;
 
 /**
  * Created by Moon on 3/8/2019
@@ -7,17 +8,21 @@
 
 namespace EventPlugin.Helpers
 {
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Song
     {
         public string SongId { get; set; }
         public string SongName { get; set; }
         public LevelDifficulty Difficulty { get; set; }
-        public IDifficultyBeatmap Beatmap { get; set; }
-        public GameOptions GameOptions { get; set; }
-        public PlayerOptions PlayerOptions { get; set; }
 
-        //TEMPORARY - TeamSaber
-        public float Speed { get; set; }
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
+        public IDifficultyBeatmap Beatmap { get; set; }
+
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
+        public GameOptions GameOptions { get; set; }
+
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
+        public PlayerOptions PlayerOptions { get; set; }
 
         //Necessary overrides for being used as a key in a Dictionary
         public static bool operator ==(Song a, Song b)

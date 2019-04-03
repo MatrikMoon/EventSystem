@@ -20,6 +20,52 @@ namespace EventServer
         {
             var route_config = new List<Route>() {
                 new Route {
+                    Name = "Sabotage Receiver",
+                    UrlRegex = @"^/sabotage/$",
+                    Method = "POST",
+                    Callable = (HttpRequest request) => {
+                        try
+                        {
+                            //Get JSON object from request content
+                            JSONNode node = JSON.Parse(WebUtility.UrlDecode(request.Content));
+
+                            //Get Score object from JSON
+                            Sabotage s = Sabotage.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
+
+                            if (RSA.SignSabotage(Convert.ToUInt64(s.PlayerId), s.TeamId, s.Score) == s.Signed &&
+                                Player.Exists(s.PlayerId) &&
+                                Player.IsRegistered(s.PlayerId) &&
+                                Team.Exists(s.TeamId))
+                            {
+                                var team = new Team(s.TeamId);
+                                team.Score -= s.Score;
+
+                                Discord.CommunityBot.SendToScoreChannel($"{new Player(s.PlayerId).DiscordMention} has sabotaged {team.TeamName} for {s.Score} points, bringing them down to {team.Score}!");
+                            }
+                            else
+                            {
+                                Logger.Warning($"{new Player(s.PlayerId).DiscordName} SUBMITTED INVALID SABOTAGE AIMED AT {s.TeamId} FOR {s.Score} POINTS");
+                            }
+
+                            return new HttpResponse()
+                            {
+                                ReasonPhrase = "OK",
+                                StatusCode = "200"
+                            };
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error($"{e}");
+                        }
+
+                        return new HttpResponse()
+                        {
+                            ReasonPhrase = "Bad Request",
+                            StatusCode = "400"
+                        };
+                     }
+                },
+                new Route {
                     Name = "Score Receiver",
                     UrlRegex = @"^/submit/$",
                     Method = "POST",
@@ -32,6 +78,7 @@ namespace EventServer
                             //Get Score object from JSON
                             Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
 
+                            /*
                             Logger.Warning($"SUBMISSION INFO:\n" +
                                 $"{s.DifficultyLevel}\n" +
                                 $"{s.FullCombo}\n" +
@@ -48,6 +95,7 @@ namespace EventServer
                                 $"{Player.Exists(s.SteamId)}\n" +
                                 $"{(Player.Exists(s.SteamId) ? $"{Player.IsRegistered(s.SteamId)}" : "player did not exist in the first place")}" +
                                 $"\n\n");
+                            */
 
                             if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed &&
                                 Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel) &&
@@ -73,7 +121,8 @@ namespace EventServer
                                 oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                             }
 
-                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
+                            //if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
+                            if (true)
                             {
                                 Player player = new Player(s.SteamId);
 
@@ -81,15 +130,17 @@ namespace EventServer
                                 oldScore?.SetOld();
 
                                 //Player stats
-                                if (oldScoreNumber > 0) player.IncrementPersonalBestsBeaten();
-                                else player.IncrementSongsPlayed();
-                                player.TotalScore += s.Score_ - oldScoreNumber; //Increment total score only by the amount the score has increased
+                                //if (oldScoreNumber > 0) player.IncrementPersonalBestsBeaten();
+                                //else player.IncrementSongsPlayed();
+                                player.IncrementSongsPlayed();
+                                //player.TotalScore += s.Score_ - oldScoreNumber; //Increment total score only by the amount the score has increased
+                                player.TotalScore += s.Score_; //Increment total score only by the amount the score has increased
 
                                 Database.Score newScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                                 newScore.SetScore(s.Score_, s.FullCombo);
 
                                 //Only send message if player is registered
-                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
+                                //if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
                             }
 
                             return new HttpResponse()
@@ -111,8 +162,8 @@ namespace EventServer
                      }
                 },
                 new Route {
-                    Name = "Weekly Song Getter",
-                    UrlRegex = @"^/getweeklysongs/$",
+                    Name = "Song Getter",
+                    UrlRegex = @"^/songs/$",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         JSONNode json = new JSONObject();
@@ -138,7 +189,7 @@ namespace EventServer
                 },
                 new Route {
                     Name = "Team Getter",
-                    UrlRegex = @"^/getteams/",
+                    UrlRegex = @"^/teams/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         string source = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
@@ -152,6 +203,7 @@ namespace EventServer
                             item["captainId"] = x.Captain;
                             item["teamName"] = x.TeamName;
                             item["color"] = x.Color;
+                            item["score"] = x.Score;
                             json.Add(x.TeamId, item);
                         });
 
@@ -167,7 +219,7 @@ namespace EventServer
                 //with new id's and it'd fill the database with junk. Should verify with steam/oculus
                 new Route {
                     Name = "Player Stats Getter",
-                    UrlRegex = @"^/getplayerstats/",
+                    UrlRegex = @"^/playerstats/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         string steamId = request.Path.Substring(request.Path.LastIndexOf("/") + 1);
@@ -207,7 +259,7 @@ namespace EventServer
                 },
                 new Route {
                     Name = "Song Leaderboard Getter",
-                    UrlRegex = @"^/getsongleaderboards/",
+                    UrlRegex = @"^/leaderboards/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
                         string[] requestData = request.Path.Substring(1).Split('/');
@@ -237,7 +289,7 @@ namespace EventServer
                                 x.Scores.Take(take).ToList().ForEach(y =>
                                 {
                                     JSONNode scoreNode = new JSONObject();
-                                    scoreNode["score"] = y.Speed;
+                                    scoreNode["score"] = y.Score;
                                     scoreNode["player"] = new Player(y.PlayerId).DiscordName;
                                     scoreNode["place"] = place;
                                     scoreNode["fullCombo"] = y.FullCombo ? "true" : "false";
@@ -280,7 +332,7 @@ namespace EventServer
                             scores.Take(10).ToList().ForEach(x =>
                             {
                                 JSONNode node = new JSONObject();
-                                node["score"] = x.Speed;
+                                node["score"] = x.Score;
                                 node["player"] = new Player(x.PlayerId).DiscordName;
                                 node["place"] = place;
                                 node["fullCombo"] = x.FullCombo ? "true" : "false";
@@ -303,11 +355,17 @@ namespace EventServer
             
             Logger.Info($"HTTP Server listening on {Dns.GetHostName()}");
 
-#if DEBUG
-            //int port = 3708; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
+#if (DEBUG && TEAMSABER)
+            int port = 3708; //My vhost is set up to direct to 3708 when the /api-teamsaber-beta/ route is followed
+#elif (!DEBUG && TEAMSABER)
+            int port = 3707;
+#elif (DEBUG && DISCORDCOMMUNITY)
             int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
-#else
-            //int port = 3707;
+#elif (!DEBUG && DISCORDCOMMUNITY)
+            int port = 3703;
+#elif DEBUG
+            int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
+#elif !DEBUG
             int port = 3703;
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);

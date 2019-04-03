@@ -1,10 +1,8 @@
-﻿using CustomUI.BeatSaber;
-using CustomUI.MenuButton;
+﻿using CustomUI.MenuButton;
 using CustomUI.Settings;
+using EventPlugin.Helpers;
 using EventPlugin.Misc;
-using EventPlugin.UI;
 using EventPlugin.UI.FlowCoordinators;
-using EventPlugin.UI.ViewControllers;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -13,10 +11,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using VRUI;
 using Logger = EventShared.Logger;
-using EventPlugin.Helpers;
 
 /**
  * Created by Moon on 8/23/2018
@@ -28,19 +23,16 @@ using EventPlugin.Helpers;
 namespace EventPlugin
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class CommunityUI : MonoBehaviour
+    class EventUI : MonoBehaviour
     {
-        public static CommunityUI instance;
-        public string communitySongPlayed; //TODO: Obselete? It's no longer used because ReturnToUI is gone
+        public static EventUI instance;
+        public string songPlayed; //TODO: Obselete? It's no longer used because ReturnToUI is gone
 
         private MainModFlowCoordinator _mainModFlowCoordinator;
         private RectTransform _mainMenuRectTransform;
         private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
         private MenuButton _communityButton;
-
-        //TEMPORARY - TeamSaber
-        public static SliderViewController _slider;
 
         //Called on Menu scene load (only once in lifetime)
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -50,7 +42,7 @@ namespace EventPlugin
             {
                 return;
             }
-            new GameObject("TeamSaber Plugin").AddComponent<CommunityUI>();
+            new GameObject("TeamSaber Plugin").AddComponent<EventUI>();
         }
 
         //Called on object creation (only once in lifetime)
@@ -126,26 +118,7 @@ namespace EventPlugin
 
         private void CreateSettingsMenu()
         {
-            /*
-            var subMenu = SettingsUI.CreateSubMenu("Community Plugin");
-            var sooperSecretSetting = subMenu.AddBool("Sooper Secret Setting");
-            sooperSecretSetting.GetValue += () => Config.SooperSecretSetting;
-            sooperSecretSetting.SetValue += (value) => Config.SooperSecretSetting = value;
 
-            var mirrorSetting = subMenu.AddBool("Mirror Mode");
-            mirrorSetting.GetValue += () => Config.MirrorMode;
-            mirrorSetting.SetValue += (b) => Config.MirrorMode = b;
-
-            var staticSetting = subMenu.AddBool("Static Lights");
-            mirrorSetting.GetValue += () => Config.StaticLights;
-            mirrorSetting.SetValue += (b) => Config.StaticLights = b;
-            */
-
-            var mainSub = SettingsUI.CreateSubMenu("TeamSaber");
-            _slider = mainSub.AddSlider("", "Song Speed", 1f, 3f, .01f, false);
-            _slider.GetValue += () => Config.Speed;
-            _slider.SetValue += (f) => Config.Speed = f;
-            _slider.Init();
         }
     }
 }

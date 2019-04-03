@@ -9,11 +9,11 @@ namespace EventShared
 {
     public static class SharedConstructs
     {
-        public static string Name => "TeamSaberPlugin";
-        public static string Version => "0.1.3";
-        public static int VersionCode => 013;
+        public static string Name => "EventPlugin";
+        public static string Version => "0.1.4";
+        public static int VersionCode => 014;
         public static string Changelog =
-            "0.0.1: First attempt at fork from DiscordCommunityPlugin\n" +
+            "0.0.1: First attempt at fork from EventPlugin\n" +
             "0.0.2: Sample update\n" +
             "0.0.3: Made Teams dynamically loaded from server\n" +
             "0.0.4: Difficulties are now decided by the server, fixed isolation, unified oculus / steam versions\n" +
@@ -25,7 +25,9 @@ namespace EventShared
             "0.1.0: Updated for Beat Saber 0.13.0\n" +
             "0.1.1: TeamSaber speed event!\n" +
             "0.1.2: Speed restart exploit hotfix\n" +
-            "0.1.3: First beta for unified event plugin\n";
+            "0.1.3: First beta for unified event plugin\n" +
+            "0.1.4: Sabotage update!\n" +
+            "0.1.5: Updated to BS 0.13.1\n";
 
         public enum Rarity
         {
