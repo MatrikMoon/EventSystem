@@ -44,6 +44,11 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DefineConstants>TEAMSABER</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DiscordCommunity|AnyCPU'">
+    <OutputPath>bin\DiscordCommunity\</OutputPath>
+    <DefineConstants>DISCORDCOMMUNITY</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -114,13 +119,14 @@
     <Compile Include="Misc\ParallelCoroutine.cs" />
     <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Misc\SongIdHelper.cs" />
-    <Compile Include="UI\ViewControllers\SpeedViewController.cs" />
-    <Compile Include="UI\CommunityUI.cs" />
+    <Compile Include="UI\ViewControllers\BottomViewController.cs" />
+    <Compile Include="UI\EventUI.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
+    <Compile Include="UI\ViewControllers\TeamSelectionViewController.cs" />
     <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
@@ -134,7 +140,6 @@
       <Name>EventShared</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

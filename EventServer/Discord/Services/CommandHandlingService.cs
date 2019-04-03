@@ -29,7 +29,7 @@ namespace EventServer.Discord.Services
             _discord.MessageUpdated += MessageUpdatedAsync;
             _discord.ReactionAdded += ReactionAddedAsync;
             _discord.ReactionRemoved += ReactionRemovedAsync;
-            _discord.UserVoiceStateUpdated += UserVoiceStateUpdated;
+            //_discord.UserVoiceStateUpdated += UserVoiceStateUpdated;
         }
 
         public async Task InitializeAsync()
@@ -79,9 +79,11 @@ namespace EventServer.Discord.Services
             ReactionRemoved?.Invoke(message, reaction);
         }
 
+        /*
         private async Task UserVoiceStateUpdated(SocketUser socketUser, SocketVoiceState socketVoiceState, SocketVoiceState userVoiceStateUpdated)
         {
 
         }
+        */
     }
 }

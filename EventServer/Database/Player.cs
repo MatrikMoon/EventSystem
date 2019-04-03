@@ -153,14 +153,12 @@ namespace EventServer.Database
         //Necessary overrides for comparison
         public static bool operator ==(Player a, Player b)
         {
-            if (b == null) return false;
-            return a.GetHashCode() == b.GetHashCode();
+            return a.GetHashCode() == b?.GetHashCode();
         }
 
         public static bool operator !=(Player a, Player b)
         {
-            if (b == null) return false;
-            return a.GetHashCode() != b.GetHashCode();
+            return a.GetHashCode() != b?.GetHashCode();
         }
 
         public override bool Equals(object obj)

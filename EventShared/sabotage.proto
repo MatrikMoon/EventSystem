@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message Sabotage {
+  string player_id = 1;
+  string team_id = 2;
+  int32 score = 3;
+  string signed = 4;
+}
