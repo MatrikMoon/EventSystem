@@ -29,7 +29,7 @@
 
             .leaderboard-item-panel {
                 .btn {
-                    width: 25%;
+                    min-width: 25%;
                     margin: 0px;
                     box-shadow: none;
 
@@ -50,9 +50,13 @@
                     display: flex;
                     font-size: calc(10px + 0.5vmin);
                     border-radius: 15px;
-                    border: 2px solid #2ecc71;
-                    padding: 0px;
-                    margin-bottom: -2px;
+                    padding: 1px;
+
+                    &.titlebar {
+                        border: 2px solid #2ecc71;
+                        padding: 0px;
+                        margin-bottom: 2px;
+                    }
                 }
             }
 
