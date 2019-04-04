@@ -1,0 +1,90 @@
+.Leaderboard {
+    text-align: center;
+    transition: transform 0.5s;
+
+    .header, .page {
+        background-color: #282c34;
+        min-height: 10vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: calc(10px + 2vmin);
+        color: white;
+    }
+
+    .btn {
+        margin: 10px;
+    }
+
+    .page {
+        min-height: 90vh;
+        font-size: calc(10px + 1.5vmin);
+    
+        .leaderboard-panel {
+            border-radius: 25px;
+            border: 2px solid #2ecc71;
+            padding: 20px;
+            margin: 15px;
+
+            .leaderboard-item-panel {
+                .btn {
+                    min-width: 25%;
+                    margin: 0px;
+                    box-shadow: none;
+
+                    &.left {
+                        border-radius: 11px 0px 0px 11px;
+                    }
+
+                    &.middle {
+                        border-radius: 0px;
+                    }
+
+                    &.right {
+                        border-radius: 0px 11px 11px 0px;
+                    }
+                }
+                
+                .item {
+                    display: flex;
+                    font-size: calc(10px + 0.5vmin);
+                    border-radius: 15px;
+                    padding: 1px;
+
+                    &.titlebar {
+                        border: 2px solid #2ecc71;
+                        padding: 0px;
+                        margin-bottom: 2px;
+                    }
+                }
+            }
+
+            .song-button-panel, .team-button-panel {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    }
+
+    .link {
+        color: #61dafb;
+    }
+
+    &.transition-appear {
+        transform: translate3d(0, 100%, 0);
+    }
+    
+    &.transition-appear.transition-appear-active {
+        transform: translate3d(0, 0, 0);
+    }
+
+    &.transition-leave {
+        transform: translate3d(0, 0, 0);
+    }
+    
+    &.transition-leave.transition-leave-active {
+        transform: translate3d(0, 100%, 0);
+    }
+}

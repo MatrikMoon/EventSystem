@@ -1,0 +1,2 @@
+@echo off
+rebrand.bat "TeamSaberPlugin,TeamSaberServer,TeamSaberShared,DiscordCommunityPlugin,DiscordCommunityServer,DiscordCommunityShared" "EventPlugin,EventServer,EventShared,EventPlugin,EventServer,EventShared"
