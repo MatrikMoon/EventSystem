@@ -36,8 +36,6 @@ namespace EventPlugin.UI.FlowCoordinators
         private GeneralNavigationController _mainModNavigationController;
         private PlatformLeaderboardViewController _globalLeaderboard;
         private CustomLeaderboardController _communityLeaderboard;
-        //private BottomViewController _bottomViewController;
-        //private TeamSelectionViewController _teamSelectionViewController;
         private ResultsViewController _resultsViewController;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -45,15 +43,13 @@ namespace EventPlugin.UI.FlowCoordinators
         {
             if (activationType == ActivationType.AddedToHierarchy)
             {
-                title = "TeamSaber";
+                title = "EventPlugin";
 
                 //TODO: The following is a potential memory leak...????
                 //If the navigation controller has previously been dismissd, it will cause
                 //an error if something tries to dismiss it again
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
                 _mainModNavigationController.didFinishEvent += (_) => mfc.InvokeMethod("DismissFlowCoordinator", this, null, false);
-
-                //_bottomViewController = BeatSaberUI.CreateViewController<BottomViewController>();
 
                 ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
@@ -77,7 +73,6 @@ namespace EventPlugin.UI.FlowCoordinators
             if (_primaryLevelCollection == null) _primaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_secondaryLevelCollection == null) _secondaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_extrasLevelCollection == null) _extrasLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            //if (_teamSelectionViewController == null) _teamSelectionViewController = BeatSaberUI.CreateViewController<TeamSelectionViewController>();
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
                 SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
@@ -160,10 +155,8 @@ namespace EventPlugin.UI.FlowCoordinators
 
                 GameplayModifiers gameplayModifiers = new GameplayModifiers();
                 gameplayModifiers.noFail = song.GameOptions.HasFlag(GameOptions.NoFail);
-                //gameplayModifiers.noArrows = song.GameOptions.HasFlag(GameOptions.NoArrows);
                 gameplayModifiers.noBombs = song.GameOptions.HasFlag(GameOptions.NoBombs);
                 gameplayModifiers.noObstacles = song.GameOptions.HasFlag(GameOptions.NoObstacles);
-                //gameplayModifiers.noWalls = song.GameOptions.HasFlag(GameOptions.NoWalls);
                 if (song.GameOptions.HasFlag(GameOptions.SlowSong))
                 {
                     gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;

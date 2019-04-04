@@ -9,7 +9,7 @@ namespace EventServer
     {
         public static string BotToken { get; set; }
         public static string BetaBotToken { get; set; }
-        public static ServerFeatures ServerFlags { get; set; }
+        public static ServerFlags ServerFlags { get; set; }
 
         private static string ConfigLocation = $"{Environment.CurrentDirectory}/Config.txt";
 
@@ -20,7 +20,7 @@ namespace EventServer
                 JSONNode node = JSON.Parse(File.ReadAllText(ConfigLocation));
                 BotToken = node["BotToken"].Value;
                 BetaBotToken = node["BetaBotToken"].Value;
-                ServerFlags = (ServerFeatures)Convert.ToInt32(node["ServerFlags"].Value);
+                ServerFlags = (ServerFlags)Convert.ToInt32(node["ServerFlags"].Value);
             }
             else
             {

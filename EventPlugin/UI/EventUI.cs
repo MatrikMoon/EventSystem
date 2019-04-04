@@ -42,7 +42,7 @@ namespace EventPlugin
             {
                 return;
             }
-            new GameObject("TeamSaber Plugin").AddComponent<EventUI>();
+            new GameObject("EventPlugin").AddComponent<EventUI>();
         }
 
         //Called on object creation (only once in lifetime)
