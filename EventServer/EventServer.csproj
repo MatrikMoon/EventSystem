@@ -46,6 +46,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DiscordCommunity|AnyCPU'">
     <OutputPath>bin\DiscordCommunity\</OutputPath>
+    <DefineConstants>DISCORDCOMMUNITY</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Costura, Version=3.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
