@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EventShared;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -194,11 +195,12 @@ namespace EventServer.Database
         }
 
         //Returns a dictionary of steamIds and scores for the designated song and rarity
+        //NOTE: If the song is on "auto" difficulty, it will return all difficulties
         public static List<ScoreConstruct> GetScoresForSong(SongConstruct s, Rarity rarity = Rarity.All, string teamId = "-1")
         {
-            List<ScoreConstruct> ret = new List<ScoreConstruct>();
+            List <ScoreConstruct> ret = new List<ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficulty, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' AND difficulty = {(int)s.Difficulty} {((Rarity)rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT steamId, score, fullCombo, difficulty, rarity, team FROM scoreTable WHERE songId = \'{s.SongId}\' {(s.Difficulty != LevelDifficulty.Auto ? $"AND difficulty = {(int)s.Difficulty}" : "")} {(rarity != Rarity.All ? $"AND rarity = \'{rarity}\'" : null)} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -268,16 +270,19 @@ namespace EventServer.Database
                 if (y.Scores.Count > 0)
                 {
                     var player = new Player(y.Scores.ElementAt(0).PlayerId);
+                    if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
                     playersToGiveTokens[player] += 3;
                 }
                 if (y.Scores.Count > 1)
                 {
                     var player = new Player(y.Scores.ElementAt(1).PlayerId);
+                    if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
                     playersToGiveTokens[player] += 2;
                 }
                 if (y.Scores.Count > 2)
                 {
                     var player = new Player(y.Scores.ElementAt(2).PlayerId);
+                    if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
                     playersToGiveTokens[player] += 1;
                 }
             });

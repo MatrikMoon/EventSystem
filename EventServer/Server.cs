@@ -98,7 +98,7 @@ namespace EventServer
                             */
 
                             if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed &&
-                                Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel) &&
+                                Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel, true) &&
                                 !new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).Old &&
                                 Player.Exists(s.SteamId) &&
                                 Player.IsRegistered(s.SteamId))
@@ -316,7 +316,7 @@ namespace EventServer
                                 Difficulty = (LevelDifficulty)difficulty
                             };
 
-                            if (!Song.Exists(songId, (LevelDifficulty)difficulty))
+                            if (!Song.Exists(songId, (LevelDifficulty)difficulty, true))
                             {
                                 Logger.Error($"Song doesn't exist for leaderboards: {songId}");
                                 return new HttpResponse()

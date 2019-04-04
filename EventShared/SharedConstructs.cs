@@ -88,7 +88,7 @@ namespace EventShared
         }
 
         [Flags]
-        public enum ServerFeatures
+        public enum ServerFlags
         {
             None = 0,
             Teams = 1,

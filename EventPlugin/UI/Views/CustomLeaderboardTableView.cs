@@ -44,8 +44,9 @@ namespace EventPlugin.UI.Views
             //TODO: Wouldn't it be easier to set anchors to .5 across the board, then work from there?
             newTransform.anchorMin = new Vector2(currentTransform.anchorMin.x, currentTransform.anchorMin.y);
             newTransform.anchorMax = new Vector2(currentTransform.anchorMax.x, currentTransform.anchorMax.y);
-            newTransform.anchoredPosition = new Vector2(currentTransform.anchoredPosition.x, currentTransform.anchoredPosition.y - 15); //In 0.12.0, the table was moved slightly to the right. Here I'm moving it back. Oh, and down.
-            newTransform.sizeDelta = new Vector2(currentTransform.sizeDelta.x - 66, currentTransform.sizeDelta.y - 18);
+            newTransform.anchoredPosition = new Vector2(currentTransform.anchoredPosition.x - 4, currentTransform.anchoredPosition.y - 4); //In 0.12.0, the table was moved slightly to the right. Here I'm moving it back. Oh, and down.
+                                                                                                                                           //In 0.13.1, it was changed again slightly. Just wanted to note that
+            newTransform.sizeDelta = new Vector2(currentTransform.sizeDelta.x - 44, currentTransform.sizeDelta.y - 20);
 
             _cellInstance = Resources.FindObjectsOfTypeAll<LeaderboardTableCell>().First(x => x.name == "LeaderboardTableCell");
         }

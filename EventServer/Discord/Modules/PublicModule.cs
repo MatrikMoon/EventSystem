@@ -71,6 +71,39 @@ namespace EventServer.Discord.Modules
             return null;
         }
 
+        [Command("serverOptions")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ServerOptionsAsync([Remainder] string paramString = null)
+        {
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+
+            if (isAdmin)
+            {
+                if (null != paramString)
+                {
+                    //Load up the GameOptions and PlayerOptions
+                    ServerFlags features = Config.ServerFlags;
+                    foreach (ServerFlags o in Enum.GetValues(typeof(ServerFlags)))
+                    {
+                        var option = ParseArgs(paramString, o.ToString());
+                        if (option == "true") features = (features | o);
+                        else if (option == "false") features &= ~o;
+                    }
+                    Config.ServerFlags = features;
+                    Config.SaveConfig();
+
+                    await ReplyAsync($"Applied settings: {features.ToString()}");
+                }
+                else
+                {
+                    await ReplyAsync($"Current server options: {Config.ServerFlags.ToString()}");
+                }
+            }
+        }
+
         [Command("register")]
         [RequireContext(ContextType.Guild)]
         public async Task RegisterAsync(string steamId, string timezone = null, IGuildUser user = null)
@@ -190,7 +223,7 @@ namespace EventServer.Discord.Modules
                     songId = songId.Substring(0, songId.IndexOf("&"));
                 }
 
-                if (!Song.Exists(songId, parsedDifficulty))
+                if (!Song.Exists(songId, parsedDifficulty, true))
                 {
                     if (OstHelper.IsOst(songId))
                     {
@@ -258,7 +291,7 @@ namespace EventServer.Discord.Modules
             if (isAdmin)
             {
                 //If the server has tokens enabled, dish out tokens to the players now
-                if (Config.ServerFlags.HasFlag(ServerFeatures.Tokens))
+                if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
                 {
                     var tokenDispersal = GetTokenDispersal();
 
@@ -270,7 +303,7 @@ namespace EventServer.Discord.Modules
 
                 //Mark all songs and scores as old
                 MarkAllOld();
-                await ReplyAsync($"All songs and scores are marked as Old.{(Config.ServerFlags.HasFlag(ServerFeatures.Tokens) ? " Tokens dispersed." : "")} You may now add new songs.");
+                await ReplyAsync($"All songs and scores are marked as Old.{(Config.ServerFlags.HasFlag(ServerFlags.Tokens) ? " Tokens dispersed." : "")} You may now add new songs.");
             }
         }
 
@@ -532,16 +565,19 @@ namespace EventServer.Discord.Modules
 
                 if (x.Scores.Count > 0) //Don't print if no one submitted scores
                 {
-                    var maxScore = new BeatSaver.Song(songId).GetMaxScore(x.Difficulty);
                     var song = new Song(songId, x.Difficulty);
                     finalMessage += song.SongName + ":\n";
 
                     int place = 1;
                     foreach (ScoreConstruct item in x.Scores)
                     {
+                        //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
+                        //seeing as auto difficulty is what would be represented in the songconstruct
+                        var maxScore = new BeatSaver.Song(songId).GetMaxScore(item.Difficulty);
+
                         var percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                         finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
-                        if (Config.ServerFlags.HasFlag(ServerFeatures.Tokens))
+                        if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
                         {
                             if (place == 1) finalMessage += " (+3 Tokens)";
                             else if (place == 2) finalMessage += " (+2 Tokens)";
@@ -575,7 +611,7 @@ namespace EventServer.Discord.Modules
 
             foreach (var key in tokenDispersal.Keys)
             {
-                finalMessage += $"{key}: {tokenDispersal[key]}\n";
+                finalMessage += $"{key.DiscordName}: {tokenDispersal[key]}\n";
             }
 
             await ReplyAsync(finalMessage);

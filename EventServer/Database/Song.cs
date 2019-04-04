@@ -51,7 +51,7 @@ namespace EventServer.Database
         {
             SongId = songId;
             Difficulty = difficulty;
-            if (!Exists())
+            if (!Exists(true))
             {
                 //Add a placeholder, trigger song download from BeatSaver if it doesn't exist
                 SimpleSql.AddSong("", "", "", songId, difficulty, SharedConstructs.PlayerOptions.None, SharedConstructs.GameOptions.None);
@@ -72,14 +72,14 @@ namespace EventServer.Database
             }
         }
 
-        public bool Exists()
+        public bool Exists(bool allowAutoDifficulty = false)
         {
-            return Exists(SongId, Difficulty);
+            return Exists(SongId, Difficulty, allowAutoDifficulty);
         }
 
-        public static bool Exists(string songId, LevelDifficulty difficulty)
+        public static bool Exists(string songId, LevelDifficulty difficulty, bool allowAutoDifficulty = false)
         {
-            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND difficulty = {(int)difficulty} AND old = 0", "songId").Any();
+            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND (difficulty = {(int)difficulty}{(allowAutoDifficulty ? " OR difficulty = -1)" : ")")} AND old = 0", "songId").Any();
         }
     }
 }
