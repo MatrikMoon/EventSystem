@@ -1,18 +1,17 @@
-﻿using System;
-using System.Net.Http;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Discord;
-using Discord.WebSocket;
+﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
+using EventServer.Database;
 using EventServer.Discord.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static EventServer.Database.SimpleSql;
 using static EventShared.SharedConstructs;
-using EventServer.Database;
-using EventShared;
-using System.Text.RegularExpressions;
 
 namespace EventServer.Discord
 {
@@ -36,7 +35,14 @@ namespace EventServer.Discord
 
         public static void SendToScoreChannel(string message)
         {
-            SendToChannel("event-feed", message);
+#if (!DEBUG && TEAMSABER)
+            string channel = "event-feed";
+#elif (!DEBUG && DISCORDCOMMUNITY)
+            string channel = "event-scores";
+#elif DEBUG
+            string channel = "event-scores";
+#endif
+            SendToChannel(channel, message);
         }
 
         public static void SendToChannel(string channel, string message)

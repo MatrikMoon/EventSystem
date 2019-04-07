@@ -121,8 +121,7 @@ namespace EventServer
                                 oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                             }
 
-                            //if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
-                            if (true)
+                            if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
                             {
                                 Player player = new Player(s.SteamId);
 
@@ -130,17 +129,16 @@ namespace EventServer
                                 oldScore?.SetOld();
 
                                 //Player stats
-                                //if (oldScoreNumber > 0) player.IncrementPersonalBestsBeaten();
-                                //else player.IncrementSongsPlayed();
+                                if (oldScoreNumber > 0) player.IncrementPersonalBestsBeaten();
+                                else player.IncrementSongsPlayed();
                                 player.IncrementSongsPlayed();
-                                //player.TotalScore += s.Score_ - oldScoreNumber; //Increment total score only by the amount the score has increased
-                                player.TotalScore += s.Score_; //Increment total score only by the amount the score has increased
+                                player.TotalScore += s.Score_ - oldScoreNumber; //Increment total score only by the amount the score has increased
 
                                 Database.Score newScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
                                 newScore.SetScore(s.Score_, s.FullCombo);
 
                                 //Only send message if player is registered
-                                //if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
+                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
                             }
 
                             return new HttpResponse()

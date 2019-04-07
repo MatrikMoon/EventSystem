@@ -212,7 +212,7 @@ namespace EventPlugin.UI.ViewControllers
             cell.SetField("_beatmapCharacteristicAlphas", new float[0]);
             cell.SetField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
             cell.SetField("_bought", true);
-
+            
             return cell;
         }
 

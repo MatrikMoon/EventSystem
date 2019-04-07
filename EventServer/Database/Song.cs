@@ -70,6 +70,7 @@ namespace EventServer.Database
                     else SongName = "[Could not download song info]";
                 });
             }
+            else if (ExistsAsAutoDifficulty()) Difficulty = LevelDifficulty.Auto;
         }
 
         public bool Exists(bool allowAutoDifficulty = false)
@@ -80,6 +81,12 @@ namespace EventServer.Database
         public static bool Exists(string songId, LevelDifficulty difficulty, bool allowAutoDifficulty = false)
         {
             return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND (difficulty = {(int)difficulty}{(allowAutoDifficulty ? " OR difficulty = -1)" : ")")} AND old = 0", "songId").Any();
+        }
+
+        public bool ExistsAsAutoDifficulty() => ExistsAsAutoDifficulty(SongId);
+        public static bool ExistsAsAutoDifficulty(string songId)
+        {
+            return SimpleSql.ExecuteQuery($"SELECT * FROM songTable WHERE songId = \'{songId}\' AND difficulty = -1 AND old = 0", "songId").Any();
         }
     }
 }

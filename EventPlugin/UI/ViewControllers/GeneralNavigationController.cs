@@ -1,5 +1,4 @@
 ﻿using CustomUI.BeatSaber;
-using EventShared;
 using System;
 using System.Reflection;
 using UnityEngine.UI;
