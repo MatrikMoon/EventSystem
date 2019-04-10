@@ -209,7 +209,7 @@ namespace EventServer.Database
                             new ScoreConstruct
                             {
                                 PlayerId = reader["steamId"].ToString(),
-                                Score = Convert.ToInt64(reader["score"].ToString()),
+                                Score = Convert.ToInt32(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 Rarity = (Rarity)Convert.ToInt64(reader["rarity"].ToString()),
                                 TeamId = reader["team"].ToString(),
@@ -244,7 +244,7 @@ namespace EventServer.Database
                                 Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
                             },
                             new ScoreConstruct {
-                                Score = Convert.ToInt64(reader["score"].ToString()),
+                                Score = Convert.ToInt32(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 Rarity = (Rarity)Convert.ToInt64(reader["rarity"].ToString()),
                                 TeamId = reader["team"].ToString(),
@@ -293,7 +293,7 @@ namespace EventServer.Database
         public class ScoreConstruct
         {
             public string PlayerId { get; set; }
-            public long Score { get; set; }
+            public int Score { get; set; }
             public bool FullCombo { get; set; }
             public Rarity Rarity { get; set; }
             public string TeamId { get; set; }

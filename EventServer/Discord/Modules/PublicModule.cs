@@ -330,6 +330,7 @@ namespace EventServer.Discord.Modules
         }
 
         [Command("crunchRarities")]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task CrunchRaritiesAsync()
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
@@ -588,6 +589,49 @@ namespace EventServer.Discord.Modules
                     }
                     finalMessage += "\n";
                 }
+            });
+
+            //Deal with long messages
+            if (finalMessage.Length > 2000)
+            {
+                for (int i = 0; finalMessage.Length > 2000; i++)
+                {
+                    await ReplyAsync(finalMessage.Substring(0, finalMessage.Length > 2000 ? 2000 : finalMessage.Length));
+                    finalMessage = finalMessage.Substring(2000);
+                }
+            }
+            await ReplyAsync(finalMessage);
+        }
+
+        [Command("lava")]
+        public async Task LavaAsync()
+        {
+            string finalMessage = "-----Current team averages-----\n\n";
+
+            GetAllScores().ForEach(s =>
+            {
+                finalMessage += s.Name + ":\n\n";
+                Dictionary<string, double> finalAverages = new Dictionary<string, double>();
+
+                var maxPossiblePoints = new BeatSaver.Song(s.SongId).GetMaxScore(s.Difficulty);
+                GetAllTeams().ForEach(t =>
+                {
+                    finalAverages[t.TeamId] = 0;
+                    var scores = s.Scores.Where(sc => sc.TeamId == t.TeamId).Take(4).ToList();
+
+                    if (scores.Count < 4) finalMessage += $"Note: {t.TeamName} ({t.TeamId}) is missing {4 - scores.Count} scores.\n";
+
+                    while (scores.Count < 4) scores.Add(new ScoreConstruct() { Score = 0 }); //Fill out up to four scores
+                    scores.ForEach(sc => finalAverages[t.TeamId] += sc.Score);
+
+                    finalAverages[t.TeamId] = finalAverages[t.TeamId] / (maxPossiblePoints * 4);
+                });
+
+                finalMessage += "\n";
+
+                finalAverages.OrderByDescending(x => x.Value).ToList().ForEach(x => finalMessage += $"{new Team(x.Key).TeamName} - Average accuracy: {x.Value.ToString("P", CultureInfo.InvariantCulture)}\n");
+
+                finalMessage += "\n\n";
             });
 
             //Deal with long messages
