@@ -188,6 +188,14 @@
     <Compile Include="Discord\Services\PictureService.cs" />
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="Database\SimpleSql.cs" />
+    <Compile Include="EventSharedFiles\Logger.cs" />
+    <Compile Include="EventSharedFiles\OstHelper.cs" />
+    <Compile Include="EventSharedFiles\ProtobufHelper.cs" />
+    <Compile Include="EventSharedFiles\RSA.cs" />
+    <Compile Include="EventSharedFiles\Sabotage.cs" />
+    <Compile Include="EventSharedFiles\Score.cs" />
+    <Compile Include="EventSharedFiles\SharedConstructs.cs" />
+    <Compile Include="EventSharedFiles\SimpleJson.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -202,12 +210,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EventShared\EventShared.csproj">
-      <Project>{37b20d14-8113-478c-ad9f-0e7c7d9e6b3c}</Project>
-      <Name>EventShared</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

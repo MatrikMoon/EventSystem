@@ -20,15 +20,15 @@ using Logger = EventShared.Logger;
  * (https://github.com/andruzzzhka/BeatSaverDownloader/)
  */
 
-namespace EventPlugin
+namespace EventPlugin.UI
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class EventUI : MonoBehaviour
     {
         public static EventUI instance;
-        public string songPlayed; //TODO: Obselete? It's no longer used because ReturnToUI is gone
+        public BoolViewController noFailController;
 
-        private MainModFlowCoordinator _mainModFlowCoordinator;
+        public MainModFlowCoordinator _mainModFlowCoordinator; //TODO: Temporarily public, for nofail toggle
         private RectTransform _mainMenuRectTransform;
         private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
@@ -60,6 +60,7 @@ namespace EventPlugin
                 SceneManager.sceneLoaded += SceneManager_sceneLoaded;
                 SongLoader.SongsLoadedEvent += SongsLoaded;
                 CreateCommunitiyButton(); //sceneLoaded won't be called the first time
+                CreateSettings();
             }
         }
 
@@ -79,6 +80,7 @@ namespace EventPlugin
             yield return new WaitUntil(() => { return menuScenes.All(x => x.isLoaded); });
 
             CreateCommunitiyButton();
+            CreateSettings();
         }
 
         private void SongsLoaded(SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs)
@@ -94,8 +96,8 @@ namespace EventPlugin
             if (_mainModFlowCoordinator == null)
             {
                 _mainModFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<MainModFlowCoordinator>();
-                _mainModFlowCoordinator.mfc = _mainFlowCoordinator;
-                _mainModFlowCoordinator.mmvc = _mainMenuViewController;
+                _mainModFlowCoordinator.mainFlowCoordinator = _mainFlowCoordinator;
+                _mainModFlowCoordinator.mainMenuViewController = _mainMenuViewController;
             }
 
             try
@@ -112,6 +114,12 @@ namespace EventPlugin
                 Logger.Error("Error: " + e.Message);
                 Logger.Error(e.StackTrace);
             }
+        }
+
+        private void CreateSettings()
+        {
+            var subMenu = SettingsUI.CreateSubMenu("Team Saber");
+            noFailController = subMenu.AddBool("No Fail", "Play with no-fail enabled");
         }
     }
 }

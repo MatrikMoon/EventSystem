@@ -7,7 +7,7 @@ namespace EventShared
     {
         public static byte[] SerializeProtobuf(object proto)
         {
-            if (proto is Score || proto is Sabotage)
+            if (proto is Score)
             {
                 return ((IMessage)proto).ToByteArray();
             }

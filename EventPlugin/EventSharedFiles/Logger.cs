@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Reflection;
 
 namespace EventShared
 {
-    public class Logger
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
+    class Logger
     {
         private const string prefix = "[EventPlugin]: ";
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using static EventShared.SharedConstructs;
 
 /*
@@ -10,7 +11,8 @@ using static EventShared.SharedConstructs;
 
 namespace EventShared
 {
-    public class OstHelper
+    [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
+    class OstHelper
     {
         static OstHelper()
         {

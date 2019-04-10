@@ -205,14 +205,9 @@ namespace EventPlugin.UI.ViewControllers
             IBeatmapLevel song = availableSongs[row].Beatmap.level;
 
             cell.reuseIdentifier = "SongCell";
-            cell.GetField<UnityEngine.UI.Image>("_coverImage").sprite = song.coverImage;
-            cell.GetField<TextMeshProUGUI>("_songNameText").text = $"{song.songName}\n<size=80%>{song.songSubName}</size>";
-            cell.GetField<TextMeshProUGUI>("_authorText").text = song.songAuthorName;
-
-            cell.SetField("_beatmapCharacteristicAlphas", new float[0]);
-            cell.SetField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
+            cell.SetDataFromLevel(song);
             cell.SetField("_bought", true);
-            
+
             return cell;
         }
 

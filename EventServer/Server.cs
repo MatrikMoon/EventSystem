@@ -20,52 +20,6 @@ namespace EventServer
         {
             var route_config = new List<Route>() {
                 new Route {
-                    Name = "Sabotage Receiver",
-                    UrlRegex = @"^/sabotage/$",
-                    Method = "POST",
-                    Callable = (HttpRequest request) => {
-                        try
-                        {
-                            //Get JSON object from request content
-                            JSONNode node = JSON.Parse(WebUtility.UrlDecode(request.Content));
-
-                            //Get Score object from JSON
-                            Sabotage s = Sabotage.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
-
-                            if (RSA.SignSabotage(Convert.ToUInt64(s.PlayerId), s.TeamId, s.Score) == s.Signed &&
-                                Player.Exists(s.PlayerId) &&
-                                Player.IsRegistered(s.PlayerId) &&
-                                Team.Exists(s.TeamId))
-                            {
-                                var team = new Team(s.TeamId);
-                                team.Score -= s.Score;
-
-                                Discord.CommunityBot.SendToScoreChannel($"{new Player(s.PlayerId).DiscordMention} has sabotaged {team.TeamName} for {s.Score} points, bringing them down to {team.Score}!");
-                            }
-                            else
-                            {
-                                Logger.Warning($"{new Player(s.PlayerId).DiscordName} SUBMITTED INVALID SABOTAGE AIMED AT {s.TeamId} FOR {s.Score} POINTS");
-                            }
-
-                            return new HttpResponse()
-                            {
-                                ReasonPhrase = "OK",
-                                StatusCode = "200"
-                            };
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Error($"{e}");
-                        }
-
-                        return new HttpResponse()
-                        {
-                            ReasonPhrase = "Bad Request",
-                            StatusCode = "400"
-                        };
-                     }
-                },
-                new Route {
                     Name = "Score Receiver",
                     UrlRegex = @"^/submit/$",
                     Method = "POST",

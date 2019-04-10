@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EventPlugin</RootNamespace>
     <AssemblyName>EventPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
@@ -66,6 +66,9 @@
     <Reference Include="Costura, Version=3.1.0.0, Culture=neutral, PublicKeyToken=9919ef960d84173d, processorArchitecture=MSIL">
       <HintPath>..\packages\Costura.Fody.3.1.0\lib\net46\Costura.dll</HintPath>
     </Reference>
+    <Reference Include="Google.Protobuf, Version=3.7.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Protobuf.3.7.0\lib\net45\Google.Protobuf.dll</HintPath>
+    </Reference>
     <Reference Include="IllusionInjector, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Beat Saber_Data\Managed\IllusionInjector.dll</HintPath>
@@ -109,6 +112,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EventSharedFiles\Logger.cs" />
+    <Compile Include="EventSharedFiles\OstHelper.cs" />
+    <Compile Include="EventSharedFiles\ProtobufHelper.cs" />
+    <Compile Include="EventSharedFiles\RSA.cs" />
+    <Compile Include="EventSharedFiles\Sabotage.cs" />
+    <Compile Include="EventSharedFiles\Score.cs" />
+    <Compile Include="EventSharedFiles\SharedConstructs.cs" />
+    <Compile Include="EventSharedFiles\SimpleJson.cs" />
     <Compile Include="Helpers\Player.cs" />
     <Compile Include="Helpers\Song.cs" />
     <Compile Include="Helpers\Team.cs" />
@@ -134,12 +145,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EventShared\EventShared.csproj">
-      <Project>{37b20d14-8113-478c-ad9f-0e7c7d9e6b3c}</Project>
-      <Name>EventShared</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

@@ -1,6 +1,7 @@
 ﻿using EventShared;
 using IllusionPlugin;
 using UnityEngine.SceneManagement;
+using EventPlugin.UI;
 
 namespace EventPlugin
 {

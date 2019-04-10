@@ -2,7 +2,6 @@
 <Weavers>
   <Costura IncludeDebugSymbols='false' DisableCleanup='true'>
     <IncludeAssemblies>
-        EventShared
         Google.Protobuf
     </IncludeAssemblies>
   </Costura>
