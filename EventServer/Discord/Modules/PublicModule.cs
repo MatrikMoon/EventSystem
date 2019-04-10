@@ -617,7 +617,7 @@ namespace EventServer.Discord.Modules
                 GetAllTeams().ForEach(t =>
                 {
                     finalAverages[t.TeamId] = 0;
-                    var scores = s.Scores.Where(sc => sc.TeamId == t.TeamId).Take(4).ToList();
+                    var scores = s.Scores.OrderByDescending(x => x.Score).Where(sc => sc.TeamId == t.TeamId).Take(4).ToList();
 
                     if (scores.Count < 4) finalMessage += $"Note: {t.TeamName} ({t.TeamId}) is missing {4 - scores.Count} scores.\n";
 
