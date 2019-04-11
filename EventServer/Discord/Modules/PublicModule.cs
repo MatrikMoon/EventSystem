@@ -629,7 +629,7 @@ namespace EventServer.Discord.Modules
 
                 finalMessage += "\n";
 
-                finalAverages.OrderByDescending(x => x.Value).ToList().ForEach(x => finalMessage += $"{new Team(x.Key).TeamName} - Average accuracy: {x.Value.ToString("P", CultureInfo.InvariantCulture)}\n");
+                finalAverages.Where(x => new Team(x.Key).Score > 0).OrderByDescending(x => x.Value).ThenByDescending(x => new Team(x.Key).Score).ToList().ForEach(x => finalMessage += $"{new Team(x.Key).TeamName} - Average accuracy: {x.Value.ToString("P", CultureInfo.InvariantCulture)}\n");
 
                 finalMessage += "\n\n";
             });

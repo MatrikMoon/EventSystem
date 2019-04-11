@@ -144,11 +144,17 @@ namespace EventServer.Database
 
         public static List<string> GetPlayersInRarity(int rarity) => ExecuteQuery($"SELECT steamId FROM playerTable WHERE rarity = {rarity}", "steamId");
 
+        public void Liquidate()
+        {
+            ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE steamId = {SteamId}");
+            ExecuteCommand($"UPDATE playerTable SET liquidated = 1 WHERE steamId = \'{SteamId}\'");
+        }
+
         public bool Exists() => Exists(SteamId);
 
         public static bool Exists(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = {steamId}", "steamId").Any();
 
-        public static bool IsRegistered(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\'", "discordMention").Any(x => x.Length > 0);
+        public static bool IsRegistered(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\' AND NOT liquidated = 1", "discordMention").Any(x => x.Length > 0);
 
         //Necessary overrides for comparison
         public static bool operator ==(Player a, Player b)

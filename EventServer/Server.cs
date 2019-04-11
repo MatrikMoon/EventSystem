@@ -11,6 +11,12 @@ using static EventServer.Database.SimpleSql;
 using static EventShared.SharedConstructs;
 using System.Text.RegularExpressions;
 using EventServer.Database;
+using Quartz;
+using Quartz.Impl;
+using System.Threading.Tasks;
+using EventServer.Discord;
+using System.Globalization;
+using System.IO;
 
 namespace EventServer
 {
@@ -189,12 +195,16 @@ namespace EventServer
 
                         JSONNode json = new JSONObject();
 
-                        if (Player.Exists(steamId)) {
+                        if (Player.Exists(steamId) && Player.IsRegistered(steamId)) {
                             Player player = new Player(steamId);
 
                             json["version"] = VersionCode;
                             json["rarity"] = player.Rarity;
                             json["team"] = player.Team;
+                        }
+                        else if (Player.Exists(steamId) && !Player.IsRegistered(steamId))
+                        {
+                            json["message"] = "Your team has been eliminated.";
                         }
                         else
                         {
@@ -330,16 +340,130 @@ namespace EventServer
             Config.LoadConfig();
 
             //Start Discord bot
-            Thread thread1 = new Thread(new ThreadStart(Discord.CommunityBot.Start));
+            Thread thread1 = new Thread(new ThreadStart(CommunityBot.Start));
             thread1.Start();
 
             //Set up HTTP server
             Thread thread2 = new Thread(new ThreadStart(StartHttpServer));
             thread2.Start();
 
+            //Create elimination task
+            ScheduleElims();
+
             //Kill on enter press
             Console.ReadLine();
             return 0;
+        }
+
+        public static async void ScheduleElims()
+        {
+            DateTime scheduledStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, 0, 0);
+            if (scheduledStart < DateTime.Now) scheduledStart = scheduledStart.AddHours(1);
+            while (scheduledStart.Hour % 4 != 3) scheduledStart = scheduledStart.AddHours(1);
+
+            //DateTime scheduledStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
+            //if (scheduledStart < DateTime.Now) scheduledStart = scheduledStart.AddMinutes(1);
+
+            Logger.Warning($"Scheduling elim task start for: {scheduledStart}");
+
+            ISchedulerFactory schedFact = new StdSchedulerFactory();
+
+            IScheduler sched = await schedFact.GetScheduler();
+            await sched.Start();
+
+            IJobDetail job = JobBuilder.Create<SimpleJob>()
+                    .WithIdentity("job1", "group1")
+                    .Build();
+
+            ITrigger trigger = TriggerBuilder.Create()
+                .WithIdentity("trigger1", "group1")
+                .StartAt(scheduledStart)
+                .WithSimpleSchedule(x => x.WithIntervalInHours(4).RepeatForever())
+                //.WithSimpleSchedule(x => x.WithIntervalInSeconds(15).RepeatForever())
+                .Build();
+
+            await sched.ScheduleJob(job, trigger);
+        }
+
+        public class SimpleJob : IJob
+        {
+            public Task Execute(IJobExecutionContext context)
+            {
+                Logger.Warning($"BEGINNING ELIM TASK. BACKING UP DATABASE...");
+                File.Copy("EventDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
+                Logger.Success("Database backed up succsessfully.");
+
+                string finalMessage = "-----Current team averages-----\n\n";
+                bool koto = DateTime.Now.Hour % 8 != 3;
+                string designatedSong = koto ? "1046-707" : "9639-10572";
+
+                var song = GetAllScores().First(x => x.SongId == designatedSong);
+
+                finalMessage += song.Name + ":\n";
+                Dictionary<string, double> finalAverages = new Dictionary<string, double>();
+
+                var maxPossiblePoints = new BeatSaver.Song(song.SongId).GetMaxScore(song.Difficulty);
+                GetAllTeams().ForEach(t =>
+                {
+                    finalAverages[t.TeamId] = 0;
+                    var scores = song.Scores.OrderByDescending(x => x.Score).Where(sc => sc.TeamId == t.TeamId).Take(4).ToList();
+
+                    while (scores.Count < 4) scores.Add(new ScoreConstruct() { Score = 0 }); //Fill out up to four scores
+                    scores.ForEach(sc => finalAverages[t.TeamId] += sc.Score);
+
+                    finalAverages[t.TeamId] = finalAverages[t.TeamId] / (maxPossiblePoints * 4);
+                });
+
+                finalMessage += "\n\n";
+
+                finalAverages.Where(x => new Team(x.Key).Score > 0).OrderByDescending(x => x.Value).ThenByDescending(x => new Team(x.Key).Score).ToList().ForEach(x => finalMessage += $"{new Team(x.Key).TeamName} - Average accuracy: {x.Value.ToString("P", CultureInfo.InvariantCulture)}\n");
+                
+                finalMessage += "\n";
+
+                var finalAveragesOrdered = finalAverages.Where(x => new Team(x.Key).Score > 0).OrderByDescending(x => x.Value).ThenByDescending(x => new Team(x.Key).Score).ToArray();
+
+                string teamIdToEliminate = null;
+                Team teamToEliminate = null;
+
+                //Handle immunity
+                for (int i = finalAveragesOrdered.ToArray().Length - 1; i >= 0 && teamIdToEliminate == null; i--)
+                {
+                    var potentialElimination = finalAveragesOrdered[i].Key;
+                    var potentialTeamToEliminate = new Team(potentialElimination);
+
+                    if (potentialTeamToEliminate.Immunity)
+                    {
+                        finalMessage += $"{potentialTeamToEliminate.TeamName} would have been eliminated, but used their immunity from the last event.\n\n";
+                        potentialTeamToEliminate.Immunity = false;
+                    }
+                    else
+                    {
+                        teamIdToEliminate = potentialElimination;
+                        teamToEliminate = potentialTeamToEliminate;
+                    }
+                }
+
+                if (teamIdToEliminate == null) return Task.CompletedTask; //Event is over, nothing left to eliminate
+
+                finalMessage += $"Eliminating: {teamToEliminate.TeamName}\n";
+
+                //Eliminate team
+                teamToEliminate.Score = -1;
+                GetAllPlayers().Where(x => x.Team == teamIdToEliminate).ToList().ForEach(x => x.Liquidate());
+
+                //Deal with long messages
+                if (finalMessage.Length > 2000)
+                {
+                    for (int i = 0; finalMessage.Length > 2000; i++)
+                    {
+                        CommunityBot.SendToScoreChannel(finalMessage.Substring(0, finalMessage.Length > 2000 ? 2000 : finalMessage.Length));
+                        finalMessage = finalMessage.Substring(2000);
+                    }
+                }
+                CommunityBot.SendToScoreChannel(finalMessage);
+
+                return Task.CompletedTask;
+            }
         }
     }
 }

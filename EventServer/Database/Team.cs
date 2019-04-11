@@ -95,6 +95,17 @@ namespace EventServer.Database
                 SimpleSql.ExecuteCommand($"UPDATE teamTable SET score = \'{value}\' WHERE teamId = \'{TeamId}\'");
             }
         }
+        public bool Immunity
+        {
+            get
+            {
+                return Convert.ToInt32(SimpleSql.ExecuteQuery($"SELECT immunity FROM teamTable WHERE teamId = \'{TeamId}\'", "immunity").First()) == 1;
+            }
+            set
+            {
+                SimpleSql.ExecuteCommand($"UPDATE teamTable SET immunity = \'{(value ? "1" : "0")}\' WHERE teamId = \'{TeamId}\'");
+            }
+        }
 
         public bool IsOld() => SimpleSql.ExecuteQuery($"SELECT old FROM teamTable WHERE teamId = \'{TeamId}\'", "old").First() == "1";
 
