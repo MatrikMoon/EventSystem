@@ -160,26 +160,21 @@ namespace EventServer.Database
         //Returns the difficulty we *should* be using
         public LevelDifficulty GetPreferredDifficulty(bool isOst = false)
         {
-            LevelDifficulty ret = LevelDifficulty.ExpertPlus;
             switch (Team)
             {
                 case "master":
                 case "blue":
-                    ret = isOst ? LevelDifficulty.Expert : LevelDifficulty.ExpertPlus;
-                    break;
+                    return isOst ? LevelDifficulty.Expert : LevelDifficulty.ExpertPlus;
                 case "gold":
                 case "silver":
-                    ret = LevelDifficulty.Expert;
-                    break;
+                    return LevelDifficulty.Expert;
                 case "bronze":
-                    ret = LevelDifficulty.Hard;
-                    break;
+                    return LevelDifficulty.Hard;
                 case "white":
-                    ret = LevelDifficulty.Easy;
-                    break;
+                    return LevelDifficulty.Easy;
             }
 
-            return ret;
+            return LevelDifficulty.ExpertPlus;
         }
 
         //Necessary overrides for comparison
