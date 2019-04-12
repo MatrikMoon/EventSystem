@@ -77,7 +77,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
@@ -110,7 +110,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
@@ -178,7 +178,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
@@ -286,7 +286,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
@@ -315,7 +315,7 @@ namespace EventServer.Discord.Modules
             role = role.ToLower();
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
             if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
             else user = (IGuildUser)Context.User;
@@ -336,7 +336,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
@@ -406,7 +406,7 @@ namespace EventServer.Discord.Modules
             teamId = teamId.ToLower();
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
@@ -464,7 +464,7 @@ namespace EventServer.Discord.Modules
             teamId = teamId.ToLower();
             ulong moderatorRoleId = currentRoles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (Team.Exists(teamId))
@@ -524,7 +524,7 @@ namespace EventServer.Discord.Modules
             teamId = teamId.ToLower();
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             user = user ?? (IGuildUser)Context.User; //Anyone who can assign teams can assign roles for others
@@ -554,7 +554,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
             if (!isAdmin) return;
 
@@ -667,7 +667,7 @@ namespace EventServer.Discord.Modules
         {
             ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
             bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannel) ||
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
             if (!isAdmin) return;
 
@@ -744,7 +744,7 @@ namespace EventServer.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder);
+            await ReplyAsync("", false, builder.Build());
         }
 
         [Command("nekolewdgif")]
@@ -757,7 +757,7 @@ namespace EventServer.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder);
+            await ReplyAsync("", false, builder.Build());
         }
 
         [Command("lewd")]
@@ -781,7 +781,7 @@ namespace EventServer.Discord.Modules
             var builder = new EmbedBuilder();
             builder.WithImageUrl(gifLink);
 
-            await ReplyAsync("", false, builder);
+            await ReplyAsync("", false, builder.Build());
         }
 
         [Command("lewdsmall")]
