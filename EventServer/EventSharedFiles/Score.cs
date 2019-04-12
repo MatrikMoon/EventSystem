@@ -91,8 +91,8 @@ namespace EventShared
                 read = (byte)stream.ReadByte();
             }
 
-            var songId = Encoding.UTF8.GetString(userIdBytes.ToArray());
-            var userId = Encoding.UTF8.GetString(songIdBytes.ToArray());
+            var songId = Encoding.UTF8.GetString(songIdBytes.ToArray());
+            var userId = Encoding.UTF8.GetString(userIdBytes.ToArray());
             var score = BitConverter.ToInt32(scoreBytes, 0);
             var difficulty = BitConverter.ToInt32(difficultyBytes, 0);
             var fullCombo = BitConverter.ToBoolean(fullComboBytes, 0);
@@ -100,14 +100,14 @@ namespace EventShared
             var gameOptions = BitConverter.ToInt32(gameOptionsBytes, 0);
             var signed = Encoding.UTF8.GetString(signedBytes.ToArray());
 
-            return new Score(songId, userId, score, difficulty, fullCombo, playerOptions, gameOptions, signed);
+            return new Score(userId, songId, score, difficulty, fullCombo, playerOptions, gameOptions, signed);
         }
 
         public string ToBase64()
         {
             var magicFlag = Encoding.UTF8.GetBytes("moon");
-            var userIdBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(SongId), new byte[] { 0x0 } });
-            var songIdBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(UserId), new byte[] { 0x0 } });
+            var userIdBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(UserId), new byte[] { 0x0 } });
+            var songIdBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(SongId), new byte[] { 0x0 } });
             var scoreBytes = BitConverter.GetBytes(Score_);
             var difficultyBytes = BitConverter.GetBytes(Difficulty);
             var fullComboBytes = BitConverter.GetBytes(FullCombo);

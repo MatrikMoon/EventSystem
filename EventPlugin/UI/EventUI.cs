@@ -102,7 +102,14 @@ namespace EventPlugin.UI
             {
                 if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
                 {
-                    _communityButton = MenuButtonUI.AddButton("Team Saber", "Compete with your team in the competition!", () => _mainModFlowCoordinator.PresentMainModUI());
+#if TEAMSABER
+                    var buttonName = "Team Saber";
+#elif DISCORDCOMMUNITY
+                    var buttonName = "Discord Community"l
+#else
+                    var buttonName = "EVENT BETA";
+#endif
+                    _communityButton = MenuButtonUI.AddButton(buttonName, "Compete with your team in the competition!", () => _mainModFlowCoordinator.PresentMainModUI());
                     _communityButton.interactable = SongLoader.AreSongsLoaded;
                 }
                 else Logger.Error("MISSING SONG LOADER PLUGIN");

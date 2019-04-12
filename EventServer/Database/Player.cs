@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EventShared;
 using static EventServer.Database.SimpleSql;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -155,6 +156,31 @@ namespace EventServer.Database
         public static bool Exists(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = {steamId}", "steamId").Any();
 
         public static bool IsRegistered(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\' AND NOT liquidated = 1", "discordMention").Any(x => x.Length > 0);
+
+        //Returns the difficulty we *should* be using
+        public LevelDifficulty GetPreferredDifficulty(bool isOst = false)
+        {
+            LevelDifficulty ret = LevelDifficulty.ExpertPlus;
+            switch (Team)
+            {
+                case "master":
+                case "blue":
+                    ret = isOst ? LevelDifficulty.Expert : LevelDifficulty.ExpertPlus;
+                    break;
+                case "gold":
+                case "silver":
+                    ret = LevelDifficulty.Expert;
+                    break;
+                case "bronze":
+                    ret = LevelDifficulty.Hard;
+                    break;
+                case "white":
+                    ret = LevelDifficulty.Easy;
+                    break;
+            }
+
+            return ret;
+        }
 
         //Necessary overrides for comparison
         public static bool operator ==(Player a, Player b)

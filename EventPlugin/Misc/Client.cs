@@ -94,7 +94,7 @@ namespace EventPlugin.Misc
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
-            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(lcfgm, slvc));
+            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(lcfgm, slvc, steamId));
         }
 
         //GET the user's profile data from the server
@@ -227,11 +227,11 @@ namespace EventPlugin.Misc
 
         //GET the songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc)
+        private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/songs/");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/songs/{steamId}/");
 #if DEBUG
-            Logger.Info($"REQUESTING SONGS: {discordCommunityApi}/songs/");
+            Logger.Info($"REQUESTING SONGS: {discordCommunityApi}/songs/{steamId}/");
 #endif
             www.timeout = 30;
             yield return www.SendWebRequest();
@@ -259,7 +259,7 @@ namespace EventPlugin.Misc
                             Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString())
                         };
 
-                        if (newSong.Difficulty == LevelDifficulty.Auto) newSong.Difficulty = Player.Instance.GetPreferredDifficulty(OstHelper.IsOst(newSong.SongId));
+                        //if (newSong.Difficulty == LevelDifficulty.Auto) newSong.Difficulty = Player.Instance.GetPreferredDifficulty(OstHelper.IsOst(newSong.SongId));
 
                         Logger.Warning($"ADDING SONG: {newSong.SongName} {newSong.Difficulty}");
 

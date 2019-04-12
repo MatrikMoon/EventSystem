@@ -98,13 +98,29 @@ namespace EventServer
                 },
                 new Route {
                     Name = "Song Getter",
-                    UrlRegex = @"^/songs/$",
+                    UrlRegex = @"^/songs/",
                     Method = "GET",
                     Callable = (HttpRequest request) => {
+                        string[] requestData = request.Path.Substring(1).Split('/');
+                        string userId = requestData[1];
+                        userId = Regex.Replace(userId, "[^a-zA-Z0-9- ]", "");
+
+                        if (!Player.Exists(userId) || !Player.IsRegistered(userId))
+                        {
+                            return new HttpResponse()
+                            {
+                                ReasonPhrase = "Bad Request",
+                                StatusCode = "400"
+                            };
+                        }
+
                         JSONNode json = new JSONObject();
                         List<SongConstruct> songs = GetActiveSongs();
 
                         songs.ForEach(x => {
+
+                            if (x.Difficulty == LevelDifficulty.Auto) x.Difficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
+
                             var item = new JSONObject();
                             item["songName"] = x.Name;
                             item["songId"] = x.SongId;
@@ -318,6 +334,12 @@ namespace EventServer
             Logger.Warning(base64);
             var newScore = Score.FromString(base64);
             Logger.Success($"{newScore.Score_} {newScore.UserId}");
+
+            //var attemptScore = "bW9vbjM3My0yMjMANzY1NjExOTgwNjMyNjgyNTEAAAAAAAAAAAAAAAAAAAAAAABIZ1E5NzIxSFNhUWlJbG1RREwvekQ5YXJHZU4raHlYRUlRRzdFTVpxa3FtejdwVHZ6RTM1Sk90aTl3ZythWTZ4WXVTbUQ3V2RNNDVRQUp6bWQ4azFQZ1JnSzRRN0tNWFkwdXhqK3NDWk1rR0NIYlZtQ2lKcUQ2OElBVTUxU3dNV3hjUi9Hb3ByQTFabmphUE10YmF6ZC9rS3dYQ2FSalNjbGU5OXJmenR4cHI5SUMxTXRiTHV6WFl4MmszYUhROFAzYWlsTjlPeGJvM00wL00xK3d4Z2ZuRG53REpsVGR1UUFqM1RTMzN5aWl0aCs2VnY1U0tHeEozb3drQzlFUGtYdmVLUGNZZ0VWOTlkaVFHbjJoRFMrRDVxLzZsT25FQmlOaE1MYVRJTW5raDNBS1V0NnB6RXFoQ0ZmZnViTVFRTTY4M2FWNkgrNWV4RnNzc3RnckhaVGc9PQA=";
+            var attemptScore = "bW9vbjc2NTYxMTk4MDYzMjY4MjUxADM3My0yMjMAAAAAAAAAAAAAAAAAAAAAAABIZ1E5NzIxSFNhUWlJbG1RREwvekQ5YXJHZU4raHlYRUlRRzdFTVpxa3FtejdwVHZ6RTM1Sk90aTl3ZythWTZ4WXVTbUQ3V2RNNDVRQUp6bWQ4azFQZ1JnSzRRN0tNWFkwdXhqK3NDWk1rR0NIYlZtQ2lKcUQ2OElBVTUxU3dNV3hjUi9Hb3ByQTFabmphUE10YmF6ZC9rS3dYQ2FSalNjbGU5OXJmenR4cHI5SUMxTXRiTHV6WFl4MmszYUhROFAzYWlsTjlPeGJvM00wL00xK3d4Z2ZuRG53REpsVGR1UUFqM1RTMzN5aWl0aCs2VnY1U0tHeEozb3drQzlFUGtYdmVLUGNZZ0VWOTlkaVFHbjJoRFMrRDVxLzZsT25FQmlOaE1MYVRJTW5raDNBS1V0NnB6RXFoQ0ZmZnViTVFRTTY4M2FWNkgrNWV4RnNzc3RnckhaVGc9PQA=";
+            var attempt = Score.FromString(attemptScore);
+
+            Logger.Success($"{attempt.UserId} {attempt.SongId} {attempt.Score_} {attempt.FullCombo} {attempt.Signed}");
 
             //Load server config
             Config.LoadConfig();
