@@ -49,47 +49,18 @@ namespace EventPlugin.Misc
         public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
         {
             //Build score object
-            Score s = new Score
-            {
-                SteamId = steamId.ToString(),
-                SongId = songId,
-                Score_ = score,
-                DifficultyLevel = difficultyLevel,
-                FullCombo = fullCombo,
-                Signed = signed,
-                PlayerOptions = playerOptions,
-                GameOptions = gameOptions,
-            };
+            Score s = new Score(steamId.ToString(), songId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, signed);
 
-            byte[] scoreData = ProtobufHelper.SerializeProtobuf(s);
+            JSONObject o = new JSONObject();
+            o.Add("pb", new JSONString(s.ToBase64()));
 
-            SharedCoroutineStarter.instance.StartCoroutine(PostProtoCoroutine(scoreData, $"{discordCommunityApi}/submit/", scoreUploadedCallback));
-        }
-
-        [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitSabotage(ulong playerId, string teamId, int score, string signed, Action<bool> sabotagedCallback = null)
-        {
-            //Build score object
-            Sabotage s = new Sabotage
-            {
-                PlayerId = playerId.ToString(),
-                TeamId = teamId,
-                Score = score,
-                Signed = signed
-            };
-
-            byte[] sabotageData = ProtobufHelper.SerializeProtobuf(s);
-
-            SharedCoroutineStarter.instance.StartCoroutine(PostProtoCoroutine(sabotageData, $"{discordCommunityApi}/sabotage/", sabotagedCallback));
+            SharedCoroutineStarter.instance.StartCoroutine(PostCoroutine(o.ToString(), $"{discordCommunityApi}/submit/", scoreUploadedCallback));
         }
 
         //Post a score to the server
-        private static IEnumerator PostProtoCoroutine(byte[] proto, string address, Action<bool> postCompleteCallback = null)
+        private static IEnumerator PostCoroutine(string data, string address, Action<bool> postCompleteCallback = null)
         {
-            JSONObject o = new JSONObject();
-            o.Add("pb", new JSONString(Convert.ToBase64String(proto)));
-
-            UnityWebRequest www = UnityWebRequest.Post(address, o.ToString());
+            UnityWebRequest www = UnityWebRequest.Post(address, data);
             www.timeout = 30;
             yield return www.SendWebRequest();
 

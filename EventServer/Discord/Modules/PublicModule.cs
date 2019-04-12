@@ -158,9 +158,10 @@ namespace EventServer.Discord.Modules
                     player.Rank = rank;
 
                     //Add "registered" role
+#if TEAMSABER
                     await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
-
-                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.SteamId}` with timezone `{timezone}`";
+#endif
+                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.SteamId}`";
                     if (rank > 0) reply += $" and rank `{rank}`";
                     await ReplyAsync(reply);
                 }

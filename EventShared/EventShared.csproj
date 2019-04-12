@@ -44,9 +44,6 @@
     <OutputPath>bin\DiscordCommunity\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Google.Protobuf, Version=3.6.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Protobuf.3.6.1\lib\net45\Google.Protobuf.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -58,17 +55,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EventSharedFiles\Logger.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="EventSharedFiles\ProtobufHelper.cs" />
-    <Compile Include="EventSharedFiles\RSA.cs" />
     <Compile Include="EventSharedFiles\Score.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="EventSharedFiles\RSA.cs" />
     <Compile Include="EventSharedFiles\OstHelper.cs" />
     <Compile Include="EventSharedFiles\SharedConstructs.cs" />
     <Compile Include="EventSharedFiles\SimpleJson.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="EventSharedFiles\score.proto" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

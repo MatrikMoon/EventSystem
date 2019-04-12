@@ -9,9 +9,9 @@ namespace EventShared
 {
     public static class SharedConstructs
     {
-        public static string Name => "EventPlugin";
-        public static string Version => "0.1.6";
-        public static int VersionCode => 016;
+        public const string Name = "EventPlugin";
+        public const string Version = "0.2.0";
+        public const int VersionCode = 020;
         public static string Changelog =
             "0.0.1: First attempt at fork from EventPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -30,7 +30,8 @@ namespace EventShared
             "0.1.5: Updated to BS 0.13.1\n" +
             "0.1.6: Floor is Lava! Updated to BS 0.13.2\n" +
             "0.1.7: Removed EventShared dependency from Plugin\n" +
-            "0.1.8: Added NoFail toggle for Lava event\n";
+            "0.1.8: Added NoFail toggle for Lava event\n" +
+            "0.2.0: Changed to custom serialization, removed protobuf dependency\n";
 
         public enum Rarity
         {

@@ -60,7 +60,6 @@ namespace EventPlugin.UI
                 SceneManager.sceneLoaded += SceneManager_sceneLoaded;
                 SongLoader.SongsLoadedEvent += SongsLoaded;
                 CreateCommunitiyButton(); //sceneLoaded won't be called the first time
-                CreateSettings();
             }
         }
 
@@ -80,7 +79,6 @@ namespace EventPlugin.UI
             yield return new WaitUntil(() => { return menuScenes.All(x => x.isLoaded); });
 
             CreateCommunitiyButton();
-            CreateSettings();
         }
 
         private void SongsLoaded(SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs)
@@ -114,12 +112,6 @@ namespace EventPlugin.UI
                 Logger.Error("Error: " + e.Message);
                 Logger.Error(e.StackTrace);
             }
-        }
-
-        private void CreateSettings()
-        {
-            var subMenu = SettingsUI.CreateSubMenu("Team Saber");
-            noFailController = subMenu.AddBool("No Fail", "Play with no-fail enabled");
         }
     }
 }

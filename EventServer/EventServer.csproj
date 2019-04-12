@@ -194,9 +194,7 @@
     <Compile Include="Database\SimpleSql.cs" />
     <Compile Include="EventSharedFiles\Logger.cs" />
     <Compile Include="EventSharedFiles\OstHelper.cs" />
-    <Compile Include="EventSharedFiles\ProtobufHelper.cs" />
     <Compile Include="EventSharedFiles\RSA.cs" />
-    <Compile Include="EventSharedFiles\Sabotage.cs" />
     <Compile Include="EventSharedFiles\Score.cs" />
     <Compile Include="EventSharedFiles\SharedConstructs.cs" />
     <Compile Include="EventSharedFiles\SimpleJson.cs" />

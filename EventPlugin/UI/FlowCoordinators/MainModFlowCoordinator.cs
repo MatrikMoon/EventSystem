@@ -36,7 +36,6 @@ namespace EventPlugin.UI.FlowCoordinators
         private GeneralNavigationController _mainModNavigationController;
         private PlatformLeaderboardViewController _globalLeaderboard;
         public CustomLeaderboardController _communityLeaderboard; //TODO: Temporarily public, for nofail toggle
-        private BottomViewController _bottomViewController;
         private ResultsViewController _resultsViewController;
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
@@ -49,7 +48,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
                 _mainModNavigationController.didFinishEvent += (_) => mainFlowCoordinator.InvokeMethod("DismissFlowCoordinator", this, null, false);
 
-                ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard, _bottomViewController);
+                ProvideInitialViewControllers(_mainModNavigationController, _communityLeaderboard, _globalLeaderboard);
                 OpenSongsList();
             }
         }
@@ -99,9 +98,6 @@ namespace EventPlugin.UI.FlowCoordinators
             }
             SetRightScreenViewController(_globalLeaderboard);
 
-            if (_bottomViewController == null) _bottomViewController = BeatSaberUI.CreateViewController<BottomViewController>();
-            SetBottomScreenViewController(_bottomViewController);
-
             //Change global leaderboard view
             _globalLeaderboard.SetData(song.Beatmap);
 
@@ -110,11 +106,6 @@ namespace EventPlugin.UI.FlowCoordinators
             int teamIndex = _communityLeaderboard.selectedTeamIndex;
             if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.team);
             _communityLeaderboard.SetSong(song, teamIndex);
-
-            //Re-init the value for the newly selected song
-            var noFail = EventUI.instance.noFailController;
-            noFail.SetField("_on", noFail.InvokeMethod<bool>("GetInitValue"), typeof(SwitchSettingsController));
-            noFail.InvokeMethod("RefreshUI", typeof(SwitchSettingsController));
         }
 
         private void ReloadServerData()

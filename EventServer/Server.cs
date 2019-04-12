@@ -1,4 +1,6 @@
-﻿using EventShared;
+﻿using EventServer.Database;
+using EventServer.Discord;
+using EventShared;
 using EventShared.SimpleJSON;
 using SimpleHttpServer;
 using SimpleHttpServer.Models;
@@ -6,17 +8,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 using static EventServer.Database.SimpleSql;
 using static EventShared.SharedConstructs;
-using System.Text.RegularExpressions;
-using EventServer.Database;
-using Quartz;
-using Quartz.Impl;
-using System.Threading.Tasks;
-using EventServer.Discord;
-using System.Globalization;
-using System.IO;
+using Score = EventShared.Score;
 
 namespace EventServer
 {
@@ -36,38 +32,19 @@ namespace EventServer
                             JSONNode node = JSON.Parse(WebUtility.UrlDecode(request.Content));
 
                             //Get Score object from JSON
-                            Score s = Score.Parser.ParseFrom(Convert.FromBase64String(node["pb"]));
+                            Score s = Score.FromString(node["pb"]);
 
-                            /*
-                            Logger.Warning($"SUBMISSION INFO:\n" +
-                                $"{s.DifficultyLevel}\n" +
-                                $"{s.FullCombo}\n" +
-                                $"{s.GameOptions}\n" +
-                                $"{s.PlayerOptions}\n" +
-                                $"{s.Score_}\n" +
-                                $"{s.Signed}\n" +
-                                $"{s.SongId}\n" +
-                                $"{s.SteamId}\n" +
-                                "-----\n" +
-                                $"{RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed}\n" +
-                                $"{Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel)}\n" +
-                                $"{!new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).Old}\n" +
-                                $"{Player.Exists(s.SteamId)}\n" +
-                                $"{(Player.Exists(s.SteamId) ? $"{Player.IsRegistered(s.SteamId)}" : "player did not exist in the first place")}" +
-                                $"\n\n");
-                            */
-
-                            if (RSA.SignScore(Convert.ToUInt64(s.SteamId), s.SongId, s.DifficultyLevel, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed &&
-                                Song.Exists(s.SongId, (LevelDifficulty)s.DifficultyLevel, true) &&
-                                !new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).Old &&
-                                Player.Exists(s.SteamId) &&
-                                Player.IsRegistered(s.SteamId))
+                            if (RSA.SignScore(Convert.ToUInt64(s.UserId), s.SongId, s.Difficulty, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed &&
+                                Song.Exists(s.SongId, (LevelDifficulty)s.Difficulty, true) &&
+                                !new Song(s.SongId, (LevelDifficulty)s.Difficulty).Old &&
+                                Player.Exists(s.UserId) &&
+                                Player.IsRegistered(s.UserId))
                             {
-                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {new Player(s.SteamId).DiscordName} {s.SongId} {s.DifficultyLevel}");
+                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {new Player(s.UserId).DiscordName} {s.SongId} {s.Difficulty}");
                             }
                             else
                             {
-                                Logger.Error($"RECEIVED INVALID SCORE {s.Score_} FROM {new Player(s.SteamId).DiscordName} FOR {s.SteamId} {s.SongId} {s.DifficultyLevel}");
+                                Logger.Error($"RECEIVED INVALID SCORE {s.Score_} FROM {new Player(s.UserId).DiscordName} FOR {s.UserId} {s.SongId} {s.Difficulty}");
                                 return new HttpResponse()
                                 {
                                     ReasonPhrase = "Bad Request",
@@ -76,14 +53,14 @@ namespace EventServer
                             }
 
                             Database.Score oldScore = null;
-                            if (Database.Score.Exists(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel))
+                            if (Database.Score.Exists(s.SongId, s.UserId, (LevelDifficulty)s.Difficulty))
                             {
-                                oldScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
+                                oldScore = new Database.Score(s.SongId, s.UserId, (LevelDifficulty)s.Difficulty);
                             }
 
                             if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
                             {
-                                Player player = new Player(s.SteamId);
+                                Player player = new Player(s.UserId);
 
                                 long oldScoreNumber = oldScore == null ? 0 : oldScore.GetScore();
                                 oldScore?.SetOld();
@@ -94,11 +71,11 @@ namespace EventServer
                                 player.IncrementSongsPlayed();
                                 player.TotalScore += s.Score_ - oldScoreNumber; //Increment total score only by the amount the score has increased
 
-                                Database.Score newScore = new Database.Score(s.SongId, s.SteamId, (LevelDifficulty)s.DifficultyLevel);
+                                Database.Score newScore = new Database.Score(s.SongId, s.UserId, (LevelDifficulty)s.Difficulty);
                                 newScore.SetScore(s.Score_, s.FullCombo);
 
                                 //Only send message if player is registered
-                                if (Player.Exists(s.SteamId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.DifficultyLevel).SongName} ({(LevelDifficulty)s.DifficultyLevel})!");
+                                if (Player.Exists(s.UserId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongId, (LevelDifficulty)s.Difficulty).SongName} ({(LevelDifficulty)s.Difficulty})!");
                             }
 
                             return new HttpResponse()
@@ -314,7 +291,7 @@ namespace EventServer
                     }
                 }
             };
-            
+
             Logger.Info($"HTTP Server listening on {Dns.GetHostName()}");
 
 #if (DEBUG && TEAMSABER)
@@ -336,6 +313,12 @@ namespace EventServer
 
         public static int Main(string[] args)
         {
+            var score = new Score("USERID", "SONGID", 123456, 4, false, 2, 4, "SIGNED");
+            var base64 = score.ToBase64();
+            Logger.Warning(base64);
+            var newScore = Score.FromString(base64);
+            Logger.Success($"{newScore.Score_} {newScore.UserId}");
+
             //Load server config
             Config.LoadConfig();
 
@@ -347,123 +330,9 @@ namespace EventServer
             Thread thread2 = new Thread(new ThreadStart(StartHttpServer));
             thread2.Start();
 
-            //Create elimination task
-            ScheduleElims();
-
             //Kill on enter press
             Console.ReadLine();
             return 0;
-        }
-
-        public static async void ScheduleElims()
-        {
-            DateTime scheduledStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, 0, 0);
-            if (scheduledStart < DateTime.Now) scheduledStart = scheduledStart.AddHours(1);
-            while (scheduledStart.Hour % 4 != 3) scheduledStart = scheduledStart.AddHours(1);
-
-            //DateTime scheduledStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0);
-            //if (scheduledStart < DateTime.Now) scheduledStart = scheduledStart.AddMinutes(1);
-
-            Logger.Warning($"Scheduling elim task start for: {scheduledStart}");
-
-            ISchedulerFactory schedFact = new StdSchedulerFactory();
-
-            IScheduler sched = await schedFact.GetScheduler();
-            await sched.Start();
-
-            IJobDetail job = JobBuilder.Create<SimpleJob>()
-                    .WithIdentity("job1", "group1")
-                    .Build();
-
-            ITrigger trigger = TriggerBuilder.Create()
-                .WithIdentity("trigger1", "group1")
-                .StartAt(scheduledStart)
-                .WithSimpleSchedule(x => x.WithIntervalInHours(4).RepeatForever())
-                //.WithSimpleSchedule(x => x.WithIntervalInSeconds(15).RepeatForever())
-                .Build();
-
-            await sched.ScheduleJob(job, trigger);
-        }
-
-        public class SimpleJob : IJob
-        {
-            public Task Execute(IJobExecutionContext context)
-            {
-                Logger.Warning($"BEGINNING ELIM TASK. BACKING UP DATABASE...");
-                File.Copy("EventDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
-                Logger.Success("Database backed up succsessfully.");
-
-                string finalMessage = "-----Current team averages-----\n\n";
-                bool koto = DateTime.Now.Hour % 8 != 3;
-                string designatedSong = koto ? "1046-707" : "9639-10572";
-
-                var song = GetAllScores().First(x => x.SongId == designatedSong);
-
-                finalMessage += song.Name + ":\n";
-                Dictionary<string, double> finalAverages = new Dictionary<string, double>();
-
-                var maxPossiblePoints = new BeatSaver.Song(song.SongId).GetMaxScore(song.Difficulty);
-                GetAllTeams().ForEach(t =>
-                {
-                    finalAverages[t.TeamId] = 0;
-                    var scores = song.Scores.OrderByDescending(x => x.Score).Where(sc => sc.TeamId == t.TeamId).Take(4).ToList();
-
-                    while (scores.Count < 4) scores.Add(new ScoreConstruct() { Score = 0 }); //Fill out up to four scores
-                    scores.ForEach(sc => finalAverages[t.TeamId] += sc.Score);
-
-                    finalAverages[t.TeamId] = finalAverages[t.TeamId] / (maxPossiblePoints * 4);
-                });
-
-                finalMessage += "\n\n";
-
-                finalAverages.Where(x => new Team(x.Key).Score > 0).OrderByDescending(x => x.Value).ThenByDescending(x => new Team(x.Key).Score).ToList().ForEach(x => finalMessage += $"{new Team(x.Key).TeamName} - Average accuracy: {x.Value.ToString("P", CultureInfo.InvariantCulture)}\n");
-                
-                finalMessage += "\n";
-
-                var finalAveragesOrdered = finalAverages.Where(x => new Team(x.Key).Score > 0).OrderByDescending(x => x.Value).ThenByDescending(x => new Team(x.Key).Score).ToArray();
-
-                string teamIdToEliminate = null;
-                Team teamToEliminate = null;
-
-                //Handle immunity
-                for (int i = finalAveragesOrdered.ToArray().Length - 1; i >= 0 && teamIdToEliminate == null; i--)
-                {
-                    var potentialElimination = finalAveragesOrdered[i].Key;
-                    var potentialTeamToEliminate = new Team(potentialElimination);
-
-                    if (potentialTeamToEliminate.Immunity)
-                    {
-                        finalMessage += $"{potentialTeamToEliminate.TeamName} would have been eliminated, but used their immunity from the last event.\n\n";
-                        potentialTeamToEliminate.Immunity = false;
-                    }
-                    else
-                    {
-                        teamIdToEliminate = potentialElimination;
-                        teamToEliminate = potentialTeamToEliminate;
-                    }
-                }
-
-                if (teamIdToEliminate == null) return Task.CompletedTask; //Event is over, nothing left to eliminate
-
-                finalMessage += $"Eliminating: {teamToEliminate.TeamName}\n";
-
-                //Eliminate team
-                teamToEliminate.Score = -1;
-                GetAllPlayers().Where(x => x.Team == teamIdToEliminate).ToList().ForEach(x => x.Liquidate());
-
-                //Deal with long messages
-                if (finalMessage.Length > 2000)
-                {
-                    for (int i = 0; finalMessage.Length > 2000; i++)
-                    {
-                        CommunityBot.SendToScoreChannel(finalMessage.Substring(0, finalMessage.Length > 2000 ? 2000 : finalMessage.Length));
-                        finalMessage = finalMessage.Substring(2000);
-                    }
-                }
-                CommunityBot.SendToScoreChannel(finalMessage);
-
-                return Task.CompletedTask;
-            }
         }
     }
 }
