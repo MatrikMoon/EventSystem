@@ -26,7 +26,6 @@ namespace EventPlugin.UI
     class EventUI : MonoBehaviour
     {
         public static EventUI instance;
-        public BoolViewController noFailController;
 
         public MainModFlowCoordinator _mainModFlowCoordinator; //TODO: Temporarily public, for nofail toggle
         private RectTransform _mainMenuRectTransform;
@@ -51,6 +50,7 @@ namespace EventPlugin.UI
         {
             if (instance != this)
             {
+                Console.WriteLine("EVENTUI AWAKE");
                 instance = this;
                 DontDestroyOnLoad(this);
                 Config.LoadConfig();
@@ -88,6 +88,8 @@ namespace EventPlugin.UI
 
         private void CreateCommunitiyButton()
         {
+            Console.WriteLine("CREATECOMMUNITY");
+
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
@@ -105,7 +107,7 @@ namespace EventPlugin.UI
 #if TEAMSABER
                     var buttonName = "Team Saber";
 #elif DISCORDCOMMUNITY
-                    var buttonName = "Discord Community"l
+                    var buttonName = "Discord Community";
 #else
                     var buttonName = "EVENT BETA";
 #endif

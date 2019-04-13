@@ -6,16 +6,21 @@ EXIT /B 0
 :find-files
     set PATHS=
     set NAMES=
-    for /r "%~dp0" %%P in ("*.cs") do (
+    for /r "%~dp0" %%P in ("*.cs","*.csproj") do (
 		setlocal enabledelayedexpansion
         set PATHS=!PATHS! "%%~fP"
         set NAMES=!NAMES! "%%~nP%%~xP"
 		set currentPath=%%~fP
 		set currentPathNoObj=!currentPath:\obj\=!
 		
-		if !currentPath!==!currentPathNoObj! (
-			echo PROCESSING "%%~fP"
-			call :replace-in-file "%~1" "%~2" "%%~fP"
+		REM Ignore .vs and .git
+		if "x!currentPath:\.git\=!"=="x!currentPath!" (
+			if "x!currentPath:\.vs\=!"=="x!currentPath!" (
+				if !currentPath!==!currentPathNoObj! (
+					echo PROCESSING "%%~fP"
+					call :replace-in-file "%~1" "%~2" "%%~fP"
+				)
+			)
 		)
 		endlocal
     )

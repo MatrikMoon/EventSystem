@@ -35,7 +35,7 @@ namespace EventPlugin.UI.Views
             _tableView.transform.SetParent(transform, false);
             _tableView.SetField("_isInitialized", false);
             _tableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
-            _tableView.Init();
+            _tableView.InvokeMethod("Init");
 
             var currentView = Resources.FindObjectsOfTypeAll<LeaderboardTableView>().First();
             var currentTransform = (currentView.transform as RectTransform);

@@ -79,7 +79,7 @@ namespace EventPlugin.UI.ViewControllers
 
                 songsTableView.SetField("_isInitialized", false);
                 songsTableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
-                songsTableView.Init();
+                songsTableView.InvokeMethod("Init");
 
                 (songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0f);
                 (songsTableView.transform as RectTransform).anchorMax = new Vector2(1f, 1f);

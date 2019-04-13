@@ -1,14 +1,11 @@
 ﻿using Oculus.Platform;
 using Oculus.Platform.Models;
-using SongLoaderPlugin.OverrideClasses;
 using Steamworks;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using static EventShared.SharedConstructs;
-using Logger = EventShared.Logger;
 
 /*
  * Created by Moon on 9/14/2018
@@ -139,6 +136,7 @@ namespace EventPlugin.Helpers
             {
                 GetSteamUser();
             }
+            else GetSteamUser();
         }
 
         internal static void GetSteamUser()

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EventShared</RootNamespace>
     <AssemblyName>EventShared</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -54,21 +54,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EventSharedFiles\Logger.cs" />
-    <Compile Include="EventSharedFiles\Score.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="EventSharedFiles\RSA.cs" />
-    <Compile Include="EventSharedFiles\OstHelper.cs" />
-    <Compile Include="EventSharedFiles\SharedConstructs.cs" />
-    <Compile Include="EventSharedFiles\SimpleJson.cs" />
+    <Compile Include="SharedFiles\Logger.cs" />
+    <Compile Include="SharedFiles\OstHelper.cs" />
+    <Compile Include="SharedFiles\RSA.cs" />
+    <Compile Include="SharedFiles\Score.cs" />
+    <Compile Include="SharedFiles\SharedConstructs.cs" />
+    <Compile Include="SharedFiles\SimpleJson.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o "$(TargetPath)_confused" "$(TargetPath)"
-xcopy /y "$(TargetPath)_confused" "$(TargetPath)"</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)confuserex\Confuser.CLI.exe" -o Confused\ "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>xcopy /y "$(ProjectDir)EventSharedFIles\*.cs" "$(SolutionDir)EventPlugin\EventSharedFiles"
-xcopy /y "$(ProjectDir)EventSharedFIles\*.cs" "$(SolutionDir)EventServer\EventSharedFiles"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

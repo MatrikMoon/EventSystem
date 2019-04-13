@@ -5,6 +5,6 @@ confuserex/
 protoc/
 rsakeys.txt
 sqlStatements.txt
-DiscordCommunityServer/Dependencies/costura32/SQLite.Interop.dll
-DiscordCommunityServer/Dependencies/costura64/SQLite.Interop.dll
+EventServer/Dependencies/costura32/SQLite.Interop.dll
+EventServer/Dependencies/costura64/SQLite.Interop.dll
 packages/
