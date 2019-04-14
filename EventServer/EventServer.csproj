@@ -132,23 +132,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\EventShared\SharedFiles\Logger.cs">
-      <Link>SharedFiles\Logger.cs</Link>
+    <Compile Include="..\Shared\Logger.cs">
+      <Link>Shared\Logger.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\OstHelper.cs">
-      <Link>SharedFiles\OstHelper.cs</Link>
+    <Compile Include="..\Shared\OstHelper.cs">
+      <Link>Shared\OstHelper.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\RSA.cs">
-      <Link>SharedFiles\RSA.cs</Link>
+    <Compile Include="..\Shared\RSA.cs">
+      <Link>Shared\RSA.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\Score.cs">
-      <Link>SharedFiles\Score.cs</Link>
+    <Compile Include="..\Shared\Score.cs">
+      <Link>Shared\Score.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\SharedConstructs.cs">
-      <Link>SharedFiles\SharedConstructs.cs</Link>
+    <Compile Include="..\Shared\SharedConstructs.cs">
+      <Link>Shared\SharedConstructs.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\SimpleJson.cs">
-      <Link>SharedFiles\SimpleJson.cs</Link>
+    <Compile Include="..\Shared\SimpleJson.cs">
+      <Link>Shared\SimpleJson.cs</Link>
     </Compile>
     <Compile Include="BeatSaver\Song.cs" />
     <Compile Include="Database\Player.cs" />

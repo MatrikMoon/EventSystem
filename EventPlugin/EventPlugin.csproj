@@ -52,26 +52,26 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="BeatSaberCustomUI">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
+      <HintPath>..\..\Plugins\BeatSaberCustomUI.dll</HintPath>
     </Reference>
     <Reference Include="BS_Utils">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
+      <HintPath>..\..\Plugins\BS_Utils.dll</HintPath>
     </Reference>
     <Reference Include="IllusionInjector, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\IPA_old\IllusionInjector.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\IllusionInjector.dll</HintPath>
     </Reference>
     <Reference Include="IllusionPlugin">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\IPA_old\IllusionPlugin.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
     <Reference Include="SongLoaderPlugin">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
+      <HintPath>..\..\Plugins\SongLoaderPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -82,48 +82,48 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VRModule">
-      <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\EventShared\SharedFiles\Logger.cs">
-      <Link>SharedFiles\Logger.cs</Link>
+    <Compile Include="..\Shared\Logger.cs">
+      <Link>Shared\Logger.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\OstHelper.cs">
-      <Link>SharedFiles\OstHelper.cs</Link>
+    <Compile Include="..\Shared\OstHelper.cs">
+      <Link>Shared\OstHelper.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\RSA.cs">
-      <Link>SharedFiles\RSA.cs</Link>
+    <Compile Include="..\Shared\RSA.cs">
+      <Link>Shared\RSA.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\Score.cs">
-      <Link>SharedFiles\Score.cs</Link>
+    <Compile Include="..\Shared\Score.cs">
+      <Link>Shared\Score.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\SharedConstructs.cs">
-      <Link>SharedFiles\SharedConstructs.cs</Link>
+    <Compile Include="..\Shared\SharedConstructs.cs">
+      <Link>Shared\SharedConstructs.cs</Link>
     </Compile>
-    <Compile Include="..\EventShared\SharedFiles\SimpleJson.cs">
-      <Link>SharedFiles\SimpleJson.cs</Link>
+    <Compile Include="..\Shared\SimpleJson.cs">
+      <Link>Shared\SimpleJson.cs</Link>
     </Compile>
     <Compile Include="Helpers\Player.cs" />
     <Compile Include="Helpers\Song.cs" />
