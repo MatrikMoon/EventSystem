@@ -139,7 +139,7 @@ namespace EventPlugin.Helpers
             else GetSteamUser();
         }
 
-        internal static void GetSteamUser()
+        private static void GetSteamUser()
         {
             if (SteamManager.Initialized)
             {
@@ -147,7 +147,7 @@ namespace EventPlugin.Helpers
             }
         }
 
-        internal static void GetOculusUser()
+        private static void GetOculusUser()
         {
             Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
             {

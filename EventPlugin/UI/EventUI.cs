@@ -50,7 +50,6 @@ namespace EventPlugin.UI
         {
             if (instance != this)
             {
-                Console.WriteLine("EVENTUI AWAKE");
                 instance = this;
                 DontDestroyOnLoad(this);
                 Config.LoadConfig();

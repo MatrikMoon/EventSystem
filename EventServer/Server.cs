@@ -118,8 +118,16 @@ namespace EventServer
                         List<SongConstruct> songs = GetActiveSongs();
 
                         songs.ForEach(x => {
-
-                            if (x.Difficulty == LevelDifficulty.Auto) x.Difficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
+                            if (x.Difficulty == LevelDifficulty.Auto) {
+                                if (OstHelper.IsOst(x.SongId))
+                                {
+                                    x.Difficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
+                                }
+                                else {
+                                    var preferredDifficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
+                                    x.Difficulty = new BeatSaver.Song(x.SongId).GetClosestDifficultyPreferLower(preferredDifficulty);
+                                }
+                            }
 
                             var item = new JSONObject();
                             item["songName"] = x.Name;

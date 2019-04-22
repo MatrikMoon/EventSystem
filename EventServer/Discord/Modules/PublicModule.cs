@@ -575,9 +575,13 @@ namespace EventServer.Discord.Modules
                     {
                         //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
                         //seeing as auto difficulty is what would be represented in the songconstruct
-                        var maxScore = new BeatSaver.Song(songId).GetMaxScore(item.Difficulty);
+                        string percentage = "???%";
+                        if (!OstHelper.IsOst(songId))
+                        {
+                            var maxScore = new BeatSaver.Song(songId).GetMaxScore(item.Difficulty);
+                            percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
+                        }
 
-                        var percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                         finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
                         if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
                         {

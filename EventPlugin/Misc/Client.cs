@@ -46,7 +46,11 @@ namespace EventPlugin.Misc
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-        public static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+#if DEBUG
+        static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+#else
+        static void a(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+#endif
         {
             //Build score object
             Score s = new Score(steamId.ToString(), songId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, signed);
@@ -259,10 +263,9 @@ namespace EventPlugin.Misc
                             Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString())
                         };
 
-                        //if (newSong.Difficulty == LevelDifficulty.Auto) newSong.Difficulty = Player.Instance.GetPreferredDifficulty(OstHelper.IsOst(newSong.SongId));
-
+#if DEBUG
                         Logger.Warning($"ADDING SONG: {newSong.SongName} {newSong.Difficulty}");
-
+#endif
                         songs.Add(newSong);
                     }
                 }

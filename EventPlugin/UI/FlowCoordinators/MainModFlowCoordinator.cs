@@ -118,7 +118,9 @@ namespace EventPlugin.UI.FlowCoordinators
         private void BSUtilsDisableOtherPlugins()
         {
             BS_Utils.Gameplay.Gamemode.NextLevelIsIsolated("EventPlugin");
+#if DEBUG
             Logger.Success("Disabled game-modifying plugins through bs_utils :)");
+#endif
         }
 
         private void SongPlayPressed(Song song)
@@ -127,8 +129,9 @@ namespace EventPlugin.UI.FlowCoordinators
             {
                 BSUtilsDisableOtherPlugins();
             }
+#if DEBUG
             else Logger.Warning("BSUtils not installed, not disabling other plugins");
-
+#endif
             //Callback for when the song is ready to be played
             Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
             {
@@ -274,7 +277,12 @@ namespace EventPlugin.UI.FlowCoordinators
                     Logger.Success("Score upload compete!");
                     //if (b && _communityLeaderboard) _communityLeaderboard.Refresh();
                     };
-                    var cs = c.InvokeMethod("SubmitScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
+#if DEBUG
+                    var n = "SubmitScore";
+#else
+                    var n = "a";
+#endif
+                    var cs = c.InvokeMethod(n, Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
 
                     //Scoresaber leaderboards
                     var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
