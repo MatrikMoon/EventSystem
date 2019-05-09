@@ -15,7 +15,7 @@ class Homepage extends Component {
                 <img src={require('../style/moonmoonlayer.png')} className="moonlogo" alt="logo" />
                 <img src={require('../style/moonstarlayer.png')} className="starslogo" alt="logo" />
             </div>
-            <button className="btn green" onClick={this.handleClick}><span>TeamSaber Leaderboards</span></button>
+            <button className="btn green" onClick={this.handleClick}><span>Event Leaderboards</span></button>
             <button className="btn orange" onClick={() => window.location="../casino/middleman.php"}><span>Kik Bot Captcha Checker</span></button>
             <button className="btn red" onClick={() => window.location="https://www.google.com"}><span>Google</span></button>
         </header>

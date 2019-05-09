@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static EventServer.Database.SimpleSql;
 using static EventShared.SharedConstructs;
+using EventShared;
 
 namespace EventServer.Discord
 {
@@ -19,6 +20,8 @@ namespace EventServer.Discord
     {
         private static DiscordSocketClient _client;
         private static IServiceProvider _services;
+        private static string _serverName;
+        private static string _scoreChannel;
 
         //Following should be private, except for the fact we're keeping legacy
         //support for people who already have a rarity assigned to them.
@@ -28,49 +31,32 @@ namespace EventServer.Discord
         public static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
         public static string[] _rarityRoles = { "uncommon", "rare", "epic", "legendary", "mythic", "captain" };
 
-        public static void Start()
+        public static void Start(string serverName, string scoreChannel)
         {
+            _serverName = serverName;
+            _scoreChannel = scoreChannel;
             MainAsync().GetAwaiter().GetResult();
         }
 
         public static void SendToScoreChannel(string message)
         {
-#if (!DEBUG && TEAMSABER)
-            string channel = "event-feed";
-#elif (!DEBUG && DISCORDCOMMUNITY)
-            string channel = "event-scores";
-#elif DEBUG
-            string channel = "event-scores";
-#endif
-            SendToChannel(channel, message);
+            SendToChannel(_scoreChannel, message);
         }
 
         public static void SendToChannel(string channel, string message)
         {
             if (_client.ConnectionState == ConnectionState.Connected)
             {
-#if (!DEBUG && TEAMSABER)
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
-#elif (!DEBUG && DISCORDCOMMUNITY)
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
-#elif DEBUG
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
-#endif
+                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
                 guild.TextChannels.ToList().Where(x => x.Name == channel).First().SendMessageAsync(message);
             }
         }
 
         public static async void ChangeRarity(Player player, Rarity rarity)
         {
-#if (!DEBUG && TEAMSABER)
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
-#elif (!DEBUG && DISCORDCOMMUNITY)
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
-#elif DEBUG
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
-#endif
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
-            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
+            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == _scoreChannel).First();
 
             player.Rarity = (int)rarity;
 
@@ -97,15 +83,9 @@ namespace EventServer.Discord
 
         public static async void ChangeTeam(Player player, Team team, bool captain = false)
         {
-#if (!DEBUG && TEAMSABER)
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Team Saber")).First();
-#elif (!DEBUG && DISCORDCOMMUNITY)
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Discord Server")).First();
-#elif DEBUG
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains("Beat Saber Testing Server")).First();
-#endif
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
-            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == "event-feed").First();
+            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == _scoreChannel).First();
 
             //Add the role of the team we're being switched to
             //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.

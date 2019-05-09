@@ -105,7 +105,8 @@ namespace EventServer
                         string userId = requestData[1];
                         userId = Regex.Replace(userId, "[^a-zA-Z0-9- ]", "");
 
-                        if (!Player.Exists(userId) || !Player.IsRegistered(userId))
+                        //If the userid is null, we'll give them e+ everything. It's likely the leaderboard site
+                        if (!string.IsNullOrEmpty(userId) && (!Player.Exists(userId) || !Player.IsRegistered(userId)))
                         {
                             return new HttpResponse()
                             {
@@ -121,10 +122,10 @@ namespace EventServer
                             if (x.Difficulty == LevelDifficulty.Auto) {
                                 if (OstHelper.IsOst(x.SongId))
                                 {
-                                    x.Difficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
+                                    x.Difficulty = string.IsNullOrEmpty(userId) ? LevelDifficulty.Easy : new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
                                 }
                                 else {
-                                    var preferredDifficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
+                                    var preferredDifficulty = string.IsNullOrEmpty(userId) ? LevelDifficulty.Easy : new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongId));
                                     x.Difficulty = new BeatSaver.Song(x.SongId).GetClosestDifficultyPreferLower(preferredDifficulty);
                                 }
                             }
@@ -157,14 +158,16 @@ namespace EventServer
                         JSONNode json = new JSONObject();
                         List<Team> teams = GetAllTeams();
 
-                        teams.ForEach(x => {
+                        foreach (var team in teams)
+                        {
                             var item = new JSONObject();
-                            item["captainId"] = x.Captain;
-                            item["teamName"] = x.TeamName;
-                            item["color"] = x.Color;
-                            item["score"] = x.Score;
-                            json.Add(x.TeamId, item);
-                        });
+                            item["captainId"] = team.Captain;
+                            item["teamName"] = team.TeamName;
+                            item["color"] = team.Color;
+                            item["requiredTokens"] = team.RequiredTokens;
+                            item["nextPromotion"] = team.NextPromotion;
+                            json.Add(team.TeamId, item);
+                        }
 
                         return new HttpResponse()
                         {
@@ -318,18 +321,14 @@ namespace EventServer
 
             Logger.Info($"HTTP Server listening on {Dns.GetHostName()}");
 
-#if (DEBUG && TEAMSABER)
-            int port = 3708; //My vhost is set up to direct to 3708 when the /api-teamsaber-beta/ route is followed
-#elif (!DEBUG && TEAMSABER)
+#if (TEAMSABER)
             int port = 3707;
-#elif (DEBUG && DISCORDCOMMUNITY)
-            int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
-#elif (!DEBUG && DISCORDCOMMUNITY)
+#elif (DISCORDCOMMUNITY)
             int port = 3703;
-#elif DEBUG
+#elif (ASIAVR)
+            int port = 3709;
+#else
             int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
-#elif !DEBUG
-            int port = 3703;
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);
             httpServer.Listen();
@@ -341,7 +340,26 @@ namespace EventServer
             Config.LoadConfig();
 
             //Start Discord bot
-            Thread thread1 = new Thread(new ThreadStart(CommunityBot.Start));
+#if (TEAMSABER)
+            var serverName = "Team Saber";
+#elif (DISCORDCOMMUNITY)
+            var serverName = "Beat Saber Discord Server";
+#elif (ASIAVR)
+            var serverName = "Asia VR Community";
+#elif DEBUG
+            var serverName = "Beat Saber Testing Server";
+#endif
+
+#if (TEAMSABER)
+            string scoreChannel = "event-feed";
+#elif (DISCORDCOMMUNITY)
+            string scoreChannel = "event-scores";
+#elif (ASIAVR)
+            string scoreChannel = "scores-feed";
+#elif DEBUG
+            string scoreChannel = "event-scores";
+#endif
+            Thread thread1 = new Thread(() => CommunityBot.Start(serverName, scoreChannel));
             thread1.Start();
 
             //Set up HTTP server

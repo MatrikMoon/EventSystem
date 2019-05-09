@@ -16,6 +16,7 @@ using UnityEngine.Networking;
 using static EventShared.SharedConstructs;
 using Logger = EventShared.Logger;
 using SongLoaderPlugin.OverrideClasses;
+using EventPlugin.Utils;
 
 /*
  * Created by Moon on 9/9/2018
@@ -28,14 +29,12 @@ namespace EventPlugin.Misc
     class Client
     {
         private static string discordCommunityUrl = "http://networkauditor.org";
-#if (DEBUG && TEAMSABER)
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber-beta";
-#elif (!DEBUG && TEAMSABER)
+#if (TEAMSABER)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
-#elif (DEBUG && DISCORDCOMMUNITY)
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
-#elif (!DEBUG && DISCORDCOMMUNITY)
+#elif (DISCORDCOMMUNITY)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api";
+#elif (ASIAVR)
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-asiavr";
 #elif DEBUG
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
 #elif !DEBUG
@@ -216,7 +215,6 @@ namespace EventPlugin.Misc
                     foreach (var team in node)
                     {
                         var teamObject = new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]);
-                        teamObject.Score = team.Value["score"];
                         Team.allTeams.Add(teamObject);
                     }
                 }
@@ -296,7 +294,7 @@ namespace EventPlugin.Misc
                     }
 
                     //TODO: add characteristic name field to the song data stored in the server
-                    song.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level as BeatmapLevelSO, (BeatmapDifficulty)song.Difficulty);
+                    song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(level as BeatmapLevelSO, (BeatmapDifficulty)song.Difficulty);
                     availableSongs.Add(song);
                 };
 
@@ -312,7 +310,7 @@ namespace EventPlugin.Misc
                     var level = lcfgm
                                     .FirstOrDefault(y => y.beatmapLevels.Any(z => z.levelID == x.SongId)).beatmapLevels
                                     .FirstOrDefault(y => y.levelID == x.SongId) as BeatmapLevelSO;
-                    x.Beatmap = Player.Instance.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
+                    x.Beatmap = SongUtils.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
                     availableSongs.Add(x);
                 });
 

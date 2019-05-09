@@ -50,6 +50,14 @@
     <OutputPath>bin\DiscordCommunity\</OutputPath>
     <DefineConstants>DISCORDCOMMUNITY</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'AsiaVR|AnyCPU'">
+    <OutputPath>bin\AsiaVR\</OutputPath>
+    <DefineConstants>ASIAVR</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
@@ -125,9 +133,9 @@
     <Compile Include="..\Shared\SimpleJson.cs">
       <Link>Shared\SimpleJson.cs</Link>
     </Compile>
-    <Compile Include="Helpers\Player.cs" />
-    <Compile Include="Helpers\Song.cs" />
-    <Compile Include="Helpers\Team.cs" />
+    <Compile Include="Models\Player.cs" />
+    <Compile Include="Models\Song.cs" />
+    <Compile Include="Models\Team.cs" />
     <Compile Include="Misc\Client.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Misc\DebugTools.cs" />
@@ -142,10 +150,10 @@
     <Compile Include="Misc\ReflectionUtil.cs" />
     <Compile Include="UI\FlowCoordinators\MainModFlowCoordinator.cs" />
     <Compile Include="UI\ViewControllers\CustomLeaderboardController.cs" />
-    <Compile Include="UI\ViewControllers\TeamSelectionViewController.cs" />
     <Compile Include="UI\Views\CustomLeaderboardTableView.cs" />
     <Compile Include="UI\ViewControllers\GeneralNavigationController.cs" />
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
+    <Compile Include="Utils\SongUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -32,7 +32,7 @@ namespace EventServer.Database
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', rank INTEGER DEFAULT 0, tokens INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', rarity INTEGER DEFAULT 0, team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', score INTEGER DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', requiredTokens INTEGER DEFAULT 0, nextPromotion TEXT DEFAULT '', old BIT DEFAULT 0)");
             }
             else
             {
@@ -87,9 +87,9 @@ namespace EventServer.Database
             return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songId}\', {(int)difficulty}, {(int)playerOptions}, {(int)gameOptions}, 0)") > 0;
         }
 
-        public static bool AddTeam(string teamId, string teamName, string captainId, string color, int score)
+        public static bool AddTeam(string teamId, string teamName, string captainId, string color, int requiredTokens, string nextPromotion)
         {
-            return ExecuteCommand($"INSERT INTO teamTable VALUES (NULL, \'{teamId}\', \'{teamName}\', \'{captainId}\', \'{color}\', {score}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO teamTable VALUES (NULL, \'{teamId}\', \'{teamName}\', \'{captainId}\', \'{color}\', {requiredTokens}, \'{nextPromotion}\' 0)") > 0;
         }
 
         //This marks all songs and scores as "old"
@@ -264,27 +264,31 @@ namespace EventServer.Database
         {
             Dictionary<Player, int> playersToGiveTokens = new Dictionary<Player, int>();
 
-            GetAllScores().ToList().ForEach(y =>
+            var teams = GetAllTeams();
+            foreach (var team in teams)
             {
-                if (y.Scores.Count > 0)
+                GetAllScores(teamId: team.TeamId).ToList().ForEach(y =>
                 {
-                    var player = new Player(y.Scores.ElementAt(0).PlayerId);
-                    if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
-                    playersToGiveTokens[player] += 3;
-                }
-                if (y.Scores.Count > 1)
-                {
-                    var player = new Player(y.Scores.ElementAt(1).PlayerId);
-                    if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
-                    playersToGiveTokens[player] += 2;
-                }
-                if (y.Scores.Count > 2)
-                {
-                    var player = new Player(y.Scores.ElementAt(2).PlayerId);
-                    if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
-                    playersToGiveTokens[player] += 1;
-                }
-            });
+                    if (y.Scores.Count > 0)
+                    {
+                        var player = new Player(y.Scores.ElementAt(0).PlayerId);
+                        if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
+                        playersToGiveTokens[player] += 3;
+                    }
+                    if (y.Scores.Count > 1)
+                    {
+                        var player = new Player(y.Scores.ElementAt(1).PlayerId);
+                        if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
+                        playersToGiveTokens[player] += 2;
+                    }
+                    if (y.Scores.Count > 2)
+                    {
+                        var player = new Player(y.Scores.ElementAt(2).PlayerId);
+                        if (!playersToGiveTokens.ContainsKey(player)) playersToGiveTokens[player] = 0;
+                        playersToGiveTokens[player] += 1;
+                    }
+                });
+            }
 
             return playersToGiveTokens;
         }

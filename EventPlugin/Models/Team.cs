@@ -24,9 +24,6 @@ namespace EventPlugin.Helpers
         public string CaptainId { get; private set; }
         public Color Color { get; private set; }
 
-        //TEMPORARY
-        public int Score { get; set; }
-
         public Team(string teamId, string teamName, string captainId, string color)
         {
             TeamId = teamId;

@@ -87,8 +87,6 @@ namespace EventPlugin.UI
 
         private void CreateCommunitiyButton()
         {
-            Console.WriteLine("CREATECOMMUNITY");
-
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
@@ -105,12 +103,18 @@ namespace EventPlugin.UI
                 {
 #if TEAMSABER
                     var buttonName = "Team Saber";
+                    var hint = "Compete with your team in the competition!";
 #elif DISCORDCOMMUNITY
                     var buttonName = "Discord Community";
+                    var hint = "Compete with your team in the competition!";
+#elif ASIAVR
+                    var buttonName = "AsiaVR Tournament";
+                    var hint = "Compete in the Asia Server Event!";
 #else
                     var buttonName = "EVENT BETA";
+                    var hint = "STILL A BETA";
 #endif
-                    _communityButton = MenuButtonUI.AddButton(buttonName, "Compete with your team in the competition!", () => _mainModFlowCoordinator.PresentMainModUI());
+                    _communityButton = MenuButtonUI.AddButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
                     _communityButton.interactable = SongLoader.AreSongsLoaded;
                 }
                 else Logger.Error("MISSING SONG LOADER PLUGIN");

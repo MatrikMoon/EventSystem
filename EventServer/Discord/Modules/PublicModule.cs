@@ -75,7 +75,7 @@ namespace EventServer.Discord.Modules
         [RequireContext(ContextType.Guild)]
         public async Task ServerOptionsAsync([Remainder] string paramString = null)
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -108,7 +108,7 @@ namespace EventServer.Discord.Modules
         [RequireContext(ContextType.Guild)]
         public async Task RegisterAsync(string steamId, string timezone = null, IGuildUser user = null)
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -162,7 +162,7 @@ namespace EventServer.Discord.Modules
                     await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
 #endif
                     string reply = $"User `{player.DiscordName}` successfully linked to `{player.SteamId}`";
-                    if (rank > 0) reply += $" and rank `{rank}`";
+                    if (rank > 0) reply += $" with rank `{rank}`";
                     await ReplyAsync(reply);
                 }
                 else await ReplyAsync("Waiting for embedded content...");
@@ -176,7 +176,7 @@ namespace EventServer.Discord.Modules
         [Command("addSong")]
         public async Task AddSongAsync(string songId, [Remainder] string paramString = null)
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -243,7 +243,7 @@ namespace EventServer.Discord.Modules
                             BeatSaver.Song song = new BeatSaver.Song(songId);
                             string songName = song.SongName;
 
-                            if (!song.Difficulties.Contains(parsedDifficulty))
+                            if (parsedDifficulty != LevelDifficulty.Auto && !song.Difficulties.Contains(parsedDifficulty))
                             {
                                 LevelDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(parsedDifficulty);
 
@@ -284,13 +284,19 @@ namespace EventServer.Discord.Modules
         [Command("endEvent")]
         public async Task EndEventAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (isAdmin)
             {
+                //Make server backup
+                Logger.Warning($"BACKING UP DATABASE...");
+                File.Copy("EventDatabase.db", $"EventDatabase_bak_{DateTime.Now.Day}_{DateTime.Now.Hour}_{DateTime.Now.Minute}_{DateTime.Now.Second}.db");
+                Logger.Success("Database backed up succsessfully.");
+
+
                 //If the server has tokens enabled, dish out tokens to the players now
                 if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
                 {
@@ -313,7 +319,7 @@ namespace EventServer.Discord.Modules
         public async Task RarityAsync(string role, IGuildUser user = null)
         {
             role = role.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -334,7 +340,7 @@ namespace EventServer.Discord.Modules
         [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task CrunchRaritiesAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -404,7 +410,7 @@ namespace EventServer.Discord.Modules
         public async Task CreateTeamAsync(string teamId, [Remainder] string args)
         {
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -420,7 +426,7 @@ namespace EventServer.Discord.Modules
 
                 if (!Team.Exists(teamId))
                 {
-                    AddTeam(teamId, name, "", color, 0);
+                    AddTeam(teamId, name, "", color, 0, "");
 
                     if (requiredTokens != null && nextPromotion != null)
                     {
@@ -462,7 +468,7 @@ namespace EventServer.Discord.Modules
             var currentRoles = Context.Guild.Roles;
 
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = currentRoles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = currentRoles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -522,7 +528,7 @@ namespace EventServer.Discord.Modules
 
             bool setToCaptain = "captain" == captain;
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
@@ -552,92 +558,87 @@ namespace EventServer.Discord.Modules
         [Command("leaderboards")]
         public async Task LeaderboardsAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
             if (!isAdmin) return;
 
             string finalMessage = "Leaderboard:\n\n";
-            List<SongConstruct> songs = GetActiveSongs(true);
 
-            songs.ForEach(x =>
+            if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
             {
-                string songId = x.SongId;
-
-                if (x.Scores.Count > 0) //Don't print if no one submitted scores
+                foreach (var team in GetAllTeams())
                 {
-                    var song = new Song(songId, x.Difficulty);
-                    finalMessage += song.SongName + ":\n";
+                    finalMessage += $"({team.TeamName})\n\n";
 
-                    int place = 1;
-                    foreach (ScoreConstruct item in x.Scores)
+                    foreach (var song in GetAllScores(teamId: team.TeamId))
                     {
-                        //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
-                        //seeing as auto difficulty is what would be represented in the songconstruct
-                        string percentage = "???%";
-                        if (!OstHelper.IsOst(songId))
+                        if (song.Scores.Count > 0) //Don't print if no one submitted scores
                         {
-                            var maxScore = new BeatSaver.Song(songId).GetMaxScore(item.Difficulty);
-                            percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
-                        }
+                            finalMessage += $"{song.Name} ({song.Scores.First().Difficulty}):\n";
 
-                        finalMessage += place + ": " + new Player(item.PlayerId).DiscordName+ " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
-                        if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
-                        {
-                            if (place == 1) finalMessage += " (+3 Tokens)";
-                            else if (place == 2) finalMessage += " (+2 Tokens)";
-                            else if (place == 3) finalMessage += " (+1 Token)";
+                            int place = 1;
+                            foreach (var score in song.Scores)
+                            {
+                                //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
+                                //seeing as auto difficulty is what would be represented in the songconstruct
+                                string percentage = "???%";
+                                if (!OstHelper.IsOst(song.SongId))
+                                {
+                                    var maxScore = new BeatSaver.Song(song.SongId).GetMaxScore(score.Difficulty);
+                                    percentage = ((double)score.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
+                                }
+
+                                finalMessage += place + ": " + new Player(score.PlayerId).DiscordName + " - " + score.Score + $" ({percentage})" + (score.FullCombo ? " (Full Combo)" : "");
+                                if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
+                                {
+                                    if (place == 1) finalMessage += " (+3 Tokens)";
+                                    else if (place == 2) finalMessage += " (+2 Tokens)";
+                                    else if (place == 3) finalMessage += " (+1 Token)";
+                                }
+                                finalMessage += "\n";
+                                place++;
+                            }
+                            finalMessage += "\n";
                         }
-                        finalMessage += "\n";
-                        place++;
                     }
                     finalMessage += "\n";
                 }
-            });
-
-            //Deal with long messages
-            if (finalMessage.Length > 2000)
-            {
-                for (int i = 0; finalMessage.Length > 2000; i++)
-                {
-                    await ReplyAsync(finalMessage.Substring(0, finalMessage.Length > 2000 ? 2000 : finalMessage.Length));
-                    finalMessage = finalMessage.Substring(2000);
-                }
             }
-            await ReplyAsync(finalMessage);
-        }
-
-        [Command("lava")]
-        public async Task LavaAsync()
-        {
-            string finalMessage = "-----Current team averages-----\n\n";
-
-            GetAllScores().ForEach(s =>
+            else
             {
-                finalMessage += s.Name + ":\n\n";
-                Dictionary<string, double> finalAverages = new Dictionary<string, double>();
+                List<SongConstruct> songs = GetActiveSongs(true);
 
-                var maxPossiblePoints = new BeatSaver.Song(s.SongId).GetMaxScore(s.Difficulty);
-                GetAllTeams().ForEach(t =>
+                songs.ForEach(x =>
                 {
-                    finalAverages[t.TeamId] = 0;
-                    var scores = s.Scores.OrderByDescending(x => x.Score).Where(sc => sc.TeamId == t.TeamId).Take(4).ToList();
+                    string songId = x.SongId;
 
-                    if (scores.Count < 4) finalMessage += $"Note: {t.TeamName} ({t.TeamId}) is missing {4 - scores.Count} scores.\n";
+                    if (x.Scores.Count > 0) //Don't print if no one submitted scores
+                    {
+                        var song = new Song(songId, x.Difficulty);
+                        finalMessage += song.SongName + ":\n";
 
-                    while (scores.Count < 4) scores.Add(new ScoreConstruct() { Score = 0 }); //Fill out up to four scores
-                    scores.ForEach(sc => finalAverages[t.TeamId] += sc.Score);
+                        int place = 1;
+                        foreach (ScoreConstruct item in x.Scores)
+                        {
+                            //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
+                            //seeing as auto difficulty is what would be represented in the songconstruct
+                            string percentage = "???%";
+                            if (!OstHelper.IsOst(songId))
+                            {
+                                var maxScore = new BeatSaver.Song(songId).GetMaxScore(item.Difficulty);
+                                percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
+                            }
 
-                    finalAverages[t.TeamId] = finalAverages[t.TeamId] / (maxPossiblePoints * 4);
+                            finalMessage += place + ": " + new Player(item.PlayerId).DiscordName + " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
+                            finalMessage += "\n";
+                            place++;
+                        }
+                        finalMessage += "\n";
+                    }
                 });
-
-                finalMessage += "\n";
-
-                finalAverages.Where(x => new Team(x.Key).Score > 0).OrderByDescending(x => x.Value).ThenByDescending(x => new Team(x.Key).Score).ToList().ForEach(x => finalMessage += $"{new Team(x.Key).TeamName} - Average accuracy: {x.Value.ToString("P", CultureInfo.InvariantCulture)}\n");
-
-                finalMessage += "\n\n";
-            });
+            }
 
             //Deal with long messages
             if (finalMessage.Length > 2000)
@@ -669,7 +670,7 @@ namespace EventServer.Discord.Modules
         [Command("listTeams")]
         public async Task ListTeamsAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator").Id;
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
                 ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);

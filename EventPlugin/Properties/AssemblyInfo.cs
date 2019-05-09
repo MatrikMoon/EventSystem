@@ -1,14 +1,15 @@
-﻿using System.Reflection;
+﻿using EventShared;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("EventPlugin")]
+[assembly: AssemblyTitle(SharedConstructs.Name)]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("EventPlugin")]
+[assembly: AssemblyProduct(SharedConstructs.Name)]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -32,5 +33,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion(EventShared.SharedConstructs.Version)]
-[assembly: AssemblyFileVersion(EventShared.SharedConstructs.Version)]
+[assembly: AssemblyVersion(SharedConstructs.Version)]
+[assembly: AssemblyFileVersion(SharedConstructs.Version)]

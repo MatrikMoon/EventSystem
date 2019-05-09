@@ -9,6 +9,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
+using SongLoaderPlugin.OverrideClasses;
+using SongLoaderPlugin;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,

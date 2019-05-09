@@ -158,9 +158,10 @@ namespace EventServer.Database
         public static bool IsRegistered(string steamId) => ExecuteQuery($"SELECT * FROM playerTable WHERE steamId = \'{steamId}\' AND NOT liquidated = 1", "discordMention").Any(x => x.Length > 0);
 
         //Returns the difficulty we *should* be using
-        public LevelDifficulty GetPreferredDifficulty(bool isOst = false)
+        public LevelDifficulty GetPreferredDifficulty(bool isOst = false) => GetPreferredDifficulty(Team, isOst);
+        public static LevelDifficulty GetPreferredDifficulty(string teamId, bool isOst = false)
         {
-            switch (Team)
+            switch (teamId)
             {
                 case "master":
                 case "blue":
@@ -174,7 +175,7 @@ namespace EventServer.Database
                     return LevelDifficulty.Easy;
             }
 
-            return LevelDifficulty.ExpertPlus;
+            return LevelDifficulty.Easy;
         }
 
         //Necessary overrides for comparison
