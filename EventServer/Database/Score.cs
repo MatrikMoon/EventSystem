@@ -22,7 +22,7 @@ namespace EventServer.Database
             this.difficulty = difficulty;
             if (!Exists())
             {
-                SimpleSql.AddScore(songId, steamId, player.Rarity, player.Team, difficulty, PlayerOptions.None, GameOptions.None, false, 0);
+                SimpleSql.AddScore(songId, steamId, player.Team, difficulty, PlayerOptions.None, GameOptions.None, false, 0);
             }
         }
 

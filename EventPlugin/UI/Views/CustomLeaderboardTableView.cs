@@ -108,21 +108,14 @@ namespace EventPlugin.UI.Views
 
         public class CustomScoreData : LeaderboardTableView.ScoreData
         {
-            public Rarity Rarity
-            {
-                get;
-                private set;
-            }
-
             public string TeamId
             {
                 get;
                 private set;
             }
 
-            public CustomScoreData(int score, string playerName, int place, bool fullCombo, Rarity rarity = Rarity.None, string teamId = "-1") : base(score, playerName, place, fullCombo)
+            public CustomScoreData(int score, string playerName, int place, bool fullCombo, string teamId = "-1") : base(score, playerName, place, fullCombo)
             {
-                Rarity = rarity;
                 TeamId = teamId;
             }
         }

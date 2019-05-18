@@ -79,9 +79,9 @@ namespace EventPlugin.Misc
         }
 
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, Rarity rarity, string teamId, bool useTeamColors = false)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, string teamId, bool useTeamColors = false)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, difficulty, rarity, teamId, useTeamColors));
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, difficulty, teamId, useTeamColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
@@ -134,7 +134,6 @@ namespace EventPlugin.Misc
                         slvc.DownloadErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
                     }
 
-                    Player.Instance.rarity = (Rarity)Convert.ToInt64(node["rarity"].Value);
                     Player.Instance.team = node["team"].ToString();
                 }
                 catch (Exception e)
@@ -145,9 +144,9 @@ namespace EventPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, Rarity rarity, string teamId = "-1", bool useTeamColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songId}/{(int)difficulty}/{(int)rarity}/{teamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songId}/{(int)difficulty}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -169,7 +168,6 @@ namespace EventPlugin.Misc
                             score.Value["player"],
                             Convert.ToInt32(score.Value["place"].ToString()),
                             score.Value["fullCombo"] == "true",
-                            (Rarity)Convert.ToInt32(score.Value["rarity"].ToString()),
                             score.Value["team"]
                         ));
 

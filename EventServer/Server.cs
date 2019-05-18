@@ -203,7 +203,6 @@ namespace EventServer
                             Player player = new Player(steamId);
 
                             json["version"] = VersionCode;
-                            json["rarity"] = player.Rarity;
                             json["team"] = player.Team;
                         }
                         else if (Player.Exists(steamId) && !Player.IsRegistered(steamId))
@@ -235,14 +234,12 @@ namespace EventServer
                         if (songId == "all")
                         {
                             int take = 10;
-                            int rarity = (int)Rarity.All;
                             string teamId = "-1";
 
                             if (requestData.Length > 3) take = Convert.ToInt32(requestData[2]);
-                            if (requestData.Length > 4) rarity = Convert.ToInt32(requestData[3]);
-                            if (requestData.Length > 5) teamId = requestData[4];
+                            if (requestData.Length > 4) teamId = requestData[4];
 
-                            List<SongConstruct> songs = GetAllScores((Rarity)rarity, teamId);
+                            List<SongConstruct> songs = GetAllScores(teamId);
                             songs.ToList().ForEach(x =>
                             {
                                 JSONNode songNode = new JSONObject();
@@ -260,7 +257,6 @@ namespace EventServer
                                     scoreNode["place"] = place;
                                     scoreNode["fullCombo"] = y.FullCombo ? "true" : "false";
                                     scoreNode["steamId"] = y.PlayerId;
-                                    scoreNode["rarity"] = (int)y.Rarity;
                                     scoreNode["team"] = y.TeamId;
                                     songNode["scores"].Add(Convert.ToString(place++), scoreNode);
                                 });
@@ -271,8 +267,7 @@ namespace EventServer
                         else
                         {
                             int difficulty = Convert.ToInt32(requestData[2]);
-                            int rarity = Convert.ToInt32(requestData[3]);
-                            string teamId = requestData[4];
+                            string teamId = requestData[3];
                             songId = Regex.Replace(songId, "[^a-zA-Z0-9- ]", "");
                             teamId = Regex.Replace(teamId, "[^a-zA-Z0-9- ]", "");
 
@@ -292,7 +287,7 @@ namespace EventServer
                                 };
                             }
 
-                            List<ScoreConstruct> scores = GetScoresForSong(songConstruct, (Rarity)rarity, teamId);
+                            List<ScoreConstruct> scores = GetScoresForSong(songConstruct, teamId);
 
                             int place = 1;
                             scores.Take(10).ToList().ForEach(x =>
@@ -303,7 +298,6 @@ namespace EventServer
                                 node["place"] = place;
                                 node["fullCombo"] = x.FullCombo ? "true" : "false";
                                 node["steamId"] = x.PlayerId;
-                                node["rarity"] = (int)x.Rarity;
                                 node["team"] = x.TeamId;
                                 json.Add(Convert.ToString(place++), node);
                             });

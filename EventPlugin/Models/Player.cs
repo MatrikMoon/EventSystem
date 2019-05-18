@@ -31,7 +31,6 @@ namespace EventPlugin.Helpers
         }
 
         //Fields
-        public Rarity rarity;
         public string team;
 
         //Constructor
@@ -59,27 +58,6 @@ namespace EventPlugin.Helpers
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
         }
         */
-
-        //Returns the appropriate color for a rarity
-        public Color GetColorForRarity() => GetColorForRarity(rarity);
-        public static Color GetColorForRarity(Rarity rarity)
-        {
-            switch (rarity)
-            {
-                case Rarity.SSS:
-                    return Color.red;
-                case Rarity.A:
-                    return Color.magenta;
-                case Rarity.S:
-                    return Color.yellow;
-                case Rarity.SS:
-                    return Color.cyan;
-                case Rarity.B:
-                    return Color.blue;
-                default:
-                    return Color.white;
-            }
-        }
 
         //User ID code, courtesy of Kyle and Beat Saber Utils//
         public static void UpdateUserId()

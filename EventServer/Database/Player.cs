@@ -21,7 +21,7 @@ namespace EventServer.Database
             if (!Exists())
             {
                 //Default name is the steam id
-                AddPlayer(steamId, steamId, "", "", "", (int)SharedConstructs.Rarity.None, "-1", 0, 0, 0, 0, 0, 0, 0, true);
+                AddPlayer(steamId, steamId, "", "", "", "-1", 0, 0, 0, 0, 0, 0, 0, true);
             }
         }
 
@@ -79,18 +79,6 @@ namespace EventServer.Database
             }
         }
 
-        public int Rarity
-        {
-            get
-            {
-                return Convert.ToInt32(ExecuteQuery($"SELECT rarity FROM playerTable WHERE steamId = \'{SteamId}\'", "rarity").First());
-            }
-            set
-            {
-                ExecuteCommand($"UPDATE playerTable SET rarity = {value} WHERE steamId = \'{SteamId}\'");
-            }
-        }
-
         public string Team
         {
             get
@@ -142,8 +130,6 @@ namespace EventServer.Database
         public bool IncrementPersonalBestsBeaten() => ExecuteCommand($"UPDATE playerTable SET personalBestsBeaten = personalBestsBeaten + 1 WHERE steamId = \'{SteamId}\'") > 1;
 
         public bool IncrementSongsPlayed() => ExecuteCommand($"UPDATE playerTable SET songsPlayed = songsPlayed + 1 WHERE steamId = \'{SteamId}\'") > 1;
-
-        public static List<string> GetPlayersInRarity(int rarity) => ExecuteQuery($"SELECT steamId FROM playerTable WHERE rarity = {rarity}", "steamId");
 
         public void Liquidate()
         {

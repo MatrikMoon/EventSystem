@@ -16,10 +16,8 @@ using System.Globalization;
 
 namespace EventServer.Discord.Modules
 {
-    // Modules must be public and inherit from an IModuleBase
-    public class PublicModule : ModuleBase<SocketCommandContext>
+    public class BeatSaberModule : ModuleBase<SocketCommandContext>
     {
-        // Dependency Injection will fill this value in for us
         public PictureService PictureService { get; set; }
 
         //Pull parameters out of an argument list string
@@ -310,97 +308,6 @@ namespace EventServer.Discord.Modules
                 //Mark all songs and scores as old
                 MarkAllOld();
                 await ReplyAsync($"All songs and scores are marked as Old.{(Config.ServerFlags.HasFlag(ServerFlags.Tokens) ? " Tokens dispersed." : "")} You may now add new songs.");
-            }
-        }
-
-        [Command("rarity")]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task RarityAsync(string role, IGuildUser user = null)
-        {
-            role = role.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-            if (isAdmin) user = user ?? (IGuildUser)Context.User; //Admins can assign roles for others
-            else user = (IGuildUser)Context.User;
-
-            if ((isAdmin) && CommunityBot._rarityRoles.Contains(role))
-            {
-                Player player = Player.GetByDiscordMetion(user.Mention);
-                if (player == null) await ReplyAsync("That user has not registered with the bot yet");
-                else if (Enum.TryParse(char.ToUpper(role[0]) + role.Substring(1), out Rarity rarity)) CommunityBot.ChangeRarity(player, rarity);
-                else await ReplyAsync("Role parse failed");
-            }
-            else await ReplyAsync("You are not authorized to assign that role");
-        }
-
-        [Command("crunchRarities")]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
-        public async Task CrunchRaritiesAsync()
-        {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-
-            if (isAdmin)
-            {
-                var players = GetAllPlayers()
-                    .Where(x => x.Rarity== -1 && Team.GetByDiscordMentionOfCaptain(x.DiscordMention) == null)
-                    .OrderBy(x => x.Rank)
-                    .ToList(); //Database complexity hell. Oh well.
-
-                int count = players.Count;
-                int threshold = count / 6; //Divide players by number of rarities for an even split
-
-                string reply = $"Registrant count: {players.Count}\n" +
-                    $"Tiers: 6\n" +
-                    $"Players per tier: {threshold}\n\n";
-
-                int index = 0;
-                Rarity currentRarity = Rarity.SSS;
-
-                players.ForEach(x =>
-                {
-                    x.Rarity = (int)currentRarity;
-
-                    //Increment current rarity based on how many players we've iterated over
-                    if (++index >= threshold)
-                    {
-                        index = 0;
-                        currentRarity--;
-                    }
-                });
-
-                reply += "Rarity Assignments:\n\n";
-
-                index = 0;
-                currentRarity = Rarity.SS;
-
-                players.ForEach(x =>
-                {
-                    reply += $"{x.DiscordName} ({x.Timezone}) - {(Rarity)x.Rarity}\n";
-
-                    //Increment current rarity based on how many players we've iterated over
-                    if (++index >= threshold)
-                    {
-                        reply += $"\n\n{currentRarity}:\n";
-                        index = 0;
-                        currentRarity--;
-                    }
-                });
-
-                //Deal with long messages
-                if (reply.Length > 2000)
-                {
-                    for (int i = 0; reply.Length > 2000; i++)
-                    {
-                        await ReplyAsync(reply.Substring(0, reply.Length > 2000 ? 2000 : reply.Length));
-                        reply = reply.Substring(2000);
-                    }
-                }
-                await ReplyAsync(reply);
             }
         }
 
@@ -697,7 +604,6 @@ namespace EventServer.Discord.Modules
                 "register [scoresaber link] [timezone] <@User>\n" +
                 "addSong [beatsaver url] <-difficulty> (<difficulty> can be either a number or whole-word, such as 4 or ExpertPlus)\n" +
                 "endEvent\n" +
-                "rarity [rarity] <@User> (assigns a rarity to a user. Likely to remain unused)\n" +
                 "crunchRarities (looks at the ranks of all registered players and assigns rarities accordingly)\n" +
                 "createTeam [teamId] <name> <color> (teamId should be in the form of teamX, where X is the next teamId number in line, name must be no-spaces, and color must start with #)\n" +
                 "modifyTeam <teamId> <-name> <-color> (admins can override the teamId they're changing)\n" +
@@ -706,97 +612,6 @@ namespace EventServer.Discord.Modules
                 "listTeams (Shows a list of teams. Moderators only)\n" +
                 "help (This message!)```";
             await ReplyAsync(ret);
-        }
-
-        [Command("cat")]
-        public async Task CatAsync()
-        {
-            // Get a stream containing an image of a cat
-            var stream = await PictureService.GetCatPictureAsync();
-            // Streams must be seeked to their beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "cat.png");
-        }
-
-        [Command("neko")]
-        public async Task NekoAsync()
-        {
-            // Get a stream containing an image of a cat
-            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.Neko);
-            // Streams must be seeked to their beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "neko.png");
-        }
-
-        [Command("nekolewd")]
-        [RequireNsfw]
-        public async Task NekoLewdAsync()
-        {
-            // Get a stream containing an image of a cat
-            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.NekoLewd);
-            // Streams must be seeked to their beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "nekolewd.png");
-        }
-
-        [Command("nekogif")]
-        public async Task NekoGifAsync()
-        {
-            // Get a stream containing an image of a cat
-            var gifLink = await PictureService.GetNekoGifAsync();
-
-            var builder = new EmbedBuilder();
-            builder.WithImageUrl(gifLink);
-
-            await ReplyAsync("", false, builder.Build());
-        }
-
-        [Command("nekolewdgif")]
-        [RequireNsfw]
-        public async Task NekoLewdGifAsync()
-        {
-            // Get a stream containing an image of a cat
-            var gifLink = await PictureService.GetNekoLewdGifAsync();
-
-            var builder = new EmbedBuilder();
-            builder.WithImageUrl(gifLink);
-
-            await ReplyAsync("", false, builder.Build());
-        }
-
-        [Command("lewd")]
-        [RequireNsfw]
-        public async Task LewdAsync()
-        {
-            // Get a stream containing an image of a cat
-            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.Hentai);
-            // Streams must be seeked to their beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "lewd.png");
-        }
-
-        [Command("lewdgif")]
-        [RequireNsfw]
-        public async Task LewdGifAsync()
-        {
-            // Get a stream containing an image of a cat
-            var gifLink = await PictureService.GetLewdGifAsync();
-
-            var builder = new EmbedBuilder();
-            builder.WithImageUrl(gifLink);
-
-            await ReplyAsync("", false, builder.Build());
-        }
-
-        [Command("lewdsmall")]
-        [RequireNsfw]
-        public async Task LewdSmallAsync()
-        {
-            // Get a stream containing an image of a cat
-            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.HentaiSmall);
-            // Streams must be seeked to their beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "lewdsmall.png");
         }
     }
 }

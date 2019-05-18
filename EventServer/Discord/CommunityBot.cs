@@ -23,14 +23,6 @@ namespace EventServer.Discord
         private static string _serverName;
         private static string _scoreChannel;
 
-        //Following should be private, except for the fact we're keeping legacy
-        //support for people who already have a rarity assigned to them.
-        //This means when someone registers, that command needs access to these
-        //to see if they're assigned a role that's relevant to us.
-        //Also leaderboards uses _rarityToList
-        public static int[] _saberRankValues = { 0, 1, 2, 3, 4, 5 };
-        public static string[] _rarityRoles = { "uncommon", "rare", "epic", "legendary", "mythic", "captain" };
-
         public static void Start(string serverName, string scoreChannel)
         {
             _serverName = serverName;
@@ -50,35 +42,6 @@ namespace EventServer.Discord
                 var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
                 guild.TextChannels.ToList().Where(x => x.Name == channel).First().SendMessageAsync(message);
             }
-        }
-
-        public static async void ChangeRarity(Player player, Rarity rarity)
-        {
-            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
-            var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
-            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == _scoreChannel).First();
-
-            player.Rarity = (int)rarity;
-
-            /*
-            await user.RemoveRolesAsync(guild.Roles.Where(x => _rarityRoles.Contains(x.Name.ToLower())));
-            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => x.Name.ToLower() == rarity.ToString().ToLower()));
-            */
-
-            //Sort out existing scores
-            string steamId = player.SteamId;
-            IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(steamId);
-
-            if (playerScores.Count >= 0)
-            {
-                playerScores.ToList().ForEach(x =>
-                {
-                    BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongId);
-                    ExecuteCommand($"UPDATE scoreTable SET rarity = {(int)rarity} WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
-                });
-            }
-
-            await rankChannel.SendMessageAsync($"{player.DiscordMention} has been designated as `{rarity}`!");
         }
 
         public static async void ChangeTeam(Player player, Team team, bool captain = false)

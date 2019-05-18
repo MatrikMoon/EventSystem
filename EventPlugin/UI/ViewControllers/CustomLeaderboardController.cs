@@ -171,7 +171,7 @@ namespace EventPlugin.UI.ViewControllers
             }
 
             //Get leaderboard data
-            Client.GetSongLeaderboard(this, song.SongId, song.Difficulty, Rarity.All, selectedTeam, selectedTeam == "-1");
+            Client.GetSongLeaderboard(this, song.SongId, song.Difficulty, selectedTeam, selectedTeam == "-1");
         }
 
         public void Refresh()
