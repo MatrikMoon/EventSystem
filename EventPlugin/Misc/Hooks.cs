@@ -54,7 +54,7 @@ namespace EventPlugin.Misc
                 }
                 else
                 {
-                    songId = SongIdHelper.GetSongIdFromLevelId(level.levelID);
+                    songId = SongUtils.GetSongIdFromLevelId(level.levelID);
                 }
 
                 //Community leaderboards

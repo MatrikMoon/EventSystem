@@ -84,7 +84,6 @@ namespace EventServer.Discord.Modules
             {
                 if (null != paramString)
                 {
-                    //Load up the GameOptions and PlayerOptions
                     ServerFlags features = Config.ServerFlags;
                     foreach (ServerFlags o in Enum.GetValues(typeof(ServerFlags)))
                     {

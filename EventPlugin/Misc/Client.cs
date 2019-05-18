@@ -279,12 +279,12 @@ namespace EventPlugin.Misc
 
                 //Filter out songs we already have and OSTS
                 IEnumerable<Song> osts = songs.Where(x => OstHelper.IsOst(x.SongId));
-                IEnumerable<Song> alreadyHave = songs.Where(x => SongIdHelper.GetSongExistsBySongId(x.SongId));
+                IEnumerable<Song> alreadyHave = songs.Where(x => SongUtils.GetSongExistsBySongId(x.SongId));
 
                 //Loads a level from a song instance, populates the Beatmap property and adds to the available list
                 Action<Song> loadLevel = (song) =>
                 {
-                    var level = SongIdHelper.GetLevelFromSongId(song.SongId);
+                    var level = SongUtils.GetLevelFromSongId(song.SongId);
 
                     //If the directory exists, but isn't loaded in song loader,
                     //there's probably a conflict with another loaded song

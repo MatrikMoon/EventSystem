@@ -2,6 +2,7 @@
 using EventPlugin.Helpers;
 using EventPlugin.Misc;
 using EventPlugin.UI.ViewControllers;
+using EventPlugin.Utils;
 using EventShared;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -253,7 +254,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     }
                     else
                     {
-                        songId = SongIdHelper.GetSongIdFromLevelId(level.levelID);
+                        songId = SongUtils.GetSongIdFromLevelId(level.levelID);
                     }
 
                     //Community leaderboards

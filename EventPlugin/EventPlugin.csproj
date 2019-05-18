@@ -142,7 +142,6 @@
     <Compile Include="Misc\Hooks.cs" />
     <Compile Include="Misc\ParallelCoroutine.cs" />
     <Compile Include="Misc\Ryder.Lightweight.cs" />
-    <Compile Include="Misc\SongIdHelper.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="UI\ViewControllers\BottomViewController.cs" />
     <Compile Include="UI\EventUI.cs" />
