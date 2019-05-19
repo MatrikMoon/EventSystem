@@ -1,16 +1,20 @@
 ﻿using EventServer.Database;
 using EventServer.Discord;
+using EventServer.Discord.Services;
 using EventShared;
 using EventShared.SimpleJSON;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
-using static EventServer.Database.SimpleSql;
+using System.Threading.Tasks;
+using static EventServer.Database.SqlUtils;
 using static EventShared.SharedConstructs;
 using Score = EventShared.Score;
 
@@ -95,6 +99,72 @@ namespace EventServer
                             StatusCode = "400"
                         };
                      }
+                },
+                new Route {
+                    Name = "Rank Receiver",
+                    UrlRegex = @"^/requestrank/$",
+                    Method = "POST",
+                    Callable = (HttpRequest request) => {
+                        try
+                        {
+                            //Get JSON object from request content
+                            JSONNode node = JSON.Parse(WebUtility.UrlDecode(request.Content));
+
+                            //Get Score object from JSON
+                            RankRequest r = RankRequest.FromString(node["pb"]);
+
+                            if (RSA.SignRankRequest(Convert.ToUInt64(r.UserId), r.RequestedTeamId, r.InitialAssignment) == r.Signed &&
+                                Player.Exists(r.UserId) &&
+                                Player.IsRegistered(r.UserId) &&
+                                Team.Exists(r.RequestedTeamId))
+                            {
+                                Logger.Info($"RECEIVED VALID RANK REQUEST: {r.RequestedTeamId} FOR {r.UserId} {r.RequestedTeamId} {r.InitialAssignment}");
+
+                                var player = new Player(r.UserId);
+                                var team = new Team(r.RequestedTeamId);
+
+                                //The rank up system will ignore requets where the player doesn't have the required tokens,
+                                //or is requesting a rank higher than the one above their current rank (if it's not an inital rank assignment)
+                                if (r.InitialAssignment && player.Team == "-1") CommunityBot.ChangeTeam(player, team);
+                                else if (player.Team != "gold") {
+                                    var oldTeam = new Team(player.Team);
+                                    var nextTeam = new Team(oldTeam.NextPromotion);
+                                    if (player.Tokens >= nextTeam.RequiredTokens) CommunityBot.ChangeTeam(player, nextTeam);
+                                }
+                                else if (player.Team == "gold" && player.Tokens >= new Team("gold").RequiredTokens) { //Player is submitting for Blue
+                                    new Vote(player.PlayerId, r.OstScoreInfo);
+                                }
+                                else
+                                {
+                                    return new HttpResponse()
+                                    {
+                                        ReasonPhrase = "Bad Request",
+                                        StatusCode = "400"
+                                    };
+                                }
+
+                                return new HttpResponse()
+                                {
+                                    ReasonPhrase = "OK",
+                                    StatusCode = "200"
+                                };
+                            }
+                            else
+                            {
+                                Logger.Warning($"RECEIVED INVALID RANK REQUEST {r.RequestedTeamId} FROM {r.UserId}");
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error($"{e}");
+                        }
+
+                        return new HttpResponse()
+                        {
+                            ReasonPhrase = "Bad Request",
+                            StatusCode = "400"
+                        };
+                    }
                 },
                 new Route {
                     Name = "Song Getter",
@@ -353,7 +423,11 @@ namespace EventServer
 #elif DEBUG
             string scoreChannel = "event-scores";
 #endif
-            Thread thread1 = new Thread(() => CommunityBot.Start(serverName, scoreChannel));
+            Thread thread1 = new Thread(async () => {
+                CommunityBot.Start(serverName, scoreChannel, "vote");
+                Vote.RegisterVotesWithBot();
+                await Task.Delay(-1);
+            });
             thread1.Start();
 
             //Set up HTTP server

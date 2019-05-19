@@ -1,25 +1,26 @@
 ﻿using Discord;
 using Discord.Commands;
 using EventServer.Database;
-using EventServer.Discord.Services;
 using EventShared;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static EventServer.Database.SimpleSql;
+using static EventServer.Database.SqlUtils;
 using static EventShared.SharedConstructs;
-using Discord.WebSocket;
-using System.Globalization;
+
+/**
+ * Created by Moon on ??/??/2018
+ * A Discord.NET module for Beat Saber Events related commands
+ */
 
 namespace EventServer.Discord.Modules
 {
     public class BeatSaberModule : ModuleBase<SocketCommandContext>
     {
-        public PictureService PictureService { get; set; }
-
         //Pull parameters out of an argument list string
         //Note: argument specifiers are required to start with "-"
         private static string ParseArgs(string argString, string argToGet)
@@ -69,16 +70,20 @@ namespace EventServer.Discord.Modules
             return null;
         }
 
+        private bool IsAdmin()
+        {
+            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => CommunityBot.AdminRoles.Contains(x.Name.ToLower())).Id;
+            bool isAdmin =
+                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
+                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+            return isAdmin;
+        }
+
         [Command("serverOptions")]
         [RequireContext(ContextType.Guild)]
         public async Task ServerOptionsAsync([Remainder] string paramString = null)
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-
-            if (isAdmin)
+            if (IsAdmin())
             {
                 if (null != paramString)
                 {
@@ -103,14 +108,9 @@ namespace EventServer.Discord.Modules
 
         [Command("register")]
         [RequireContext(ContextType.Guild)]
-        public async Task RegisterAsync(string steamId, string timezone = null, IGuildUser user = null)
+        public async Task RegisterAsync(string steamId, IGuildUser user = null, [Remainder]string extras = null)
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-
-            if (isAdmin)
+            if (IsAdmin())
             {
                 user = user ?? (IGuildUser)Context.User;
             }
@@ -128,7 +128,8 @@ namespace EventServer.Discord.Modules
             }
 
             steamId = Regex.Replace(steamId, "[^0-9]", "");
-            timezone = Regex.Replace(timezone ?? "none", "[^a-zA-Z0-9]", "");
+            extras = ParseArgs(extras, "extras");
+            extras = Regex.Replace(extras ?? "none", "[^a-zA-Z0-9 :-]", "");
 
             if (!Player.Exists(steamId) || !Player.IsRegistered(steamId))
             {
@@ -143,7 +144,7 @@ namespace EventServer.Discord.Modules
                     player.DiscordName = username;
                     player.DiscordExtension = user.Discriminator;
                     player.DiscordMention = user.Mention;
-                    player.Timezone = timezone;
+                    player.Extras = extras;
 
                     //Scrape out the rank data
                     var description = embed.Description;
@@ -158,7 +159,7 @@ namespace EventServer.Discord.Modules
 #if TEAMSABER
                     await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
 #endif
-                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.SteamId}`";
+                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.PlayerId}`";
                     if (rank > 0) reply += $" with rank `{rank}`";
                     await ReplyAsync(reply);
                 }
@@ -173,12 +174,7 @@ namespace EventServer.Discord.Modules
         [Command("addSong")]
         public async Task AddSongAsync(string songId, [Remainder] string paramString = null)
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-
-            if (isAdmin)
+            if (IsAdmin())
             {
                 //Parse the difficulty input, either as an int or a string
                 LevelDifficulty parsedDifficulty = LevelDifficulty.ExpertPlus;
@@ -281,12 +277,7 @@ namespace EventServer.Discord.Modules
         [Command("endEvent")]
         public async Task EndEventAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-
-            if (isAdmin)
+            if (IsAdmin())
             {
                 //Make server backup
                 Logger.Warning($"BACKING UP DATABASE...");
@@ -316,12 +307,8 @@ namespace EventServer.Discord.Modules
         public async Task CreateTeamAsync(string teamId, [Remainder] string args)
         {
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
-            if (isAdmin)
+            if (IsAdmin())
             {
                 var name = ParseArgs(args, "name") ?? "Default Team Name";
                 var color = ParseArgs(args, "color") ?? "#ffffff";
@@ -374,10 +361,6 @@ namespace EventServer.Discord.Modules
             var currentRoles = Context.Guild.Roles;
 
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = currentRoles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             if (Team.Exists(teamId))
             {
@@ -386,9 +369,9 @@ namespace EventServer.Discord.Modules
                 //though, it's still relevant since any person could *try* to modify the team still. They should just get a permission required message
                 Team currentTeam = new Team(teamId);
                 string captain = currentTeam.Captain;
-                bool isCaptain = string.IsNullOrEmpty(captain) ? true : captain == Player.GetByDiscordMetion(Context.User.Mention).SteamId; //In the case of teams, team captains count as admins
+                bool isCaptain = string.IsNullOrEmpty(captain) ? true : captain == Player.GetByDiscordMetion(Context.User.Mention).PlayerId; //In the case of teams, team captains count as admins
 
-                if (isAdmin || isCaptain)
+                if (IsAdmin() || isCaptain)
                 {
                     //If the provided color can be parsed into a uint, we can use the provided color as the color for the dicsord role
                     Color? discordColor = null;
@@ -434,10 +417,6 @@ namespace EventServer.Discord.Modules
 
             bool setToCaptain = "captain" == captain;
             teamId = teamId.ToLower();
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
 
             user = user ?? (IGuildUser)Context.User; //Anyone who can assign teams can assign roles for others
 
@@ -447,7 +426,8 @@ namespace EventServer.Discord.Modules
                 //though, it's still relevant since any person could *try* to modify the team still. They should just get a permission required message
                 Team currentTeam = new Team(teamId);
                 string currentCaptain = currentTeam.Captain;
-                bool isCaptain = string.IsNullOrEmpty(currentCaptain) ? true : currentCaptain == Player.GetByDiscordMetion(Context.User.Mention).SteamId; //In the case of teams, team captains count as admins
+                bool isCaptain = string.IsNullOrEmpty(currentCaptain) ? true : currentCaptain == Player.GetByDiscordMetion(Context.User.Mention).PlayerId; //In the case of teams, team captains count as admins
+                var isAdmin = IsAdmin();
 
                 if (isAdmin || isCaptain)
                 {
@@ -464,11 +444,7 @@ namespace EventServer.Discord.Modules
         [Command("leaderboards")]
         public async Task LeaderboardsAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-            if (!isAdmin) return;
+            if (!IsAdmin()) return;
 
             string finalMessage = "Leaderboard:\n\n";
 
@@ -576,11 +552,7 @@ namespace EventServer.Discord.Modules
         [Command("listTeams")]
         public async Task ListTeamsAsync()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "moderator" || x.Name.ToLower() == "weekly event manager" || x.Name.ToLower() == "senpai").Id;
-            bool isAdmin =
-                ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
-            if (!isAdmin) return;
+            if (!IsAdmin()) return;
 
             string finalMessage = "Teams:\n\n";
             List<Team> teams = GetAllTeams();
@@ -601,7 +573,7 @@ namespace EventServer.Discord.Modules
                 "<> -> optional parameter / admin-only parameter\n" +
                 "() -> Extra notes about command```\n\n" +
                 "```Commands:\n\n" +
-                "register [scoresaber link] [timezone] <@User>\n" +
+                "register [scoresaber link] <extras> <@User>\n" +
                 "addSong [beatsaver url] <-difficulty> (<difficulty> can be either a number or whole-word, such as 4 or ExpertPlus)\n" +
                 "endEvent\n" +
                 "crunchRarities (looks at the ranks of all registered players and assigns rarities accordingly)\n" +

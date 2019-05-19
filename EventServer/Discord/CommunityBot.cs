@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using EventServer.Database;
 using EventServer.Discord.Services;
@@ -10,9 +11,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static EventServer.Database.SimpleSql;
-using static EventShared.SharedConstructs;
-using EventShared;
+using static EventServer.Database.SqlUtils;
 
 namespace EventServer.Discord
 {
@@ -22,26 +21,35 @@ namespace EventServer.Discord
         private static IServiceProvider _services;
         private static string _serverName;
         private static string _scoreChannel;
+        private static string _voteChannel;
+        private static string _databaseLocation;
 
-        public static void Start(string serverName, string scoreChannel)
+        public static List<string> AdminRoles { get; } = new List<string>
+        {
+            "moderator",
+            "weekly event manager",
+            "senpai"
+        };
+
+        public static void Start(string serverName, string scoreChannel, string voteChannel, string databaseLocation = "botDatabase.db")
         {
             _serverName = serverName;
             _scoreChannel = scoreChannel;
+            _voteChannel = voteChannel;
+            _databaseLocation = databaseLocation;
             MainAsync().GetAwaiter().GetResult();
         }
 
         public static void SendToScoreChannel(string message)
         {
-            SendToChannel(_scoreChannel, message);
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
+            guild.TextChannels.First(x => x.Name == _scoreChannel).SendMessageAsync(message);
         }
 
-        public static void SendToChannel(string channel, string message)
+        public static Task<RestUserMessage> SendToVoteChannel(string message)
         {
-            if (_client.ConnectionState == ConnectionState.Connected)
-            {
-                var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
-                guild.TextChannels.ToList().Where(x => x.Name == channel).First().SendMessageAsync(message);
-            }
+            var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
+            return guild.TextChannels.First(x => x.Name == _voteChannel).SendMessageAsync(message);
         }
 
         public static async void ChangeTeam(Player player, Team team, bool captain = false)
@@ -52,12 +60,13 @@ namespace EventServer.Discord
 
             //Add the role of the team we're being switched to
             //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.
+            await user.RemoveRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == new Team(player.Team).TeamName.ToLower()));
             await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == team.TeamName.ToLower()));
 
             player.Team = team.TeamId;
 
             //Sort out existing scores
-            string steamId = player.SteamId;
+            string steamId = player.PlayerId;
             IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(steamId);
 
             if (playerScores.Count >= 0)
@@ -69,7 +78,7 @@ namespace EventServer.Discord
                 });
             }
 
-            if (captain) team.Captain = player.SteamId;
+            if (captain) team.Captain = player.PlayerId;
 
             string teamName = team.TeamName;
             await rankChannel.SendMessageAsync($"{player.DiscordMention} has been assigned {(captain ? "as the captain of" : "to")} `{((teamName == string.Empty || teamName == null )? team.TeamId: teamName)}`!");
@@ -92,8 +101,10 @@ namespace EventServer.Discord
             await _client.StartAsync();
             await _services.GetRequiredService<CommandHandlingService>().InitializeAsync();
 
-            await Task.Delay(-1);
+            _services.GetRequiredService<DatabaseService>().RegisterReactionRolesWithBot();
         }
+
+        public static IServiceProvider GetServices() => _services;
 
         private static Task LogAsync(LogMessage log)
         {
@@ -105,13 +116,14 @@ namespace EventServer.Discord
         private static IServiceProvider ConfigureServices()
         {
             var config = new DiscordSocketConfig { MessageCacheSize = 100 };
-            var client = new DiscordSocketClient(config);
             return new ServiceCollection()
-                .AddSingleton(client)
+                .AddSingleton(new DiscordSocketClient(config))
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<PictureService>()
+                .AddSingleton<ReactionService>()
+                .AddSingleton(serviceProvider => new DatabaseService(_databaseLocation, serviceProvider))
                 .BuildServiceProvider();
         }
     }

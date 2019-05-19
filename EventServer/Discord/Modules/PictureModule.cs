@@ -1,16 +1,17 @@
 ﻿using Discord;
 using Discord.Commands;
 using EventServer.Discord.Services;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+
+/**
+ * Created by Moon on 5/18/2019
+ * A Discord.NET module for image commands
+ */
 
 namespace EventServer.Discord.Modules
 {
-    class PictureModule : ModuleBase<SocketCommandContext>
+    public class PictureModule : ModuleBase<SocketCommandContext>
     {
         public PictureService PictureService { get; set; }
 
@@ -92,17 +93,6 @@ namespace EventServer.Discord.Modules
             builder.WithImageUrl(gifLink);
 
             await ReplyAsync("", false, builder.Build());
-        }
-
-        [Command("lewdsmall")]
-        [RequireNsfw]
-        public async Task LewdSmallAsync()
-        {
-            // Get a stream containing an image of a cat
-            var stream = await PictureService.GetNekoStreamAsync(PictureService.NekoType.HentaiSmall);
-            // Streams must be seeked to their beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "lewdsmall.png");
         }
     }
 }

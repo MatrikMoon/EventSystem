@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EventShared;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -13,31 +14,37 @@ using static EventShared.SharedConstructs;
 
 namespace EventServer.Database
 {
-    public class SimpleSql
+    public class SqlUtils
     {
         private static string databaseLocation = Directory.GetCurrentDirectory();
         private static string databaseName = "EventDatabase";
         private static string databaseExtension = "db";
         private static string databaseFullPath = $@"{databaseLocation}\{databaseName}.{databaseExtension}";
+        private static bool initialized = false;
 
         private static SQLiteConnection OpenConnection()
         {
-            SQLiteConnection dbc = null;
+            SQLiteConnection dbc;
             if (!File.Exists(databaseFullPath))
             {
                 SQLiteConnection.CreateFile($"{databaseName}.{databaseExtension}");
                 dbc = new SQLiteConnection($"Data Source={databaseName}.{databaseExtension};Version=3;");
                 dbc.Open();
-
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', timezone TEXT DEFAULT '', team TEXT DEFAULT '', rank INTEGER DEFAULT 0, tokens INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', requiredTokens INTEGER DEFAULT 0, nextPromotion TEXT DEFAULT '', old BIT DEFAULT 0)");
             }
             else
             {
                 dbc = new SQLiteConnection($"Data Source={databaseName}.{databaseExtension};Version=3;");
                 dbc.Open();
+            }
+
+            if (!initialized)
+            {
+                initialized = true;
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, steamId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', extras TEXT DEFAULT '', team TEXT DEFAULT '', rank INTEGER DEFAULT 0, tokens INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songId TEXT DEFAULT '', steamId TEXT DEFAULT '', team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songId TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', requiredTokens INTEGER DEFAULT 0, nextPromotion TEXT DEFAULT '', old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS voteTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, playerId TEXT DEFAULT '', messageId BIGINT DEFAULT 0, nextPromotion TEXT DEFAULT '', votes INTEGER DEFAULT 0, requiredVotes INTEGER DEFAULT 0, old BIT DEFAULT 0)");
             }
 
             return dbc;
@@ -49,6 +56,7 @@ namespace EventServer.Database
             SQLiteCommand c = new SQLiteCommand(command, db);
             int ret = c.ExecuteNonQuery();
             db.Close();
+
             return ret;
         }
 
@@ -72,9 +80,9 @@ namespace EventServer.Database
             return ret;
         }
 
-        public static bool AddPlayer(string steamId, string discordName, string discordExtension, string discordMention, string timezone, string team, int rank, int tokens, long totalScore, long topScores, int songsPlayed, int personalBestsBeaten, int playersBeat, bool mentionMe)
+        public static bool AddPlayer(string steamId, string discordName, string discordExtension, string discordMention, string extras, string team, int rank, int tokens, long totalScore, long topScores, int songsPlayed, int personalBestsBeaten, int playersBeat, bool mentionMe)
         {
-            return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{timezone}\', \'{team}\', {rank}, {tokens}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{steamId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{extras}\', \'{team}\', {rank}, {tokens}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
         }
 
         public static bool AddScore(string songId, string steamId, string team, LevelDifficulty difficulty, PlayerOptions playerOptions, GameOptions gameOptions, bool fullCombo, long score)
@@ -89,7 +97,12 @@ namespace EventServer.Database
 
         public static bool AddTeam(string teamId, string teamName, string captainId, string color, int requiredTokens, string nextPromotion)
         {
-            return ExecuteCommand($"INSERT INTO teamTable VALUES (NULL, \'{teamId}\', \'{teamName}\', \'{captainId}\', \'{color}\', {requiredTokens}, \'{nextPromotion}\' 0)") > 0;
+            return ExecuteCommand($"INSERT INTO teamTable VALUES (NULL, \'{teamId}\', \'{teamName}\', \'{captainId}\', \'{color}\', {requiredTokens}, \'{nextPromotion}\', 0)") > 0;
+        }
+
+        public static bool AddVote(string playerId, ulong messageId, string nextPromotion, int votes, int requiredVotes)
+        {
+            return ExecuteCommand($"INSERT INTO voteTable VALUES (NULL, \'{playerId}\', {(long)messageId}, \'{nextPromotion}\', {votes}, {requiredVotes}, 0)") > 0;
         }
 
         //This marks all songs and scores as "old"
@@ -113,6 +126,27 @@ namespace EventServer.Database
                     while (reader.Read())
                     {
                         ret.Add(new Team(reader["teamId"].ToString()));
+                    }
+                }
+            }
+
+            db.Close();
+
+            return ret;
+        }
+
+        //Returns a list of all the votes
+        public static List<Vote> GetAllVotes()
+        {
+            List<Vote> ret = new List<Vote>();
+            SQLiteConnection db = OpenConnection();
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT playerId FROM voteTable WHERE NOT old = 1", db))
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        ret.Add(new Vote(reader["playerId"].ToString(), "[deleted]"));
                     }
                 }
             }

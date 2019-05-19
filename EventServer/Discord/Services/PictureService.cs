@@ -21,8 +21,7 @@ namespace EventServer.Discord.Services
 
         private readonly HttpClient _http;
 
-        public PictureService(HttpClient http)
-            => _http = http;
+        public PictureService(HttpClient http) => _http = http;
 
         public async Task<Stream> GetCatPictureAsync()
         {
@@ -59,11 +58,6 @@ namespace EventServer.Discord.Services
         {
             return await GetStringFromNekosApi("https://nekos.life/api/v2/img/Random_hentai_gif");
         }
-        
-        public async Task<string> GetLewdPetitePictureAsync()
-        {
-            return await GetStringFromNekosApi("https://nekos.life/api/v2/img/smallboobs");
-        }
 
         public async Task<string> GetStringFromNekosApi(string apiCall)
         {
@@ -98,9 +92,6 @@ namespace EventServer.Discord.Services
                     break;
                 case NekoType.HentaiGif:
                     url = await GetLewdGifAsync();
-                    break;
-                case NekoType.HentaiSmall:
-                    url = await GetLewdPetitePictureAsync();
                     break;
             }
 

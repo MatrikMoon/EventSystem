@@ -11,10 +11,6 @@ namespace EventServer.Discord.Services
     public class CommandHandlingService
 
     {
-        //TODO: This is probably not how I'm supposed to be doing this
-        public event Action<IUserMessage, SocketReaction> ReactionAdded;
-        public event Action<IUserMessage, SocketReaction> ReactionRemoved;
-
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
@@ -27,8 +23,6 @@ namespace EventServer.Discord.Services
 
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.MessageUpdated += MessageUpdatedAsync;
-            _discord.ReactionAdded += ReactionAddedAsync;
-            _discord.ReactionRemoved += ReactionRemovedAsync;
             //_discord.UserVoiceStateUpdated += UserVoiceStateUpdated;
         }
 
@@ -65,18 +59,6 @@ namespace EventServer.Discord.Services
             //NOTE: Embed checking like this avoids re-parsing commands when an embed is downloaded
             //TODO: Fix the hackiness, implement real "listen for update" system
             if (after.Embeds.Count <= 0 ^ after.Content.Contains(" register ")) await MessageReceivedAsync(after);
-        }
-
-        private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel channel, SocketReaction reaction)
-        {
-            var message = await before.GetOrDownloadAsync();
-            ReactionAdded?.Invoke(message, reaction);
-        }
-
-        private async Task ReactionRemovedAsync(Cacheable<IUserMessage, ulong> before, ISocketMessageChannel channel, SocketReaction reaction)
-        {
-            var message = await before.GetOrDownloadAsync();
-            ReactionRemoved?.Invoke(message, reaction);
         }
 
         /*

@@ -67,6 +67,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Drawing.Design" />
     <Reference Include="System.IO.Compression.FileSystem" />
@@ -93,6 +94,9 @@
     <Compile Include="..\Shared\Score.cs">
       <Link>Shared\Score.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\RankRequest.cs">
+      <Link>Shared\RankRequest.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\SharedConstructs.cs">
       <Link>Shared\SharedConstructs.cs</Link>
     </Compile>
@@ -104,12 +108,20 @@
     <Compile Include="Database\Score.cs" />
     <Compile Include="Database\Team.cs" />
     <Compile Include="Database\Song.cs" />
+    <Compile Include="Database\Vote.cs" />
     <Compile Include="Discord\CommunityBot.cs" />
+    <Compile Include="Discord\Database\DatabaseContext.cs" />
+    <Compile Include="Discord\Database\ReactionRole.cs" />
+    <Compile Include="Discord\Database\SQLiteConfiguration.cs" />
     <Compile Include="Discord\Modules\BeatSaberModule.cs" />
+    <Compile Include="Discord\Modules\BotModule.cs" />
+    <Compile Include="Discord\Modules\PictureModule.cs" />
     <Compile Include="Discord\Services\CommandHandlingService.cs" />
+    <Compile Include="Discord\Services\DatabaseService.cs" />
     <Compile Include="Discord\Services\PictureService.cs" />
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
-    <Compile Include="Database\SimpleSql.cs" />
+    <Compile Include="Database\SqlUtils.cs" />
+    <Compile Include="Discord\Services\ReactionService.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -156,6 +168,9 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="SQLite.CodeFirst">
+      <Version>1.5.2.28</Version>
     </PackageReference>
     <PackageReference Include="System.AppContext">
       <Version>4.3.0</Version>

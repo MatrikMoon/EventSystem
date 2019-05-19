@@ -127,6 +127,9 @@
     <Compile Include="..\Shared\Score.cs">
       <Link>Shared\Score.cs</Link>
     </Compile>
+	<Compile Include="..\Shared\RankRequest.cs">
+      <Link>Shared\RankRequest.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\SharedConstructs.cs">
       <Link>Shared\SharedConstructs.cs</Link>
     </Compile>
