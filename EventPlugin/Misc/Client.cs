@@ -1,4 +1,4 @@
-﻿using EventPlugin.Helpers;
+﻿using EventPlugin.Models;
 using EventPlugin.UI.ViewControllers;
 using EventPlugin.UI.Views;
 using EventShared;
@@ -35,9 +35,9 @@ namespace EventPlugin.Misc
         private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #elif (ASIAVR)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-asiavr";
-#elif DEBUG
+#elif BETA
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
-#elif !DEBUG
+#elif !BETA
         private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
 
@@ -45,7 +45,7 @@ namespace EventPlugin.Misc
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
-#if DEBUG
+#if BETA
         static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #else
         static void a(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
@@ -58,6 +58,22 @@ namespace EventPlugin.Misc
             o.Add("pb", new JSONString(s.ToBase64()));
 
             SharedCoroutineStarter.instance.StartCoroutine(PostCoroutine(o.ToString(), $"{discordCommunityApi}/submit/", scoreUploadedCallback));
+        }
+
+        [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
+#if BETA
+        public static void SubmitRankRequest(ulong userId, string requestedTeamId, string ostInfo, bool initialRequest, string signed, Action<bool> rankRequestedCallback = null)
+#else
+        public static void b(ulong userId, string requestedTeamId, string ostInfo, bool initialRequest, string signed, Action<bool> rankRequestedCallback = null)
+#endif
+        {
+            //Build score object
+            RankRequest s = new RankRequest(userId.ToString(), requestedTeamId, ostInfo, initialRequest, signed);
+
+            JSONObject o = new JSONObject();
+            o.Add("pb", new JSONString(s.ToBase64()));
+
+            SharedCoroutineStarter.instance.StartCoroutine(PostCoroutine(o.ToString(), $"{discordCommunityApi}/requestrank/", rankRequestedCallback));
         }
 
         //Post a score to the server
@@ -85,28 +101,38 @@ namespace EventPlugin.Misc
         }
 
         //Starts the necessary coroutine chain to make the mod functional
-        public static void GetData(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
+        public static void GetData(
+            BeatmapLevelCollectionSO[] lcfgm,
+            SongListViewController slvc,
+            string steamId,
+            Action<Player> userDataGottenCallback = null,
+            Action<List<Team>> teamsGottenCallback = null,
+            Action<List<Song>> songsGottenCallback = null
+            )
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId));
+            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId, userDataGottenCallback, teamsGottenCallback, songsGottenCallback));
         }
 
         //Gets all relevant data for the mod to work
-        //TODO: If I can parallelize this with song downloading AND get the songs not to try to display when getting
-        //profile data fails, that'd be nice.
-        private static IEnumerator GetAllData(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
+        private static IEnumerator GetAllData(
+            BeatmapLevelCollectionSO[] lcfgm,
+            SongListViewController slvc,
+            string userId,
+            Action<Player> userDataGottenCallback = null,
+            Action<List<Team>> teamsGottenCallback = null,
+            Action<List<Song>> songsGottenCallback = null
+            )
         {
-            yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, steamId));
-            yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc));
-            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(lcfgm, slvc, steamId));
+            yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, userId, userDataGottenCallback));
+            yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc, teamsGottenCallback));
+            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(lcfgm, slvc, userId, songsGottenCallback));
         }
 
         //GET the user's profile data from the server
-        private static IEnumerator GetUserData(SongListViewController slvc, string steamId)
+        private static IEnumerator GetUserData(SongListViewController slvc, string steamId, Action<Player> userDataGottenCallback = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/playerstats/{steamId}");
-#if DEBUG
-            Logger.Info($"GETTING PLAYER DATA: {discordCommunityApi}/playerstats/{steamId}");
-#endif
+            Logger.Debug($"GETTING PLAYER DATA: {discordCommunityApi}/playerstats/{steamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -134,7 +160,11 @@ namespace EventPlugin.Misc
                         slvc.DownloadErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
                     }
 
-                    Player.Instance.team = node["team"].ToString();
+                    Player.Instance.Team = node["team"];
+                    Player.Instance.Tokens = Convert.ToInt32(node["tokens"].Value);
+                    Player.Instance.ServerOptions = (ServerFlags)Convert.ToInt32(node["serverSettings"].Value);
+
+                    userDataGottenCallback?.Invoke(Player.Instance);
                 }
                 catch (Exception e)
                 {
@@ -187,12 +217,10 @@ namespace EventPlugin.Misc
         }
 
         //GET the teams from the server
-        private static IEnumerator GetTeams(SongListViewController slvc)
+        private static IEnumerator GetTeams(SongListViewController slvc, Action<List<Team>> teamsGottenCallback = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/teams/");
-#if DEBUG
-            Logger.Info($"REQUESTING TEAMS: {discordCommunityApi}/teams/");
-#endif
+            Logger.Debug($"REQUESTING TEAMS: {discordCommunityApi}/teams/");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -212,9 +240,19 @@ namespace EventPlugin.Misc
                     var node = JSON.Parse(www.downloadHandler.text);
                     foreach (var team in node)
                     {
-                        var teamObject = new Team(team.Key, team.Value["teamName"], team.Value["captainId"], team.Value["color"]);
+                        var teamObject = 
+                            new Team(
+                                team.Key,
+                                team.Value["teamName"],
+                                team.Value["captainId"],
+                                team.Value["color"],
+                                team.Value["requiredTokens"],
+                                team.Value["nextPromotion"]
+                            );
                         Team.allTeams.Add(teamObject);
                     }
+
+                    teamsGottenCallback?.Invoke(Team.allTeams);
                 }
                 catch (Exception e)
                 {
@@ -227,12 +265,11 @@ namespace EventPlugin.Misc
 
         //GET the songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string steamId)
+        private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string userId, Action<List<Song>> songsGottenCallback = null)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/songs/{steamId}/");
-#if DEBUG
-            Logger.Info($"REQUESTING SONGS: {discordCommunityApi}/songs/{steamId}/");
-#endif
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/songs/{userId}/");
+            Logger.Debug($"REQUESTING SONGS: {discordCommunityApi}/songs/{userId}/");
+
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -259,9 +296,7 @@ namespace EventPlugin.Misc
                             Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString())
                         };
 
-#if DEBUG
-                        Logger.Warning($"ADDING SONG: {newSong.SongName} {newSong.Difficulty}");
-#endif
+                        Logger.Debug($"ADDING SONG: {newSong.SongName} {newSong.Difficulty}");
                         songs.Add(newSong);
                     }
                 }
@@ -332,7 +367,7 @@ namespace EventPlugin.Misc
                         {
                             //Now that they're refreshed, we can populate their beatmaps and add them to the available list
                             songs.ForEach(x => loadLevel(x));
-                            slvc.SetSongs(availableSongs);
+                            songsGottenCallback?.Invoke(availableSongs);
                         };
 
                     SongLoader.SongsLoadedEvent -= songsLoaded;
@@ -341,7 +376,7 @@ namespace EventPlugin.Misc
                 }
                 else
                 {
-                    slvc.SetSongs(availableSongs);
+                    songsGottenCallback?.Invoke(availableSongs);
                 }
             }
         }
@@ -355,7 +390,7 @@ namespace EventPlugin.Misc
         private static IEnumerator DownloadSongs(string songId, SongListViewController slvc)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
-#if DEBUG
+#if BETA
             Logger.Info($"DOWNLOADING: {beatSaverDownloadUrl}{songId}");
 #endif
             bool timeout = false;

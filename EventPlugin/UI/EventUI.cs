@@ -1,6 +1,6 @@
 ﻿using CustomUI.MenuButton;
 using CustomUI.Settings;
-using EventPlugin.Helpers;
+using EventPlugin.Models;
 using EventPlugin.Misc;
 using EventPlugin.UI.FlowCoordinators;
 using SongLoaderPlugin;
@@ -99,7 +99,7 @@ namespace EventPlugin.UI
 
             try
             {
-                if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoaderPlugin"))
+                if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoader"))
                 {
 #if TEAMSABER
                     var buttonName = "Team Saber";

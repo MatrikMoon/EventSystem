@@ -12,7 +12,7 @@ using UnityEngine;
  * A list of these is downloaded by the plugin with player data and song data
  */
 
-namespace EventPlugin.Helpers
+namespace EventPlugin.Models
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Team
@@ -23,12 +23,16 @@ namespace EventPlugin.Helpers
         public string TeamName { get; private set; }
         public string CaptainId { get; private set; }
         public Color Color { get; private set; }
+        public int RequiredTokens { get; set; }
+        public string NextPromotion { get; set; }
 
-        public Team(string teamId, string teamName, string captainId, string color)
+        public Team(string teamId, string teamName, string captainId, string color, int requiredTokens = 0, string nextPromotion = "-1")
         {
             TeamId = teamId;
             TeamName = teamName;
             CaptainId = captainId;
+            RequiredTokens = requiredTokens;
+            NextPromotion = nextPromotion;
 
             ColorUtility.TryParseHtmlString(color, out var parsedColor);
             Color = parsedColor;

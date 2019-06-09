@@ -13,17 +13,18 @@ namespace EventServer.Discord.Services
     {
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
+        private readonly MessageUpdateService _messageUpdateService;
         private readonly IServiceProvider _services;
 
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
+            _messageUpdateService = services.GetRequiredService<MessageUpdateService>();
             _services = services;
 
             _discord.MessageReceived += MessageReceivedAsync;
-            _discord.MessageUpdated += MessageUpdatedAsync;
-            //_discord.UserVoiceStateUpdated += UserVoiceStateUpdated;
+            _messageUpdateService.MessageUpdated += MessageUpdatedAsync;
         }
 
         public async Task InitializeAsync()
@@ -49,7 +50,7 @@ namespace EventServer.Discord.Services
                 await context.Channel.SendMessageAsync(result.ToString());
         }
 
-        private async Task MessageUpdatedAsync(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
+        public async void MessageUpdatedAsync(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
         {
             var message = await before.GetOrDownloadAsync();
             Console.WriteLine($"{message} -> {after}");
@@ -60,12 +61,5 @@ namespace EventServer.Discord.Services
             //TODO: Fix the hackiness, implement real "listen for update" system
             if (after.Embeds.Count <= 0 ^ after.Content.Contains(" register ")) await MessageReceivedAsync(after);
         }
-
-        /*
-        private async Task UserVoiceStateUpdated(SocketUser socketUser, SocketVoiceState socketVoiceState, SocketVoiceState userVoiceStateUpdated)
-        {
-
-        }
-        */
     }
 }

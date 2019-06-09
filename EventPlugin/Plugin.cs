@@ -1,11 +1,11 @@
 ﻿using EventShared;
-using IllusionPlugin;
 using UnityEngine.SceneManagement;
 using EventPlugin.UI;
+using IPA;
 
 namespace EventPlugin
 {
-    public class Plugin : IPlugin
+    public class Plugin : IBeatSaberPlugin
     {
         public string Name => SharedConstructs.Name;
         public string Version => SharedConstructs.Version;
@@ -14,26 +14,11 @@ namespace EventPlugin
 
         public void OnApplicationStart()
         {
-            SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
         }
 
-        private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
-        {
-        }
-
-        private void SceneManager_sceneLoaded(Scene scene, LoadSceneMode arg1)
-        {
-            if (scene.name == "MenuCore")
-            {
-                EventUI.OnLoad();
-            }
-        }
 
         public void OnApplicationQuit()
         {
-            SceneManager.activeSceneChanged -= SceneManagerOnActiveSceneChanged;
-            SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
         }
 
         public void OnLevelWasLoaded(int level)
@@ -50,6 +35,22 @@ namespace EventPlugin
         }
 
         public void OnFixedUpdate()
+        {
+        }
+
+        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
+        {
+            if (scene.name == "MenuCore")
+            {
+                EventUI.OnLoad();
+            }
+        }
+
+        public void OnSceneUnloaded(Scene scene)
+        {
+        }
+
+        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
         {
         }
 

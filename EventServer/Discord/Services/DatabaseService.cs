@@ -15,13 +15,13 @@ namespace EventServer.Discord.Services
     {
         public DatabaseContext DatabaseContext { get; private set; }
 
-        private ReactionService _reactionService;
+        private MessageUpdateService _messageUpdateService;
 
         public DatabaseService(string location, IServiceProvider serviceProvider)
         {
             DatabaseContext = new DatabaseContext(location);
 
-            _reactionService = serviceProvider.GetRequiredService<ReactionService>();
+            _messageUpdateService = serviceProvider.GetRequiredService<MessageUpdateService>();
         }
 
         public void RegisterReactionRolesWithBot()
@@ -30,10 +30,14 @@ namespace EventServer.Discord.Services
 
             foreach (var reactionRole in DatabaseContext.ReactionRoles)
             {
-                Logger.Info($"Registering ReactionRole for {reactionRole.ID} {reactionRole.MessageId} {reactionRole.RoleId} {reactionRole.EmojiId}");
+                if (!reactionRole.Old)
+                {
+                    Logger.Info($"Registering ReactionRole for {reactionRole.ID} {reactionRole.MessageId} {reactionRole.RoleId} {reactionRole.EmojiId}");
 
-                _reactionService.ReactionAdded += reactionRole.RoleAdded;
-                _reactionService.ReactionRemoved += reactionRole.RoleRemoved;
+                    _messageUpdateService.ReactionAdded += reactionRole.RoleAdded;
+                    _messageUpdateService.ReactionRemoved += reactionRole.RoleRemoved;
+                    _messageUpdateService.MessageDeleted += reactionRole.MessageDeleted;
+                }
             }
         }
     }

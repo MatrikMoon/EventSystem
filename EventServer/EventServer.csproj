@@ -22,7 +22,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;BETA</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -121,7 +121,7 @@
     <Compile Include="Discord\Services\PictureService.cs" />
     <Compile Include="BeatSaver\BeatSaverDownloader.cs" />
     <Compile Include="Database\SqlUtils.cs" />
-    <Compile Include="Discord\Services\ReactionService.cs" />
+    <Compile Include="Discord\Services\MessageUpdateService.cs" />
     <Compile Include="Misc\Config.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

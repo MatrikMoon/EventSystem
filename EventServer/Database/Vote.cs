@@ -40,13 +40,13 @@ namespace EventServer.Database
             var message = await CommunityBot.SendToVoteChannel(messageText);
             MessageId = message.Id;
             NextPromotion = "blue";
-#if DEBUG
+#if BETA
             RequiredVotes = 2;
 #else
             RequiredVotes = 8;
 #endif
 
-            var reactionService = CommunityBot.GetServices().GetRequiredService<ReactionService>();
+            var reactionService = CommunityBot.GetServices().GetRequiredService<MessageUpdateService>();
             reactionService.ReactionAdded += VoteAdded;
             reactionService.ReactionRemoved += VoteRemoved;
         }
@@ -129,7 +129,7 @@ namespace EventServer.Database
                 {
                     PromotePlayer();
 
-                    var reactionService = CommunityBot.GetServices().GetRequiredService<ReactionService>();
+                    var reactionService = CommunityBot.GetServices().GetRequiredService<MessageUpdateService>();
                     reactionService.ReactionAdded -= VoteAdded;
                     reactionService.ReactionRemoved -= VoteRemoved;
                     Old = true;
@@ -149,7 +149,7 @@ namespace EventServer.Database
         {
             Logger.Info("Registering ongoing votes...");
 
-            var reactionService = CommunityBot.GetServices().GetRequiredService<ReactionService>();
+            var reactionService = CommunityBot.GetServices().GetRequiredService<MessageUpdateService>();
             foreach (var vote in SqlUtils.GetAllVotes())
             {
                 Logger.Info($"Registering vote for {new Player(vote.PlayerId).DiscordName}");

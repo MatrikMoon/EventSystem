@@ -23,15 +23,15 @@ namespace EventShared
 
         public RankRequest(
             string userId,
-            string songId,
+            string requestedTeamId,
             string ostScoreInfo,
-            bool fullCombo,
+            bool initialRequest,
             string signed)
         {
             UserId = userId;
-            RequestedTeamId = songId;
+            RequestedTeamId = requestedTeamId;
             OstScoreInfo = ostScoreInfo;
-            InitialAssignment = fullCombo;
+            InitialAssignment = initialRequest;
             Signed = signed;
         }
 

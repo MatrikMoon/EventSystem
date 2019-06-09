@@ -23,7 +23,7 @@ namespace EventServer.Discord.Modules
 {
     public class BotModule : ModuleBase<SocketCommandContext>
     {
-        public ReactionService ReactionService { get; set; }
+        public MessageUpdateService MessageUpdateService { get; set; }
         public DatabaseService DatabaseService { get; set; }
 
         //Pull parameters out of an argument list string
@@ -127,9 +127,21 @@ namespace EventServer.Discord.Modules
 
                     await message.AddReactionAsync(emote);
 
-                    ReactionService.ReactionAdded += reactionRole.RoleAdded;
-                    ReactionService.ReactionRemoved += reactionRole.RoleRemoved;
+                    MessageUpdateService.ReactionAdded += reactionRole.RoleAdded;
+                    MessageUpdateService.ReactionRemoved += reactionRole.RoleRemoved;
+                    MessageUpdateService.MessageDeleted += reactionRole.MessageDeleted;
                 }
+            }
+        }
+
+        [Command("removeRoleReactions")]
+        [Summary("Removes all active ReactionRoles. This can also be accomplished by deleting the bot's message.")]
+        public async Task RemoveRoleReactions()
+        {
+            if (IsAdmin())
+            {
+                DatabaseService.DatabaseContext.ReactionRoles.RemoveRange(DatabaseService.DatabaseContext.ReactionRoles);
+                await DatabaseService.DatabaseContext.SaveChangesAsync();
             }
         }
     }

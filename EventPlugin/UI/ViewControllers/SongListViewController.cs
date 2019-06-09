@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using EventPlugin.Helpers;
+using EventPlugin.Models;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,8 +34,7 @@ namespace EventPlugin.UI.ViewControllers
 
         public TableView songsTableView;
         LevelListTableCell _songTableCellInstance;
-        TextMeshProUGUI _songsDownloadingText;
-        TextMeshProUGUI _downloadErrorText;
+        TextMeshProUGUI _infoText;
 
         List<Song> availableSongs = new List<Song>();
 
@@ -75,7 +74,9 @@ namespace EventPlugin.UI.ViewControllers
                 container.anchorMax = new Vector2(0.7f, 0.5f);
                 container.sizeDelta = new Vector2(0f, 60f);
 
-                songsTableView = new GameObject("CustomTableView").AddComponent<TableView>();
+                var tableGO = new GameObject("CustomTableView");
+                tableGO.SetActive(false);
+                songsTableView = tableGO.AddComponent<TableView>();
                 songsTableView.gameObject.AddComponent<RectMask2D>();
                 songsTableView.transform.SetParent(container, false);
 
@@ -88,40 +89,31 @@ namespace EventPlugin.UI.ViewControllers
                 (songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 0f);
                 (songsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, 0f);
 
-                _songsDownloadingText = BeatSaberUI.CreateText(rectTransform, "Downloading songs...", new Vector2(0f, -25f));
-                _songsDownloadingText.fontSize = 8f;
-                _songsDownloadingText.alignment = TextAlignmentOptions.Center;
-                _songsDownloadingText.rectTransform.anchorMin = new Vector2(.5f, .7f);
-                _songsDownloadingText.rectTransform.anchorMax = new Vector2(.5f, .7f);
-                _songsDownloadingText.rectTransform.sizeDelta = new Vector2(120f, 6f);
+                _infoText = BeatSaberUI.CreateText(rectTransform, "Downloading songs...", new Vector2(0f, -25f));
+                _infoText.fontSize = 8f;
+                _infoText.alignment = TextAlignmentOptions.Center;
+                _infoText.rectTransform.anchorMin = new Vector2(.5f, .6f);
+                _infoText.rectTransform.anchorMax = new Vector2(.5f, .6f);
+                _infoText.rectTransform.sizeDelta = new Vector2(120f, 6f);
+                _infoText.enableWordWrapping = true;
 
-                _downloadErrorText = BeatSaberUI.CreateText(rectTransform, "Generic Error", new Vector2(0f, 0f));
-                _downloadErrorText.fontSize = 8f;
-                _downloadErrorText.alignment = TextAlignmentOptions.Center;
-                _downloadErrorText.rectTransform.anchorMin = new Vector2(.5f, .5f);
-                _downloadErrorText.rectTransform.anchorMax = new Vector2(.5f, .5f);
-                _downloadErrorText.rectTransform.sizeDelta = new Vector2(120f, 6f);
-
-                _downloadErrorReloadButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton");
-                _downloadErrorReloadButton.SetButtonText("Reload");
-                (_downloadErrorReloadButton.transform as RectTransform).anchorMin = new Vector2(.5f, 0);
-                (_downloadErrorReloadButton.transform as RectTransform).anchorMax = new Vector2(.5f, 0);
-                (_downloadErrorReloadButton.transform as RectTransform).sizeDelta = new Vector2(38, 10);
-                (_downloadErrorReloadButton.transform as RectTransform).anchoredPosition = new Vector2(0, 10f);
-                _downloadErrorReloadButton.onClick.AddListener(() =>
+                _downloadErrorReloadButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", () =>
                 {
                     songsTableView.gameObject.SetActive(false);
                     _pageUpButton.gameObject.SetActive(false);
                     _pageDownButton.gameObject.SetActive(false);
-                    _downloadErrorText.gameObject.SetActive(false);
-                    _songsDownloadingText.gameObject.SetActive(true);
+                    _infoText.gameObject.SetActive(true);
                     _downloadErrorReloadButton.gameObject.SetActive(false);
 
-                    _downloadErrorText.SetText("Generic Error");
+                    _infoText.SetText("Downloading songs...");
                     errorHappened = false;
 
                     ReloadPressed?.Invoke();
-                });
+                }, "Reload");
+                (_downloadErrorReloadButton.transform as RectTransform).anchorMin = new Vector2(.5f, 0);
+                (_downloadErrorReloadButton.transform as RectTransform).anchorMax = new Vector2(.5f, 0);
+                (_downloadErrorReloadButton.transform as RectTransform).sizeDelta = new Vector2(38, 10);
+                (_downloadErrorReloadButton.transform as RectTransform).anchoredPosition = new Vector2(0, 10f);
                 _downloadErrorReloadButton.gameObject.SetActive(false);
 
                 songsTableView.SetField("_pageUpButton", _pageUpButton);
@@ -129,13 +121,13 @@ namespace EventPlugin.UI.ViewControllers
 
                 songsTableView.didSelectCellWithIdxEvent += SongsTableView_didSelectCellWithIdxEvent;
                 songsTableView.dataSource = this;
+                tableGO.SetActive(true);
 
                 //Set to view "Downloading songs..." until the songs are set
                 songsTableView.gameObject.SetActive(false);
                 _pageUpButton.gameObject.SetActive(false);
                 _pageDownButton.gameObject.SetActive(false);
-                _downloadErrorText.gameObject.SetActive(false);
-                _songsDownloadingText.gameObject.SetActive(true);
+                _infoText.gameObject.SetActive(true);
             }
             else
             {
@@ -148,11 +140,10 @@ namespace EventPlugin.UI.ViewControllers
             songsTableView.gameObject.SetActive(false);
             _pageUpButton.gameObject.SetActive(false);
             _pageDownButton.gameObject.SetActive(false);
-            _downloadErrorText.gameObject.SetActive(true);
             _downloadErrorReloadButton.gameObject.SetActive(true);
-            _songsDownloadingText.gameObject.SetActive(false);
+            _infoText.gameObject.SetActive(true);
 
-            _downloadErrorText.SetText(error);
+            _infoText.SetText(error);
             errorHappened = true;
         }
 
@@ -169,11 +160,11 @@ namespace EventPlugin.UI.ViewControllers
         public void SetSongs(List<Song> levels)
         {
             //Now that songs are being set, hide the "downloading" text
-            if (_downloadErrorText.gameObject.activeSelf) return; //If there was an error earlier, don't continue
+            if (errorHappened) return; //If there was an error earlier, don't continue
             songsTableView.gameObject.SetActive(true);
             _pageUpButton.gameObject.SetActive(true);
             _pageDownButton.gameObject.SetActive(true);
-            _songsDownloadingText.gameObject.SetActive(false);
+            _infoText.gameObject.SetActive(false);
 
             availableSongs = levels;
 
@@ -207,7 +198,7 @@ namespace EventPlugin.UI.ViewControllers
             IBeatmapLevel song = availableSongs[row].Beatmap.level;
 
             cell.reuseIdentifier = "SongCell";
-            cell.SetDataFromLevel(song);
+            cell.SetDataFromLevelAsync(song);
             cell.SetField("_bought", true);
 
             return cell;

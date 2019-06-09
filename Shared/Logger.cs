@@ -42,7 +42,7 @@ namespace EventShared
 
         public static void Debug(string message)
         {
-#if DEBUG
+#if BETA
             ConsoleColor originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine(prefix + message);

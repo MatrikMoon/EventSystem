@@ -10,8 +10,8 @@ namespace EventShared
     public static class SharedConstructs
     {
         public const string Name = "EventPlugin";
-        public const string Version = "0.2.2";
-        public const int VersionCode = 022;
+        public const string Version = "0.2.3";
+        public const int VersionCode = 023;
         public static string Changelog =
             "0.0.1: First attempt at fork from EventPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -33,7 +33,8 @@ namespace EventShared
             "0.1.8: Added NoFail toggle for Lava event\n" +
             "0.2.0: Changed to custom serialization, removed protobuf dependency\n" +
             "0.2.1: Comply with songloader 'requirements'\n" +
-            "0.2.2: Removed rarity from database/api\n";
+            "0.2.2: Removed rarity from database/api\n" +
+            "0.2.3: Updated for Beat Saber 1.0.0\n";
 
         public enum LevelDifficulty
         {
@@ -87,7 +88,6 @@ namespace EventShared
             None = 0,
             Teams = 1,
             Tokens = 2,
-            AutoPromotion = 4
         }
     }
 }

@@ -20,7 +20,7 @@ namespace EventServer.Discord
         private static DiscordSocketClient _client;
         private static IServiceProvider _services;
         private static string _serverName;
-        private static string _scoreChannel;
+        private static ulong _scoreChannel;
         private static string _voteChannel;
         private static string _databaseLocation;
 
@@ -31,7 +31,7 @@ namespace EventServer.Discord
             "senpai"
         };
 
-        public static void Start(string serverName, string scoreChannel, string voteChannel, string databaseLocation = "botDatabase.db")
+        public static void Start(string serverName, ulong scoreChannel, string voteChannel, string databaseLocation = "botDatabase.db")
         {
             _serverName = serverName;
             _scoreChannel = scoreChannel;
@@ -43,7 +43,7 @@ namespace EventServer.Discord
         public static void SendToScoreChannel(string message)
         {
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
-            guild.TextChannels.First(x => x.Name == _scoreChannel).SendMessageAsync(message);
+            guild.GetTextChannel(_scoreChannel).SendMessageAsync(message);
         }
 
         public static Task<RestUserMessage> SendToVoteChannel(string message)
@@ -52,16 +52,16 @@ namespace EventServer.Discord
             return guild.TextChannels.First(x => x.Name == _voteChannel).SendMessageAsync(message);
         }
 
-        public static async void ChangeTeam(Player player, Team team, bool captain = false)
+        public static async void ChangeTeam(Player player, Team team, bool captain = false, IRole role = null)
         {
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
-            var rankChannel = guild.TextChannels.ToList().Where(x => x.Name == _scoreChannel).First();
+            var rankChannel = guild.GetTextChannel(_scoreChannel);
 
             //Add the role of the team we're being switched to
             //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.
-            await user.RemoveRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == new Team(player.Team).TeamName.ToLower()));
-            await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == team.TeamName.ToLower()));
+            if (role != null) await user.AddRoleAsync(role);
+            else await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == team.TeamName.ToLower()));
 
             player.Team = team.TeamId;
 
@@ -93,7 +93,7 @@ namespace EventServer.Discord
             _client.Log += LogAsync;
             _services.GetRequiredService<CommandService>().Log += LogAsync;
 
-#if DEBUG
+#if BETA
             await _client.LoginAsync(TokenType.Bot, Config.BetaBotToken);
 #else
             await _client.LoginAsync(TokenType.Bot, Config.BotToken);
@@ -122,7 +122,7 @@ namespace EventServer.Discord
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<PictureService>()
-                .AddSingleton<ReactionService>()
+                .AddSingleton<MessageUpdateService>()
                 .AddSingleton(serviceProvider => new DatabaseService(_databaseLocation, serviceProvider))
                 .BuildServiceProvider();
         }

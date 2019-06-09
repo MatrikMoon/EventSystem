@@ -131,6 +131,18 @@ namespace EventServer.Discord.Modules
             extras = ParseArgs(extras, "extras");
             extras = Regex.Replace(extras ?? "none", "[^a-zA-Z0-9 :-]", "");
 
+#if ASIAVR
+            //Special roles for tournamonth
+            bool isTier1 = (Context.User as IGuildUser).RoleIds.Contains((ulong)572765180140716062);
+            bool isTier2 = (Context.User as IGuildUser).RoleIds.Contains((ulong)572765611709693954);
+
+            if (!isTier1 && !isTier2)
+            {
+                await ReplyAsync("Please select a tier by reacting to the message in the tournamonth channel");
+                return;
+            }
+#endif
+
             if (!Player.Exists(steamId) || !Player.IsRegistered(steamId))
             {
                 int rank = 0;
@@ -155,8 +167,14 @@ namespace EventServer.Discord.Modules
                     rank = Convert.ToInt32(Regex.Replace(description, "[^0-9]", ""));
                     player.Rank = rank;
 
-                    //Add "registered" role
+#if ASIAVR
+                    //Assign them to the proper tournamonth team
+                    if (isTier1) CommunityBot.ChangeTeam(player, new Team("tier1"), role: Context.Guild.GetRole(572765180140716062));
+                    else if (isTier2) CommunityBot.ChangeTeam(player, new Team("tier2"), role: Context.Guild.GetRole(572765611709693954));
+#endif
+
 #if TEAMSABER
+                    //Add "registered" role
                     await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
 #endif
                     string reply = $"User `{player.DiscordName}` successfully linked to `{player.PlayerId}`";

@@ -30,6 +30,9 @@ namespace EventServer.Discord.Database
         [Column(Name = "EmojiId")]
         public long EmojiId { get; set; }
 
+        [Column(Name = "Old")]
+        public bool Old { get; set; }
+
         public void RoleAdded(SocketReaction reaction)
         {
             if (reaction.MessageId == (ulong)MessageId &&
@@ -60,6 +63,11 @@ namespace EventServer.Discord.Database
                     if (!user.IsBot) user.RemoveRoleAsync(role);
                 }
             }
+        }
+
+        public void MessageDeleted(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
+        {
+            if (message.Id == (ulong)MessageId) Old = true;
         }
     }
 }

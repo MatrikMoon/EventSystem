@@ -131,7 +131,7 @@ namespace EventServer
                                     var nextTeam = new Team(oldTeam.NextPromotion);
                                     if (player.Tokens >= nextTeam.RequiredTokens) CommunityBot.ChangeTeam(player, nextTeam);
                                 }
-                                else if (player.Team == "gold" && player.Tokens >= new Team("gold").RequiredTokens) { //Player is submitting for Blue
+                                else if (player.Team == "gold" && player.Tokens >= new Team("blue").RequiredTokens) { //Player is submitting for Blue
                                     new Vote(player.PlayerId, r.OstScoreInfo);
                                 }
                                 else
@@ -247,8 +247,6 @@ namespace EventServer
                         };
                      }
                 },
-                //TODO: This is totally vulnerable to an attack where I could be spammed
-                //with new id's and it'd fill the database with junk. Should verify with steam/oculus
                 new Route {
                     Name = "Player Stats Getter",
                     UrlRegex = @"^/playerstats/",
@@ -274,10 +272,12 @@ namespace EventServer
 
                             json["version"] = VersionCode;
                             json["team"] = player.Team;
+                            json["tokens"] = player.Tokens;
+                            json["serverSettings"] = (int)Config.ServerFlags;
                         }
                         else if (Player.Exists(steamId) && !Player.IsRegistered(steamId))
                         {
-                            json["message"] = "Your team has been eliminated.";
+                            json["message"] = "Your have been banned from this event.";
                         }
                         else
                         {
@@ -410,17 +410,17 @@ namespace EventServer
             var serverName = "Beat Saber Discord Server";
 #elif (ASIAVR)
             var serverName = "Asia VR Community";
-#elif DEBUG
+#elif BETA
             var serverName = "Beat Saber Testing Server";
 #endif
 
 #if (TEAMSABER)
             string scoreChannel = "event-feed";
 #elif (DISCORDCOMMUNITY)
-            string scoreChannel = "event-scores";
+            ulong scoreChannel = 457952124307898368; //"event-scores";
 #elif (ASIAVR)
-            string scoreChannel = "scores-feed";
-#elif DEBUG
+            ulong scoreChannel = 572908789699969054; //"scores feed";
+#elif BETA
             string scoreChannel = "event-scores";
 #endif
             Thread thread1 = new Thread(async () => {

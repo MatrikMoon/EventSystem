@@ -1,4 +1,5 @@
 ﻿using EventShared;
+using SongCore;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -38,8 +39,13 @@ namespace EventPlugin.Utils
 
             if (ret is CustomLevel.CustomDifficultyBeatmap)
             {
+                var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
+                var requirements = extras?.difficulties.First(x => x.difficulty == ret.difficulty).additionalDifficultyData.requirements;
                 Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
-                if ((ret as CustomLevel.CustomDifficultyBeatmap).requirements.Any(x => !SongLoader.capabilities.Contains(x))) ret = null;
+                if (
+                    (requirements?.Count() > 0) &&
+                    (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
+                ) ret = null;
                 Logger.Debug((ret == null ? "Requirement not met." : "Requirement met!"));
             }
 
@@ -61,8 +67,13 @@ namespace EventPlugin.Utils
             var ret = availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
             if (ret is CustomLevel.CustomDifficultyBeatmap)
             {
+                var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
+                var requirements = extras?.difficulties.First(x => x.difficulty == ret.difficulty).additionalDifficultyData.requirements;
                 Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
-                if ((ret as CustomLevel.CustomDifficultyBeatmap).requirements.Any(x => !SongLoader.capabilities.Contains(x))) ret = null;
+                if (
+                    (requirements?.Count() > 0) &&
+                    (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
+                ) ret = null;
                 Logger.Debug((ret == null ? "Requirement not met." : "Requirement met!"));
             }
             return ret;
@@ -74,8 +85,13 @@ namespace EventPlugin.Utils
             var ret = availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
             if (ret is CustomLevel.CustomDifficultyBeatmap)
             {
+                var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
+                var requirements = extras?.difficulties.First(x => x.difficulty == ret.difficulty).additionalDifficultyData.requirements;
                 Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
-                if ((ret as CustomLevel.CustomDifficultyBeatmap).requirements.Any(x => !SongLoader.capabilities.Contains(x))) ret = null;
+                if (
+                    (requirements?.Count() > 0) &&
+                    (!requirements?.ToList().All(x => Collections.capabilities.Contains(x)) ?? false)
+                ) ret = null;
                 Logger.Debug((ret == null ? "Requirement not met." : "Requirement met!"));
             }
             return ret;

@@ -6,7 +6,7 @@ using static EventShared.SharedConstructs;
  * Tiny helper class to hold together levels and desired options
  */
 
-namespace EventPlugin.Helpers
+namespace EventPlugin.Models
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Song

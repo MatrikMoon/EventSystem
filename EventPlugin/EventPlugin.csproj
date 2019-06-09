@@ -20,7 +20,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;BETA</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -71,15 +71,19 @@
     <Reference Include="BS_Utils">
       <HintPath>..\..\Plugins\BS_Utils.dll</HintPath>
     </Reference>
-    <Reference Include="IllusionInjector, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="IPA.Injector, Version=3.12.14.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Beat Saber_Data\Managed\IllusionInjector.dll</HintPath>
+      <HintPath>..\..\Beat Saber_Data\Managed\IPA.Injector.dll</HintPath>
     </Reference>
-    <Reference Include="IllusionPlugin">
-      <HintPath>..\..\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
+    <Reference Include="IPA.Loader, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
     </Reference>
-    <Reference Include="SongLoaderPlugin">
-      <HintPath>..\..\Plugins\SongLoaderPlugin.dll</HintPath>
+    <Reference Include="SongCore">
+      <HintPath>..\..\Plugins\SongCore.dll</HintPath>
+    </Reference>
+    <Reference Include="SongLoader">
+      <HintPath>..\..\Plugins\SongLoader.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -127,7 +131,7 @@
     <Compile Include="..\Shared\Score.cs">
       <Link>Shared\Score.cs</Link>
     </Compile>
-	<Compile Include="..\Shared\RankRequest.cs">
+    <Compile Include="..\Shared\RankRequest.cs">
       <Link>Shared\RankRequest.cs</Link>
     </Compile>
     <Compile Include="..\Shared\SharedConstructs.cs">
@@ -157,7 +161,9 @@
     <Compile Include="UI\ViewControllers\SongListViewController.cs" />
     <Compile Include="Utils\SongUtils.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="manifest.json" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

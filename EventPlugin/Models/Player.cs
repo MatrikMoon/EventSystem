@@ -13,7 +13,7 @@ using static EventShared.SharedConstructs;
  * TODO: Add more relevant info later
  */
 
-namespace EventPlugin.Helpers
+namespace EventPlugin.Models
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Player
@@ -31,7 +31,9 @@ namespace EventPlugin.Helpers
         }
 
         //Fields
-        public string team;
+        public string Team { get; set; }
+        public int Tokens { get; set; }
+        public ServerFlags ServerOptions { get; set; }
 
         //Constructor
         public Player()
@@ -39,25 +41,32 @@ namespace EventPlugin.Helpers
             Instance = this;
         }
 
-        /*
+        //Determines whether or not the player qualifies for ranking up
+        public bool CanRankUp()
+        {
+            var currentTeam = Models.Team.allTeams.First(x => x.TeamId == Team);
+            var nextTeam = Models.Team.allTeams.First(x => x.TeamId == currentTeam.NextPromotion);
+            if (Tokens < nextTeam.RequiredTokens) return false;
+
+            //return GetSongsToImproveBeforeRankUp(rank).Count <= 0;
+            return true;
+        }
+
         //Gets a the player's locally stored score for a map
-        public int GetLocalScore(string levelId, LevelDifficulty difficulty, PlayerDataModelSO dataModel = null)
+        public int GetLocalScore(IDifficultyBeatmap map, PlayerDataModelSO dataModel = null)
         {
             dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(levelId, (BeatmapDifficulty)difficulty);
+            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             return playerLevelStatsData.validScore ? playerLevelStatsData.highScore : 0;
         }
-        */
 
-        /*
         //Gets a the player's locally stored rank for a map
-        public RankModel.Rank GetLocalRank(string levelId, LevelDifficulty difficulty, PlayerDataModelSO dataModel = null)
+        public RankModel.Rank GetLocalRank(IDifficultyBeatmap map, PlayerDataModelSO dataModel = null)
         {
             dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(levelId, (BeatmapDifficulty)difficulty);
+            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
         }
-        */
 
         //User ID code, courtesy of Kyle and Beat Saber Utils//
         public static void UpdateUserId()

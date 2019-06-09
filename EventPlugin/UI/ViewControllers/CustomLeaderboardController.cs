@@ -1,5 +1,5 @@
 ﻿using CustomUI.BeatSaber;
-using EventPlugin.Helpers;
+using EventPlugin.Models;
 using EventPlugin.Misc;
 using EventPlugin.UI.Views;
 using System;
@@ -44,9 +44,11 @@ namespace EventPlugin.UI.ViewControllers
         {
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
+                gameObject.SetActive(false);
                 _leaderboard = gameObject.AddComponent<CustomLeaderboardTableView>();
                 _leaderboard.transform.SetParent(rectTransform, false);
                 _leaderboard.name = "Community Leaderboard";
+                gameObject.SetActive(true);
 
                 _difficulty = BeatSaberUI.CreateText(rectTransform, "Difficulty", new Vector2());
                 _difficulty.fontSize = 3f;

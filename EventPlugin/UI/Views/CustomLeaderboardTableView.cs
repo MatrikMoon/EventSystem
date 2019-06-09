@@ -1,4 +1,4 @@
-﻿using EventPlugin.Helpers;
+﻿using EventPlugin.Models;
 using HMUI;
 using System.Collections.Generic;
 using System.Linq;

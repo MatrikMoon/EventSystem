@@ -1,0 +1,11 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
+  "author": "Moon",
+  "description": "Plugin which allows you to play songs and have them be submitted to a server for a discord event",
+  "gameVersion": "0.13.2",
+  "id": "AsiaEventPlugin",
+  "name": "AsiaEventPlugin",
+  "version": "0.0.0",
+  "features": [
+  ]
+}
