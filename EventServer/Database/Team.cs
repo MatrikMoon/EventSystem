@@ -92,7 +92,7 @@ namespace EventServer.Database
             Player player = Player.GetByDiscordMetion(mention);
             if (player == null) return null; //If the player doesn't exist, we definitely don't need to continue; it's obviously an invalid request
 
-            return SqlUtils.GetAllTeams().FirstOrDefault(x => x.Captain== player.PlayerId);
+            return SqlUtils.GetAllTeams().FirstOrDefault(x => x.Captain== player.UserId);
         }
 
         public bool Exists() => Exists(TeamId);

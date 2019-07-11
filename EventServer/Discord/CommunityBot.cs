@@ -66,19 +66,19 @@ namespace EventServer.Discord
             player.Team = team.TeamId;
 
             //Sort out existing scores
-            string steamId = player.PlayerId;
-            IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(steamId);
+            string userId = player.UserId;
+            IDictionary<SongConstruct, ScoreConstruct> playerScores = GetScoresForPlayer(userId);
 
             if (playerScores.Count >= 0)
             {
                 playerScores.ToList().ForEach(x =>
                 {
-                    BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongId);
-                    ExecuteCommand($"UPDATE scoreTable SET team = \'{team.TeamId}\' WHERE songId=\'{x.Key.SongId}\' AND steamId=\'{steamId}\'");
+                    BeatSaver.Song songData = new BeatSaver.Song(x.Key.SongHash);
+                    ExecuteCommand($"UPDATE scoreTable SET team = \'{team.TeamId}\' WHERE songHash=\'{x.Key.SongHash}\' AND userId=\'{userId}\'");
                 });
             }
 
-            if (captain) team.Captain = player.PlayerId;
+            if (captain) team.Captain = player.UserId;
 
             string teamName = team.TeamName;
             await rankChannel.SendMessageAsync($"{player.DiscordMention} has been assigned {(captain ? "as the captain of" : "to")} `{((teamName == string.Empty || teamName == null )? team.TeamId: teamName)}`!");

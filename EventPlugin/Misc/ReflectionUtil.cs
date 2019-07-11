@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using Logger = EventShared.Logger;
 
 /**
  * Modified by Moon on 8/20/2018

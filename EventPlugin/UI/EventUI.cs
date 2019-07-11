@@ -1,9 +1,8 @@
 ﻿using CustomUI.MenuButton;
-using CustomUI.Settings;
-using EventPlugin.Models;
 using EventPlugin.Misc;
+using EventPlugin.Models;
 using EventPlugin.UI.FlowCoordinators;
-using SongLoaderPlugin;
+using SongCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -57,7 +56,7 @@ namespace EventPlugin.UI
                 Player.UpdateUserId();
 
                 SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-                SongLoader.SongsLoadedEvent += SongsLoaded;
+                Loader.SongsLoadedEvent += SongsLoaded;
                 CreateCommunitiyButton(); //sceneLoaded won't be called the first time
             }
         }
@@ -80,7 +79,7 @@ namespace EventPlugin.UI
             CreateCommunitiyButton();
         }
 
-        private void SongsLoaded(SongLoader sender, List<SongLoaderPlugin.OverrideClasses.CustomLevel> loadedSongs)
+        private void SongsLoaded(Loader _, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             if (_communityButton != null) _communityButton.interactable = true;
         }
@@ -99,7 +98,7 @@ namespace EventPlugin.UI
 
             try
             {
-                if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongLoader"))
+                if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongCore"))
                 {
 #if TEAMSABER
                     var buttonName = "Team Saber";
@@ -115,9 +114,9 @@ namespace EventPlugin.UI
                     var hint = "STILL A BETA";
 #endif
                     _communityButton = MenuButtonUI.AddButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
-                    _communityButton.interactable = SongLoader.AreSongsLoaded;
+                    _communityButton.interactable = Loader.AreSongsLoaded;
                 }
-                else Logger.Error("MISSING SONG LOADER PLUGIN");
+                else Logger.Error("MISSING SONGCORE PLUGIN");
             }
             catch (Exception e)
             {

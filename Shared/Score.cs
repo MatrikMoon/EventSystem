@@ -16,7 +16,7 @@ namespace EventShared
     class Score
     {
         public string UserId { get; private set; }
-        public string SongId { get; private set; }
+        public string SongHash { get; private set; }
         public int Score_ { get; private set; }
         public int Difficulty { get; private set; }
         public bool FullCombo { get; private set; }
@@ -26,7 +26,7 @@ namespace EventShared
 
         public Score(
             string userId,
-            string songId,
+            string songHash,
             int score,
             int difficulty,
             bool fullCombo,
@@ -35,7 +35,7 @@ namespace EventShared
             string signed)
         {
             UserId = userId;
-            SongId = songId;
+            SongHash = songHash;
             Score_ = score;
             Difficulty = difficulty;
             FullCombo = fullCombo;
@@ -50,7 +50,7 @@ namespace EventShared
 
             var magicFlagBytes = new byte[sizeof(byte) * 4];
             var userIdBytes = new List<byte>();
-            var songIdBytes = new List<byte>();
+            var songHashBytes = new List<byte>();
             var scoreBytes = new byte[sizeof(int)];
             var difficultyBytes = new byte[sizeof(int)];
             var fullComboBytes = new byte[sizeof(bool)];
@@ -73,7 +73,7 @@ namespace EventShared
             read = (byte)stream.ReadByte();
             while (read != 0x0)
             {
-                songIdBytes.Add(read);
+                songHashBytes.Add(read);
                 read = (byte)stream.ReadByte();
             }
 
@@ -90,7 +90,7 @@ namespace EventShared
                 read = (byte)stream.ReadByte();
             }
 
-            var songId = Encoding.UTF8.GetString(songIdBytes.ToArray());
+            var songHash = Encoding.UTF8.GetString(songHashBytes.ToArray());
             var userId = Encoding.UTF8.GetString(userIdBytes.ToArray());
             var score = BitConverter.ToInt32(scoreBytes, 0);
             var difficulty = BitConverter.ToInt32(difficultyBytes, 0);
@@ -99,14 +99,14 @@ namespace EventShared
             var gameOptions = BitConverter.ToInt32(gameOptionsBytes, 0);
             var signed = Encoding.UTF8.GetString(signedBytes.ToArray());
 
-            return new Score(userId, songId, score, difficulty, fullCombo, playerOptions, gameOptions, signed);
+            return new Score(userId, songHash, score, difficulty, fullCombo, playerOptions, gameOptions, signed);
         }
 
         public string ToBase64()
         {
             var magicFlag = Encoding.UTF8.GetBytes("moon");
             var userIdBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(UserId), new byte[] { 0x0 } });
-            var songIdBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(SongId), new byte[] { 0x0 } });
+            var songHashBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(SongHash), new byte[] { 0x0 } });
             var scoreBytes = BitConverter.GetBytes(Score_);
             var difficultyBytes = BitConverter.GetBytes(Difficulty);
             var fullComboBytes = BitConverter.GetBytes(FullCombo);
@@ -114,7 +114,7 @@ namespace EventShared
             var gameOptionsBytes = BitConverter.GetBytes(GameOptions);
             var signedBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(Signed), new byte[] { 0x0 } });
 
-            var allBytes = Combine(new byte[][] { magicFlag, userIdBytes, songIdBytes, scoreBytes, difficultyBytes, fullComboBytes, playerOptionsBytes, gameOptionsBytes, signedBytes });
+            var allBytes = Combine(new byte[][] { magicFlag, userIdBytes, songHashBytes, scoreBytes, difficultyBytes, fullComboBytes, playerOptionsBytes, gameOptionsBytes, signedBytes });
             return Convert.ToBase64String(allBytes);
         }
 

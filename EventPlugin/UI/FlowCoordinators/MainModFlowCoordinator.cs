@@ -4,8 +4,6 @@ using EventPlugin.Misc;
 using EventPlugin.UI.ViewControllers;
 using EventPlugin.Utils;
 using EventShared;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +22,7 @@ namespace EventPlugin.UI.FlowCoordinators
         public MainMenuViewController mainMenuViewController;
         public SongListViewController songListViewController;
 
-        private AdditionalContentModelSO _additionalContentModel;
+        private AlwaysOwnedContentModelSO _alwaysOwnedContentModel;
         private BeatmapLevelCollectionSO _primaryLevelCollection;
         private BeatmapLevelCollectionSO _secondaryLevelCollection;
         private BeatmapLevelCollectionSO _extrasLevelCollection;
@@ -69,10 +67,10 @@ namespace EventPlugin.UI.FlowCoordinators
             if (_menuLightsManager == null) _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
             if (_soloFreePlayFlowCoordinator == null) _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             if (_campaignFlowCoordinator == null) _campaignFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
-            if (_additionalContentModel == null) _additionalContentModel = Resources.FindObjectsOfTypeAll<AdditionalContentModelSO>().First();
-            if (_primaryLevelCollection == null) _primaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_extrasLevelCollection == null) _extrasLevelCollection = _additionalContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_alwaysOwnedContentModel == null) _alwaysOwnedContentModel = Resources.FindObjectsOfTypeAll<AlwaysOwnedContentModelSO>().First();
+            if (_primaryLevelCollection == null) _primaryLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
                 SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
@@ -132,7 +130,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     _extrasLevelCollection
                 },
                 songListViewController,
-                Plugin.PlayerId.ToString(),
+                Plugin.UserId.ToString(),
                 (player) =>
                 {
                     ShowBottomViewController(player);
@@ -164,56 +162,42 @@ namespace EventPlugin.UI.FlowCoordinators
             }
             else Logger.Debug("BSUtils not installed, not disabling other plugins");
 
-            //Callback for when the song is ready to be played
-            Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
+            MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
+            var playerSettings = _playerDataModel.currentLocalPlayer.playerSpecificSettings;
+
+            //Override defaults if we have forced options enabled
+            if (song.PlayerOptions != PlayerOptions.None)
             {
-                MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
-                var playerSettings = _playerDataModel.currentLocalPlayer.playerSpecificSettings;
-
-                //Override defaults if we have forced options enabled
-                if (song.PlayerOptions != PlayerOptions.None)
-                {
-                    playerSettings = new PlayerSpecificSettings();
-                    playerSettings.leftHanded = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
-                    playerSettings.swapColors = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
-                    playerSettings.staticLights = song.PlayerOptions.HasFlag(PlayerOptions.StaticLights);
-                    playerSettings.noTextsAndHuds = song.PlayerOptions.HasFlag(PlayerOptions.NoHud);
-                    playerSettings.advancedHud = song.PlayerOptions.HasFlag(PlayerOptions.AdvancedHud);
-                    playerSettings.reduceDebris = song.PlayerOptions.HasFlag(PlayerOptions.ReduceDebris);
-                }
-
-                GameplayModifiers gameplayModifiers = new GameplayModifiers();
-                gameplayModifiers.noFail = song.GameOptions.HasFlag(GameOptions.NoFail);
-                gameplayModifiers.noBombs = song.GameOptions.HasFlag(GameOptions.NoBombs);
-                gameplayModifiers.noObstacles = song.GameOptions.HasFlag(GameOptions.NoObstacles);
-                if (song.GameOptions.HasFlag(GameOptions.SlowSong))
-                {
-                    gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
-                }
-                else if (song.GameOptions.HasFlag(GameOptions.FastSong))
-                {
-                    gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
-                }
-
-                gameplayModifiers.instaFail = song.GameOptions.HasFlag(GameOptions.InstaFail);
-                gameplayModifiers.failOnSaberClash = song.GameOptions.HasFlag(GameOptions.FailOnClash);
-                gameplayModifiers.batteryEnergy = song.GameOptions.HasFlag(GameOptions.BatteryEnergy);
-                gameplayModifiers.fastNotes = song.GameOptions.HasFlag(GameOptions.FastNotes);
-                gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
-                gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
-
-                menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);
-            };
-
-            //Load audio if it's custom
-            if (song.Beatmap.level is CustomLevel)
-            {
-                SongLoader.Instance.LoadAudioClipForLevel((CustomLevel)song.Beatmap.level, SongLoaded);
+                playerSettings = new PlayerSpecificSettings();
+                playerSettings.leftHanded = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
+                playerSettings.swapColors = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
+                playerSettings.staticLights = song.PlayerOptions.HasFlag(PlayerOptions.StaticLights);
+                playerSettings.noTextsAndHuds = song.PlayerOptions.HasFlag(PlayerOptions.NoHud);
+                playerSettings.advancedHud = song.PlayerOptions.HasFlag(PlayerOptions.AdvancedHud);
+                playerSettings.reduceDebris = song.PlayerOptions.HasFlag(PlayerOptions.ReduceDebris);
             }
-            else
+
+            GameplayModifiers gameplayModifiers = new GameplayModifiers();
+            gameplayModifiers.noFail = song.GameOptions.HasFlag(GameOptions.NoFail);
+            gameplayModifiers.noBombs = song.GameOptions.HasFlag(GameOptions.NoBombs);
+            gameplayModifiers.noObstacles = song.GameOptions.HasFlag(GameOptions.NoObstacles);
+            if (song.GameOptions.HasFlag(GameOptions.SlowSong))
             {
-                SongLoaded(song.Beatmap.level);
+                gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Slower;
             }
+            else if (song.GameOptions.HasFlag(GameOptions.FastSong))
+            {
+                gameplayModifiers.songSpeed = GameplayModifiers.SongSpeed.Faster;
+            }
+
+            gameplayModifiers.instaFail = song.GameOptions.HasFlag(GameOptions.InstaFail);
+            gameplayModifiers.failOnSaberClash = song.GameOptions.HasFlag(GameOptions.FailOnClash);
+            gameplayModifiers.batteryEnergy = song.GameOptions.HasFlag(GameOptions.BatteryEnergy);
+            gameplayModifiers.fastNotes = song.GameOptions.HasFlag(GameOptions.FastNotes);
+            gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
+            gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
+
+            menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);//Callback for when the song is ready to be played
         }
 
         private bool BSUtilsScoreDisabled()
@@ -234,7 +218,7 @@ namespace EventPlugin.UI.FlowCoordinators
             var redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
             var defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-            if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Restart)
+            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart)
             {
                 var song = _communityLeaderboard.selectedSong;
                 MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
@@ -276,18 +260,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     }
 
                     IBeatmapLevel level = _communityLeaderboard.selectedSong.Beatmap.level;
-                    string songHash = level.levelID.Substring(0, Math.Min(32, level.levelID.Length));
-                    string songId = null;
-
-                    //If the song is an OST, just send the hash
-                    if (OstHelper.IsOst(songHash))
-                    {
-                        songId = songHash;
-                    }
-                    else
-                    {
-                        songId = SongUtils.GetSongIdFromLevelId(level.levelID);
-                    }
+                    string songHash = SongUtils.GetHashFromLevelId(level.levelID);
 
                     //Community leaderboards
                     var sn = _communityLeaderboard.GetField("selectedSong");
@@ -299,8 +272,8 @@ namespace EventPlugin.UI.FlowCoordinators
                     var fc = results.GetProperty("fullCombo");
                     var ms = typeof(RSA);
 
-                    //var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, (int)po, (int)go);
-                    var s = RSA.SignScore(Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), (bool)fc, (int)rs, (int)po, (int)go);
+                    //var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songHash, d.GetProperty<int>("difficulty"), fc, rs, (int)po, (int)go);
+                    var s = RSA.SignScore(Plugin.UserId, songHash, d.GetProperty<int>("difficulty"), (bool)fc, (int)rs, (int)po, (int)go);
 
 
                     var c = typeof(Client);
@@ -315,7 +288,7 @@ namespace EventPlugin.UI.FlowCoordinators
 #else
                     var n = "a";
 #endif
-                    var cs = c.InvokeMethod(n, Plugin.PlayerId, songId, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
+                    var cs = c.InvokeMethod(n, Plugin.UserId, songHash, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
 
                     //Scoresaber leaderboards
                     var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");

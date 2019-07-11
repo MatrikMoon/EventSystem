@@ -46,6 +46,14 @@ namespace EventShared
             ExpertPlus = 4
         }
 
+        public enum BeatmapCharacteristic
+        {
+            Auto = -1,
+            Standard = 0,
+            OneSaber = 2,
+            NoArrows = 3
+        }
+
         [Flags]
         public enum GameOptions
         {

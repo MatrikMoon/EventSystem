@@ -90,7 +90,7 @@ namespace EventPlugin.Models
         {
             if (SteamManager.Initialized)
             {
-                Plugin.PlayerId = SteamUser.GetSteamID().m_SteamID;
+                Plugin.UserId = SteamUser.GetSteamID().m_SteamID;
             }
         }
 
@@ -100,7 +100,7 @@ namespace EventPlugin.Models
             {
                 if (!msg.IsError)
                 {
-                    Plugin.PlayerId = msg.Data.ID;
+                    Plugin.UserId = msg.Data.ID;
                 }
             });
         }

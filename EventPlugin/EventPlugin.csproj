@@ -82,9 +82,6 @@
     <Reference Include="SongCore">
       <HintPath>..\..\Plugins\SongCore.dll</HintPath>
     </Reference>
-    <Reference Include="SongLoader">
-      <HintPath>..\..\Plugins\SongLoader.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />

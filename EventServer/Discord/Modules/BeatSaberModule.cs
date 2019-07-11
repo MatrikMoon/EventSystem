@@ -108,7 +108,7 @@ namespace EventServer.Discord.Modules
 
         [Command("register")]
         [RequireContext(ContextType.Guild)]
-        public async Task RegisterAsync(string steamId, IGuildUser user = null, [Remainder]string extras = null)
+        public async Task RegisterAsync(string userId, IGuildUser user = null, [Remainder]string extras = null)
         {
             if (IsAdmin())
             {
@@ -117,17 +117,17 @@ namespace EventServer.Discord.Modules
             else user = (IGuildUser)Context.User;
 
             //Sanitize input
-            if (steamId.StartsWith("https://scoresaber.com/u/"))
+            if (userId.StartsWith("https://scoresaber.com/u/"))
             {
-                steamId = steamId.Substring("https://scoresaber.com/u/".Length);
+                userId = userId.Substring("https://scoresaber.com/u/".Length);
             }
 
-            if (steamId.Contains("&"))
+            if (userId.Contains("&"))
             {
-                steamId = steamId.Substring(0, steamId.IndexOf("&"));
+                userId = userId.Substring(0, userId.IndexOf("&"));
             }
 
-            steamId = Regex.Replace(steamId, "[^0-9]", "");
+            userId = Regex.Replace(userId, "[^0-9]", "");
             extras = ParseArgs(extras, "extras");
             extras = Regex.Replace(extras ?? "none", "[^a-zA-Z0-9 :-]", "");
 
@@ -143,7 +143,7 @@ namespace EventServer.Discord.Modules
             }
 #endif
 
-            if (!Player.Exists(steamId) || !Player.IsRegistered(steamId))
+            if (!Player.Exists(userId) || !Player.IsRegistered(userId))
             {
                 int rank = 0;
                 var embed = Context.Message.Embeds.FirstOrDefault();
@@ -152,7 +152,7 @@ namespace EventServer.Discord.Modules
                 {
                     string username = Regex.Replace(user.Username, "[\'\";]", "");
 
-                    Player player = new Player(steamId);
+                    Player player = new Player(userId);
                     player.DiscordName = username;
                     player.DiscordExtension = user.Discriminator;
                     player.DiscordMention = user.Mention;
@@ -177,15 +177,15 @@ namespace EventServer.Discord.Modules
                     //Add "registered" role
                     await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
 #endif
-                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.PlayerId}`";
+                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.UserId}`";
                     if (rank > 0) reply += $" with rank `{rank}`";
                     await ReplyAsync(reply);
                 }
                 else await ReplyAsync("Waiting for embedded content...");
             }
-            else if (new Player(steamId).DiscordMention!= user.Mention)
+            else if (new Player(userId).DiscordMention!= user.Mention)
             {
-                await ReplyAsync($"That steam account is already linked to `{new Player(steamId).DiscordName}`, message an admin if you *really* need to relink it.");
+                await ReplyAsync($"That steam account is already linked to `{new Player(userId).DiscordName}`, message an admin if you *really* need to relink it.");
             }
         }
 
@@ -235,60 +235,63 @@ namespace EventServer.Discord.Modules
                     songId = songId.Substring(0, songId.IndexOf("&"));
                 }
 
-                if (!Song.Exists(songId, parsedDifficulty, true))
+                //Get the hash for the song
+                var hash = BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+
+                if (OstHelper.IsOst(hash))
                 {
-                    if (OstHelper.IsOst(songId))
+                    if (!Song.Exists(hash, parsedDifficulty, true))
                     {
-                        Song song = new Song(songId, parsedDifficulty);
+                        Song song = new Song(hash, parsedDifficulty);
                         song.GameOptions = (int)gameOptions;
                         song.PlayerOptions = (int)playerOptions;
-                        await ReplyAsync($"Added: {OstHelper.GetOstSongNameFromLevelId(songId)} ({parsedDifficulty})" +
+                        await ReplyAsync($"Added: {OstHelper.GetOstSongNameFromLevelId(hash)} ({parsedDifficulty})" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                     }
-                    else
+                    else await ReplyAsync("Song is already active in the database");
+                }
+                else
+                {
+                    string songPath = BeatSaver.BeatSaverDownloader.DownloadSong(hash);
+                    if (songPath != null)
                     {
-                        string songPath = BeatSaver.BeatSaverDownloader.DownloadSong(songId);
-                        if (songPath != null)
+                        BeatSaver.Song song = new BeatSaver.Song(hash);
+                        string songName = song.SongName;
+
+                        if (parsedDifficulty != LevelDifficulty.Auto && !song.GetLevelDifficulties(BeatmapCharacteristic.Standard).Contains(parsedDifficulty))
                         {
-                            BeatSaver.Song song = new BeatSaver.Song(songId);
-                            string songName = song.SongName;
+                            LevelDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(parsedDifficulty);
 
-                            if (parsedDifficulty != LevelDifficulty.Auto && !song.Difficulties.Contains(parsedDifficulty))
+                            if (Song.Exists(hash, nextBestDifficulty))
                             {
-                                LevelDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(parsedDifficulty);
-
-                                if (Song.Exists(songId, nextBestDifficulty))
-                                {
-                                    await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, and {nextBestDifficulty} is already in the database.\n" +
-                                        $"Song not added.");
-                                }
-
-                                else
-                                {
-                                    var databaseSong = new Song(songId, nextBestDifficulty);
-                                    databaseSong.GameOptions = (int)gameOptions;
-                                    databaseSong.PlayerOptions = (int)playerOptions;
-                                    await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
-                                        $"Added to the song list" +
-                                        $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
-                                        $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
-                                }
+                                await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, and {nextBestDifficulty} is already in the database.\n" +
+                                    $"Song not added.");
                             }
+
                             else
                             {
-                                var databaseSong = new Song(songId, parsedDifficulty);
+                                var databaseSong = new Song(hash, nextBestDifficulty);
                                 databaseSong.GameOptions = (int)gameOptions;
                                 databaseSong.PlayerOptions = (int)playerOptions;
-                                await ReplyAsync($"{songName} ({parsedDifficulty}) downloaded and added to song list" +
+                                await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
+                                    $"Added to the song list" +
                                     $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
                                     $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                             }
                         }
-                        else await ReplyAsync("Could not download song.");
+                        else
+                        {
+                            var databaseSong = new Song(hash, parsedDifficulty);
+                            databaseSong.GameOptions = (int)gameOptions;
+                            databaseSong.PlayerOptions = (int)playerOptions;
+                            await ReplyAsync($"{songName} ({parsedDifficulty}) downloaded and added to song list" +
+                                $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
+                                $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
+                        }
                     }
+                    else await ReplyAsync("Could not download song.");
                 }
-                else await ReplyAsync("Song is already active in the database");
             }
         }
 
@@ -387,7 +390,7 @@ namespace EventServer.Discord.Modules
                 //though, it's still relevant since any person could *try* to modify the team still. They should just get a permission required message
                 Team currentTeam = new Team(teamId);
                 string captain = currentTeam.Captain;
-                bool isCaptain = string.IsNullOrEmpty(captain) ? true : captain == Player.GetByDiscordMetion(Context.User.Mention).PlayerId; //In the case of teams, team captains count as admins
+                bool isCaptain = string.IsNullOrEmpty(captain) ? true : captain == Player.GetByDiscordMetion(Context.User.Mention).UserId; //In the case of teams, team captains count as admins
 
                 if (IsAdmin() || isCaptain)
                 {
@@ -444,7 +447,7 @@ namespace EventServer.Discord.Modules
                 //though, it's still relevant since any person could *try* to modify the team still. They should just get a permission required message
                 Team currentTeam = new Team(teamId);
                 string currentCaptain = currentTeam.Captain;
-                bool isCaptain = string.IsNullOrEmpty(currentCaptain) ? true : currentCaptain == Player.GetByDiscordMetion(Context.User.Mention).PlayerId; //In the case of teams, team captains count as admins
+                bool isCaptain = string.IsNullOrEmpty(currentCaptain) ? true : currentCaptain == Player.GetByDiscordMetion(Context.User.Mention).UserId; //In the case of teams, team captains count as admins
                 var isAdmin = IsAdmin();
 
                 if (isAdmin || isCaptain)
@@ -484,13 +487,13 @@ namespace EventServer.Discord.Modules
                                 //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
                                 //seeing as auto difficulty is what would be represented in the songconstruct
                                 string percentage = "???%";
-                                if (!OstHelper.IsOst(song.SongId))
+                                if (!OstHelper.IsOst(song.SongHash))
                                 {
-                                    var maxScore = new BeatSaver.Song(song.SongId).GetMaxScore(score.Difficulty);
+                                    var maxScore = new BeatSaver.Song(song.SongHash).GetMaxScore(score.Difficulty);
                                     percentage = ((double)score.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                                 }
 
-                                finalMessage += place + ": " + new Player(score.PlayerId).DiscordName + " - " + score.Score + $" ({percentage})" + (score.FullCombo ? " (Full Combo)" : "");
+                                finalMessage += place + ": " + new Player(score.UserId).DiscordName + " - " + score.Score + $" ({percentage})" + (score.FullCombo ? " (Full Combo)" : "");
                                 if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
                                 {
                                     if (place == 1) finalMessage += " (+3 Tokens)";
@@ -512,11 +515,11 @@ namespace EventServer.Discord.Modules
 
                 songs.ForEach(x =>
                 {
-                    string songId = x.SongId;
+                    string hash = x.SongHash;
 
                     if (x.Scores.Count > 0) //Don't print if no one submitted scores
                     {
-                        var song = new Song(songId, x.Difficulty);
+                        var song = new Song(hash, x.Difficulty);
                         finalMessage += song.SongName + ":\n";
 
                         int place = 1;
@@ -525,13 +528,13 @@ namespace EventServer.Discord.Modules
                             //Incredibly inefficient to open a song info file every time, but only the score structure is guaranteed to hold the real difficutly,
                             //seeing as auto difficulty is what would be represented in the songconstruct
                             string percentage = "???%";
-                            if (!OstHelper.IsOst(songId))
+                            if (!OstHelper.IsOst(hash))
                             {
-                                var maxScore = new BeatSaver.Song(songId).GetMaxScore(item.Difficulty);
+                                var maxScore = new BeatSaver.Song(hash).GetMaxScore(item.Difficulty);
                                 percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                             }
 
-                            finalMessage += place + ": " + new Player(item.PlayerId).DiscordName + " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
+                            finalMessage += place + ": " + new Player(item.UserId).DiscordName + " - " + item.Score + $" ({percentage})" + (item.FullCombo ? " (Full Combo)" : "");
                             finalMessage += "\n";
                             place++;
                         }

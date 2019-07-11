@@ -40,13 +40,13 @@ namespace EventPlugin.UI.ViewControllers
                     var currentTeam = _teams.First(x => x.TeamId == _player.Team);
                     var nextTeam = _teams.First(x => x.TeamId == currentTeam.NextPromotion);
 
-                    var s = RSA.SignRankRequest(Plugin.PlayerId, nextTeam.TeamId, false);
+                    var s = RSA.SignRankRequest(Plugin.UserId, nextTeam.TeamId, false);
 #if BETA
                     var n = "SubmitRankRequest";
 #else
                     var n = "b";
 #endif
-                    typeof(Client).InvokeMethod(n, Plugin.PlayerId, nextTeam.TeamId, "[NOT YET IMPLEMENTED]", false, s, null);
+                    typeof(Client).InvokeMethod(n, Plugin.UserId, nextTeam.TeamId, "[NOT YET IMPLEMENTED]", false, s, null);
                 }, "Rank Up");
                 (_rankUpButton.transform as RectTransform).anchorMin = new Vector2(0.7f, 0.5f);
                 (_rankUpButton.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);

@@ -10,7 +10,7 @@ namespace EventPlugin
         public string Name => SharedConstructs.Name;
         public string Version => SharedConstructs.Version;
 
-        public static ulong PlayerId;
+        public static ulong UserId;
 
         public void OnApplicationStart()
         {

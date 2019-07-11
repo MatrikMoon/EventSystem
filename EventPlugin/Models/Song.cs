@@ -11,7 +11,7 @@ namespace EventPlugin.Models
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Song
     {
-        public string SongId { get; set; }
+        public string Hash { get; set; }
         public string SongName { get; set; }
         public LevelDifficulty Difficulty { get; set; }
 
@@ -47,7 +47,7 @@ namespace EventPlugin.Models
         public override int GetHashCode()
         {
             int hash = 13;
-            hash = (hash * 7) + SongId.GetHashCode();
+            hash = (hash * 7) + Hash.GetHashCode();
             hash = (hash * 7) + Difficulty.GetHashCode();
             return hash;
         }

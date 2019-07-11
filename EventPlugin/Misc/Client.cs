@@ -3,7 +3,6 @@ using EventPlugin.UI.ViewControllers;
 using EventPlugin.UI.Views;
 using EventShared;
 using EventShared.SimpleJSON;
-using SongLoaderPlugin;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,8 +14,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using static EventShared.SharedConstructs;
 using Logger = EventShared.Logger;
-using SongLoaderPlugin.OverrideClasses;
 using EventPlugin.Utils;
+using SongCore;
+using System.Threading.Tasks;
 
 /*
  * Created by Moon on 9/9/2018
@@ -41,18 +41,18 @@ namespace EventPlugin.Misc
         private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
 
-        private static string beatSaverDownloadUrl = "https://beatsaver.com/download/";
+        private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
         //private static string beatSaverDownloadUrl = "http://bsaber.com/dlsongs/";
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
 #if BETA
-        static void SubmitScore(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+        static void SubmitScore(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #else
-        static void a(ulong steamId, string songId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+        static void a(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #endif
         {
             //Build score object
-            Score s = new Score(steamId.ToString(), songId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, signed);
+            Score s = new Score(userId.ToString(), levelId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, signed);
 
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(s.ToBase64()));
@@ -95,22 +95,22 @@ namespace EventPlugin.Misc
         }
 
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, string teamId, bool useTeamColors = false)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songHash, LevelDifficulty difficulty, string teamId, bool useTeamColors = false)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songId, difficulty, teamId, useTeamColors));
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songHash, difficulty, teamId, useTeamColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
         public static void GetData(
             BeatmapLevelCollectionSO[] lcfgm,
             SongListViewController slvc,
-            string steamId,
+            string userId,
             Action<Player> userDataGottenCallback = null,
             Action<List<Team>> teamsGottenCallback = null,
             Action<List<Song>> songsGottenCallback = null
             )
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, steamId, userDataGottenCallback, teamsGottenCallback, songsGottenCallback));
+            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, userId, userDataGottenCallback, teamsGottenCallback, songsGottenCallback));
         }
 
         //Gets all relevant data for the mod to work
@@ -129,10 +129,10 @@ namespace EventPlugin.Misc
         }
 
         //GET the user's profile data from the server
-        private static IEnumerator GetUserData(SongListViewController slvc, string steamId, Action<Player> userDataGottenCallback = null)
+        private static IEnumerator GetUserData(SongListViewController slvc, string userId, Action<Player> userDataGottenCallback = null)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/playerstats/{steamId}");
-            Logger.Debug($"GETTING PLAYER DATA: {discordCommunityApi}/playerstats/{steamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/playerstats/{userId}");
+            Logger.Debug($"GETTING PLAYER DATA: {discordCommunityApi}/playerstats/{userId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -174,9 +174,9 @@ namespace EventPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songId, LevelDifficulty difficulty, string teamId = "-1", bool useTeamColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songHash, LevelDifficulty difficulty, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songId}/{(int)difficulty}/{teamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songHash}/{(int)difficulty}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -202,7 +202,7 @@ namespace EventPlugin.Misc
                         ));
 
                         //If one of the scores is us, set the "special" score position to the right value
-                        if (score.Value["steamId"] == Convert.ToString(Plugin.PlayerId))
+                        if (score.Value["userId"] == Convert.ToString(Plugin.UserId))
                         {
                             myPos = Convert.ToInt32(score.Value["place"] - 1);
                         }
@@ -289,7 +289,7 @@ namespace EventPlugin.Misc
                     {
                         var newSong = new Song()
                         {
-                            SongId = id.Value["songId"],
+                            Hash = id.Value["songHash"],
                             SongName = id.Value["songName"],
                             GameOptions = (GameOptions)Convert.ToInt32(id.Value["gameOptions"].ToString()),
                             PlayerOptions = (PlayerOptions)Convert.ToInt32(id.Value["playerOptions"].ToString()),
@@ -311,24 +311,30 @@ namespace EventPlugin.Misc
                 List<Song> availableSongs = new List<Song>();
 
                 //Filter out songs we already have and OSTS
-                IEnumerable<Song> osts = songs.Where(x => OstHelper.IsOst(x.SongId));
-                IEnumerable<Song> alreadyHave = songs.Where(x => SongUtils.GetSongExistsBySongId(x.SongId));
+                IEnumerable<Song> osts = songs.Where(x => OstHelper.IsOst(x.Hash));
+                IEnumerable<Song> alreadyHave = songs.Where(x => Collections.songWithHashPresent(x.Hash.ToUpper()));
 
                 //Loads a level from a song instance, populates the Beatmap property and adds to the available list
                 Action<Song> loadLevel = (song) =>
                 {
-                    var level = SongUtils.GetLevelFromSongId(song.SongId);
-
-                    //If the directory exists, but isn't loaded in song loader,
-                    //there's probably a conflict with another loaded song
-                    if (level == null)
+                    if (Collections.songWithHashPresent(song.Hash.ToUpper()))
                     {
-                        slvc.DownloadErrorHappened($"Could not load level {song.SongName}. You probably have an older version ('{song.SongId.Substring(0, song.SongId.IndexOf("-"))}') already downloded. Please remove this or save it elsewhere to continue.");
-                    }
+                        var levelId = Collections.levelIDsForHash(song.Hash).First();
 
-                    //TODO: add characteristic name field to the song data stored in the server
-                    song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(level as BeatmapLevelSO, (BeatmapDifficulty)song.Difficulty);
-                    availableSongs.Add(song);
+                        var customPreview = Loader.CustomLevelsCollection.beatmapLevels.First(x => x.levelID == levelId) as CustomPreviewBeatmapLevel;
+
+                        //TODO: Figure out proper async-ness here
+                        var beatmapLevelResult = Task.Run(async () => await SongUtils.GetLevelFromPreview(customPreview));
+                        beatmapLevelResult.Wait();
+
+                        //TODO: add characteristic name field to the song data stored in the server
+                        song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevelResult.Result?.beatmapLevel, (BeatmapDifficulty)song.Difficulty);
+                        availableSongs.Add(song);
+                    }
+                    else
+                    {
+                        slvc.DownloadErrorHappened($"Could not load level {song.SongName}");
+                    }
                 };
 
                 //Of what we already have, add the Levels to the availableSongs list
@@ -341,14 +347,14 @@ namespace EventPlugin.Misc
                 {
                     //TODO: Time complexity fix?
                     var level = lcfgm
-                                    .FirstOrDefault(y => y.beatmapLevels.Any(z => z.levelID == x.SongId)).beatmapLevels
-                                    .FirstOrDefault(y => y.levelID == x.SongId) as BeatmapLevelSO;
+                                    .FirstOrDefault(y => y.beatmapLevels.Any(z => z.levelID.StartsWith(x.Hash))).beatmapLevels
+                                    .FirstOrDefault(y => y.levelID.StartsWith(x.Hash)) as BeatmapLevelSO;
                     x.Beatmap = SongUtils.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
                     availableSongs.Add(x);
                 });
 
                 //Remove what we already have
-                songs.RemoveAll(x => alreadyHave.Select(y => y.SongId).Contains(x.SongId) || osts.Contains(x)); //Don't redownload
+                songs.RemoveAll(x => alreadyHave.Contains(x) || osts.Contains(x)); //Don't redownload
 
                 //Download the things we don't have, or if we have everything, show the menu
                 if (songs.Count > 0)
@@ -356,23 +362,23 @@ namespace EventPlugin.Misc
                     List<IEnumerator> downloadCoroutines = new List<IEnumerator>();
                     songs.ForEach(x =>
                     {
-                        downloadCoroutines.Add(DownloadSongs(x.SongId, slvc));
+                        downloadCoroutines.Add(DownloadSongs(x.Hash, slvc));
                     });
 
                     //Wait for the all downloads to finish
                     yield return SharedCoroutineStarter.instance.StartCoroutine(new ParallelCoroutine().ExecuteCoroutines(downloadCoroutines.ToArray()));
 
-                    Action<SongLoader, List<CustomLevel>> songsLoaded =
-                        (SongLoader sender, List<CustomLevel> loadedSongs) =>
+                    Action<Loader, Dictionary<string, CustomPreviewBeatmapLevel>> songsLoaded =
+                        (_, __) =>
                         {
                             //Now that they're refreshed, we can populate their beatmaps and add them to the available list
                             songs.ForEach(x => loadLevel(x));
                             songsGottenCallback?.Invoke(availableSongs);
                         };
 
-                    SongLoader.SongsLoadedEvent -= songsLoaded;
-                    SongLoader.SongsLoadedEvent += songsLoaded;
-                    SongLoader.Instance.RefreshSongs(false);
+                    Loader.SongsLoadedEvent -= songsLoaded;
+                    Loader.SongsLoadedEvent += songsLoaded;
+                    Loader.Instance.RefreshSongs(false);
                 }
                 else
                 {
@@ -387,11 +393,11 @@ namespace EventPlugin.Misc
         //completedDownloads: List of beatsaver ids representing songs that have successfully downloaded
         //songId: The song this instance of the Coroutine is supposed to download
         //slvc: The song list view controller to display the downloaded songs to
-        private static IEnumerator DownloadSongs(string songId, SongListViewController slvc)
+        private static IEnumerator DownloadSongs(string songHash, SongListViewController slvc)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{beatSaverDownloadUrl}{songHash}");
 #if BETA
-            Logger.Info($"DOWNLOADING: {beatSaverDownloadUrl}{songId}");
+            Logger.Info($"DOWNLOADING: {beatSaverDownloadUrl}{songHash}");
 #endif
             bool timeout = false;
             float time = 0f;
@@ -413,29 +419,26 @@ namespace EventPlugin.Misc
 
             if (www.isNetworkError || www.isHttpError || timeout)
             {
-                Logger.Error($"Error downloading song {songId}: {www.error}");
-                slvc.DownloadErrorHappened($"Error downloading song {songId}: {www.error}");
+                Logger.Error($"Error downloading song {songHash}: {www.error}");
+                slvc.DownloadErrorHappened($"Error downloading song {songHash}: {www.error}");
             }
             else
             {
                 //Logger.Info("Received response from BeatSaver.com...");
 
                 string zipPath = "";
-                string docPath = "";
-                string customSongsPath = "";
+                string customSongsPath = CustomLevelPathHelper.customLevelsDirectoryPath;
+                string customSongPath = "";
 
                 byte[] data = www.downloadHandler.data;
 
                 try
                 {
-                    docPath = Application.dataPath;
-                    docPath = docPath.Substring(0, docPath.Length - 5);
-                    docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                    customSongsPath = docPath + "/CustomSongs/" + songId + "/";
-                    zipPath = customSongsPath + songId + ".zip";
-                    if (!Directory.Exists(customSongsPath))
+                    customSongPath = customSongsPath + "/" + songHash + "/";
+                    zipPath = customSongPath + songHash + ".zip";
+                    if (!Directory.Exists(customSongPath))
                     {
-                        Directory.CreateDirectory(customSongsPath);
+                        Directory.CreateDirectory(customSongPath);
                     }
                     File.WriteAllBytes(zipPath, data);
                     //Logger.Info("Downloaded zip file!");
@@ -451,7 +454,7 @@ namespace EventPlugin.Misc
 
                 try
                 {
-                    ZipFile.ExtractToDirectory(zipPath, customSongsPath);
+                    ZipFile.ExtractToDirectory(zipPath, customSongPath);
                 }
                 catch (Exception e)
                 {

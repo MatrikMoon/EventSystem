@@ -1,13 +1,8 @@
-﻿using EventShared;
-using SongCore;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
+﻿using SongCore;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -22,13 +17,14 @@ namespace EventPlugin.Utils
         private static CancellationTokenSource getStatusCancellationTokenSource;
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public static IDifficultyBeatmap GetClosestDifficultyPreferLower(BeatmapLevelSO level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
+        public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
         {
             //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
             var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
 
             IDifficultyBeatmap[] availableMaps =
                 level
+                .beatmapLevelData
                 .difficultyBeatmapSets
                 .FirstOrDefault(x => x.beatmapCharacteristic.serializedName == desiredCharacteristic.serializedName)
                 .difficultyBeatmaps
@@ -37,10 +33,10 @@ namespace EventPlugin.Utils
 
             IDifficultyBeatmap ret = availableMaps.FirstOrDefault(x => x.difficulty == difficulty);
 
-            if (ret is CustomLevel.CustomDifficultyBeatmap)
+            if (ret is CustomDifficultyBeatmap)
             {
                 var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
-                var requirements = extras?.difficulties.First(x => x.difficulty == ret.difficulty).additionalDifficultyData.requirements;
+                var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
                 Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
                 if (
                     (requirements?.Count() > 0) &&
@@ -65,10 +61,10 @@ namespace EventPlugin.Utils
         private static IDifficultyBeatmap GetLowerDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
             var ret = availableMaps.TakeWhile(x => x.difficulty < difficulty).LastOrDefault();
-            if (ret is CustomLevel.CustomDifficultyBeatmap)
+            if (ret is CustomDifficultyBeatmap)
             {
                 var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
-                var requirements = extras?.difficulties.First(x => x.difficulty == ret.difficulty).additionalDifficultyData.requirements;
+                var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
                 Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
                 if (
                     (requirements?.Count() > 0) &&
@@ -83,10 +79,10 @@ namespace EventPlugin.Utils
         private static IDifficultyBeatmap GetHigherDifficulty(IDifficultyBeatmap[] availableMaps, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic)
         {
             var ret = availableMaps.SkipWhile(x => x.difficulty < difficulty).FirstOrDefault();
-            if (ret is CustomLevel.CustomDifficultyBeatmap)
+            if (ret is CustomDifficultyBeatmap)
             {
                 var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
-                var requirements = extras?.difficulties.First(x => x.difficulty == ret.difficulty).additionalDifficultyData.requirements;
+                var requirements = extras?._difficulties.First(x => x._difficulty == ret.difficulty).additionalDifficultyData._requirements;
                 Logger.Debug($"{ret.level.songName} is a custom level, checking for requirements on {ret.difficulty}...");
                 if (
                     (requirements?.Count() > 0) &&
@@ -114,48 +110,32 @@ namespace EventPlugin.Utils
             return false;
         }
 
-        public static async Task<BeatmapLevelLoader.LoadBeatmapLevelResult?> GetDLCLevel(IPreviewBeatmapLevel level, BeatmapLevelsModelSO beatmapLevelsModel = null)
+        public static async Task<BeatmapLevelsModelSO.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModelSO beatmapLevelsModel = null)
         {
             beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModelSO>().FirstOrDefault();
-            var beatmapLevelLoader = beatmapLevelsModel?.GetField<BeatmapLevelLoader>("_beatmapLevelLoader");
 
-            if (beatmapLevelLoader != null)
+            if (beatmapLevelsModel != null)
             {
                 getLevelCancellationTokenSource?.Cancel();
                 getLevelCancellationTokenSource = new CancellationTokenSource();
 
                 var token = getLevelCancellationTokenSource.Token;
 
-                BeatmapLevelLoader.LoadBeatmapLevelResult? result = null;
+                BeatmapLevelsModelSO.GetBeatmapLevelResult? result = null;
                 try
                 {
-                    result = await beatmapLevelLoader.LoadBeatmapLevelAsync(level, token);
+                    result = await beatmapLevelsModel.GetBeatmapLevelAsync(level.levelID, token);
                 }
                 catch (OperationCanceledException) { }
-
                 if (result?.isError == true || result?.beatmapLevel == null) return null; //Null out entirely in case of error
                 return result;
             }
             return null;
         }
 
-        public static string GetSongIdFromLevelId(string levelId)
+        public static string GetHashFromLevelId(string levelId)
         {
-            if (OstHelper.IsOst(levelId)) return levelId;
-
-            //Hacky way of getting the song id, through getting the file path from SongLoader
-            string songPath = SongLoader.CustomLevels.Find(x => x.levelID == levelId).customSongInfo.path;
-
-            //Yet another hacky fix for when songs are improperly uploaded, with no internal directory, only ID > files
-            var name = Directory.GetParent(songPath).Name;
-            if (name == "CustomSongs") name = new DirectoryInfo(songPath).Name;
-            return name;
-        }
-
-        //Assuming the id exists, returns the IBeatmapLevel of the level corresponding to the id
-        public static IBeatmapLevel GetLevelFromSongId(string songId)
-        {
-            return SongLoader.CustomLevels.Find(x => songId == Directory.GetParent(x.customSongInfo.path).Name || songId == new DirectoryInfo(x.customSongInfo.path).Name); //Note: VERY RARELY a song will not have an internal directory
+            return levelId.Substring(0, Math.Min(32, levelId.Length));
         }
 
         public static bool GetSongExistsBySongId(string songId)

@@ -18,23 +18,23 @@ namespace EventServer.Database
 {
     public class Vote
     {
-        public string PlayerId { get; private set; }
+        public string UserId { get; private set; }
 
-        public Vote(string playerId, string ostInfo)
+        public Vote(string userId, string ostInfo)
         {
-            PlayerId = playerId;
+            UserId = userId;
             if (!Exists())
             {
-                SqlUtils.AddVote(playerId, 0, "", 0, 0);
+                SqlUtils.AddVote(userId, 0, "", 0, 0);
                 SendVoteMessage(ostInfo);
             }
         }
 
         private async void SendVoteMessage(string ostInfo)
         {
-            var player = new Player(PlayerId);
+            var player = new Player(UserId);
             var messageText = $"{player.DiscordName} has submitted an application.\n" +
-                $"https://scoresaber.com/u/{player.PlayerId}\n\n" +
+                $"https://scoresaber.com/u/{player.UserId}\n\n" +
                 ostInfo;
 
             var message = await CommunityBot.SendToVoteChannel(messageText);
@@ -55,12 +55,12 @@ namespace EventServer.Database
         {
             get
             {
-                var ret = SqlUtils.ExecuteQuery($"SELECT messageId FROM voteTable WHERE playerId = {PlayerId}", "messageId").First();
+                var ret = SqlUtils.ExecuteQuery($"SELECT messageId FROM voteTable WHERE userId = \'{UserId}\'", "messageId").First();
                 return (ulong)Convert.ToInt64(ret);
             }
             set
             {
-                SqlUtils.ExecuteCommand($"UPDATE voteTable SET messageId = {value} WHERE playerId = \'{PlayerId}\'");
+                SqlUtils.ExecuteCommand($"UPDATE voteTable SET messageId = {value} WHERE userId = \'{UserId}\'");
             }
         }
 
@@ -68,11 +68,11 @@ namespace EventServer.Database
         {
             get
             {
-                return SqlUtils.ExecuteQuery($"SELECT nextPromotion FROM voteTable WHERE playerId = {PlayerId}", "nextPromotion").First();
+                return SqlUtils.ExecuteQuery($"SELECT nextPromotion FROM voteTable WHERE userId = \'{UserId}\'", "nextPromotion").First();
             }
             set
             {
-                SqlUtils.ExecuteCommand($"UPDATE voteTable SET nextPromotion = \'{value}\' WHERE playerId = \'{PlayerId}\'");
+                SqlUtils.ExecuteCommand($"UPDATE voteTable SET nextPromotion = \'{value}\' WHERE userId = \'{UserId}\'");
             }
         }
 
@@ -80,12 +80,12 @@ namespace EventServer.Database
         {
             get
             {
-                var ret = SqlUtils.ExecuteQuery($"SELECT votes FROM voteTable WHERE playerId = {PlayerId}", "votes").First();
+                var ret = SqlUtils.ExecuteQuery($"SELECT votes FROM voteTable WHERE userId = \'{UserId}\'", "votes").First();
                 return Convert.ToInt32(ret);
             }
             set
             {
-                SqlUtils.ExecuteCommand($"UPDATE voteTable SET votes = {value} WHERE playerId = \'{PlayerId}\'");
+                SqlUtils.ExecuteCommand($"UPDATE voteTable SET votes = {value} WHERE userId = \'{UserId}\'");
             }
         }
 
@@ -93,12 +93,12 @@ namespace EventServer.Database
         {
             get
             {
-                var ret = SqlUtils.ExecuteQuery($"SELECT requiredVotes FROM voteTable WHERE playerId = {PlayerId}", "requiredVotes").First();
+                var ret = SqlUtils.ExecuteQuery($"SELECT requiredVotes FROM voteTable WHERE userId = \'{UserId}\'", "requiredVotes").First();
                 return Convert.ToInt32(ret);
             }
             set
             {
-                SqlUtils.ExecuteCommand($"UPDATE voteTable SET requiredVotes = {value} WHERE playerId = \'{PlayerId}\'");
+                SqlUtils.ExecuteCommand($"UPDATE voteTable SET requiredVotes = {value} WHERE userId = \'{UserId}\'");
             }
         }
 
@@ -106,18 +106,18 @@ namespace EventServer.Database
         {
             get
             {
-                var ret = SqlUtils.ExecuteQuery($"SELECT old FROM voteTable WHERE playerId = {PlayerId}", "old").First();
+                var ret = SqlUtils.ExecuteQuery($"SELECT old FROM voteTable WHERE userId = \'{UserId}\'", "old").First();
                 return bool.Parse(ret);
             }
             set
             {
-                SqlUtils.ExecuteCommand($"UPDATE voteTable SET old = {(value ? "1" : "0")} WHERE playerId = \'{PlayerId}\'");
+                SqlUtils.ExecuteCommand($"UPDATE voteTable SET old = {(value ? "1" : "0")} WHERE userId = \'{UserId}\'");
             }
         }
 
         private void PromotePlayer()
         {
-            CommunityBot.ChangeTeam(new Player(PlayerId), new Team(NextPromotion));
+            CommunityBot.ChangeTeam(new Player(UserId), new Team(NextPromotion));
         }
 
         private void VoteAdded(SocketReaction reaction)
@@ -152,15 +152,15 @@ namespace EventServer.Database
             var reactionService = CommunityBot.GetServices().GetRequiredService<MessageUpdateService>();
             foreach (var vote in SqlUtils.GetAllVotes())
             {
-                Logger.Info($"Registering vote for {new Player(vote.PlayerId).DiscordName}");
+                Logger.Info($"Registering vote for {new Player(vote.UserId).DiscordName}");
 
                 reactionService.ReactionAdded += vote.VoteAdded;
                 reactionService.ReactionRemoved += vote.VoteRemoved;
             }
         }
 
-        public bool Exists() => Exists(PlayerId);
+        public bool Exists() => Exists(UserId);
 
-        public static bool Exists(string playerId) => SqlUtils.ExecuteQuery($"SELECT * FROM voteTable WHERE playerId = {playerId}", "playerId").Any();
+        public static bool Exists(string userId) => SqlUtils.ExecuteQuery($"SELECT * FROM voteTable WHERE userId = \'{userId}\'", "userId").Any();
     }
 }

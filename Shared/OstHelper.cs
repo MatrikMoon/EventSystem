@@ -5,7 +5,7 @@ using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
- * A simple class to map "stock" songIds to their corresponding song names
+ * A simple class to map "stock" levelids to their corresponding song names
  * TODO: Properly handle different map types like "OneSaber" and maps without all difficulties
  */
 
@@ -83,11 +83,11 @@ namespace EventShared
         private static readonly int[] oneSaberDifficulties = { (int)LevelDifficulty.Expert };
         private static readonly int[] noArrowsDifficulties = { (int)LevelDifficulty.Expert };
 
-        public static string GetOstSongNameFromLevelId(string levelId)
+        public static string GetOstSongNameFromLevelId(string hash)
         {
-            levelId = levelId.EndsWith("OneSaber") ? levelId.Substring(0, levelId.IndexOf("OneSaber")) : levelId;
-            levelId = levelId.EndsWith("NoArrows") ? levelId.Substring(0, levelId.IndexOf("NoArrows")) : levelId;
-            return allLevels[levelId];
+            hash = hash.EndsWith("OneSaber") ? hash.Substring(0, hash.IndexOf("OneSaber")) : hash;
+            hash = hash.EndsWith("NoArrows") ? hash.Substring(0, hash.IndexOf("NoArrows")) : hash;
+            return allLevels[hash];
         }
 
         public static LevelDifficulty[] GetDifficultiesFromLevelId(string levelId)

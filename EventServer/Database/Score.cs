@@ -15,14 +15,14 @@ namespace EventServer.Database
         private Player player;
         private LevelDifficulty difficulty;
 
-        public Score(string songId, string steamId, LevelDifficulty difficulty)
+        public Score(string hash, string userId, LevelDifficulty difficulty)
         {
-            song = new Song(songId, difficulty);
-            player = new Player(steamId);
+            song = new Song(hash, difficulty);
+            player = new Player(userId);
             this.difficulty = difficulty;
             if (!Exists())
             {
-                SqlUtils.AddScore(songId, steamId, player.Team, difficulty, PlayerOptions.None, GameOptions.None, false, 0);
+                SqlUtils.AddScore(hash, userId, player.Team, difficulty, PlayerOptions.None, GameOptions.None, false, 0);
             }
         }
 
@@ -38,36 +38,36 @@ namespace EventServer.Database
 
         public long GetScore()
         {
-            string scoreString = SqlUtils.ExecuteQuery($"SELECT score FROM scoreTable WHERE songId = \'{song.SongId}\' AND difficulty = {(int)difficulty} AND steamId = {player.PlayerId} AND old = 0", "score").First();
+            string scoreString = SqlUtils.ExecuteQuery($"SELECT score FROM scoreTable WHERE songHash = \'{song.Hash}\' AND difficulty = {(int)difficulty} AND userId = {player.UserId} AND old = 0", "score").First();
             return Convert.ToInt64(scoreString);
         }
 
         public bool SetScore(long score, bool fullCombo)
         {
-            return SqlUtils.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songId = \'{song.SongId}\' AND difficulty = {(int)difficulty} AND steamId = {player.PlayerId} AND old = 0") > 1;
+            return SqlUtils.ExecuteCommand($"UPDATE scoreTable SET score = {score}, fullCombo = {(fullCombo ? 1 : 0)} WHERE songHash = \'{song.Hash}\' AND difficulty = {(int)difficulty} AND userId = {player.UserId} AND old = 0") > 1;
         }
 
         public bool SetOld()
         {
-            return SqlUtils.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songId = \'{song.SongId}\' AND difficulty = {(int)difficulty} AND steamId = {player.PlayerId}") > 1;
+            return SqlUtils.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE songHash = \'{song.Hash}\' AND difficulty = {(int)difficulty} AND userId = {player.UserId}") > 1;
         }
 
         public bool Exists()
         {
-            return Exists(song.SongId, player.PlayerId, difficulty);
+            return Exists(song.Hash, player.UserId, difficulty);
         }
 
-        public static bool Exists(string songId, string steamId, LevelDifficulty difficulty)
+        public static bool Exists(string songHash, string userId, LevelDifficulty difficulty)
         {
-            return SqlUtils.ExecuteQuery($"SELECT * FROM scoreTable WHERE songId = \'{songId}\' AND steamId = {steamId} AND difficulty = {(int)difficulty} AND old = 0", "songId").Any();
+            return SqlUtils.ExecuteQuery($"SELECT * FROM scoreTable WHERE songHash = \'{songHash}\' AND userId = \'{userId}\' AND difficulty = {(int)difficulty} AND old = 0", "songHash").Any();
         }
 
         //KotH Event-specific
         //Deletes scores on other songs
-        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.SongId, player.PlayerId);
-        public static bool DeleteOtherScoresForUser(string songId, string steamId)
+        public bool DeleteOtherScoresForUser() => DeleteOtherScoresForUser(song.Hash, player.UserId);
+        public static bool DeleteOtherScoresForUser(string songHash, string userId)
         {
-            return SqlUtils.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE NOT songId = \'{songId}\' AND steamId = {steamId}") > 1;
+            return SqlUtils.ExecuteCommand($"UPDATE scoreTable SET old = 1 WHERE NOT songHash = \'{songHash}\' AND userId = \'{userId}\'") > 1;
         }
     }
 }

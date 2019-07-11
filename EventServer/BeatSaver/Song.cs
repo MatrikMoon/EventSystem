@@ -21,27 +21,27 @@ namespace EventServer.BeatSaver
         public static readonly string currentDirectory = Directory.GetCurrentDirectory();
         public static readonly string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
 
-        public LevelDifficulty[] Difficulties { get; private set; }
+        public BeatmapCharacteristic[] Characteristics { get; private set; }
         public string SongName { get; }
 
-        string SongId { get; set; }
+        string SongHash { get; set; }
 
         private string _infoPath;
 
-        public Song(string songId)
+        public Song(string songHash)
         {
-            SongId = songId;
+            SongHash = songHash;
 
-            if (!OstHelper.IsOst(SongId))
+            if (!OstHelper.IsOst(SongHash))
             {
                 _infoPath = GetInfoPath();
-                Difficulties = GetLevelDifficulties();
+                Characteristics = GetBeatmapCharacteristics();
                 SongName = GetSongName();
             }
             else
             {
-                SongName = OstHelper.GetOstSongNameFromLevelId(SongId);
-                Difficulties = OstHelper.GetDifficultiesFromLevelId(songId);
+                SongName = OstHelper.GetOstSongNameFromLevelId(SongHash);
+                Characteristics = new BeatmapCharacteristic[] { BeatmapCharacteristic.Standard, BeatmapCharacteristic.OneSaber, BeatmapCharacteristic.NoArrows };
             }
         }
 
@@ -50,19 +50,35 @@ namespace EventServer.BeatSaver
         {
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
-            return node["songName"];
+            return node["_songName"];
         }
 
-        private LevelDifficulty[] GetLevelDifficulties()
+        private BeatmapCharacteristic[] GetBeatmapCharacteristics()
+        {
+            List<BeatmapCharacteristic> characteristics = new List<BeatmapCharacteristic>();
+            var infoText = File.ReadAllText(_infoPath);
+            JSONNode node = JSON.Parse(infoText);
+            JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
+            foreach (var item in difficultyBeatmapSets)
+            {
+                Enum.TryParse(item.Value["_beatmapCharacteristicName"], out BeatmapCharacteristic difficulty);
+                characteristics.Add(difficulty);
+            }
+            return characteristics.OrderBy(x => x).ToArray();
+        }
+
+        public LevelDifficulty[] GetLevelDifficulties(BeatmapCharacteristic characteristic)
         {
             List<LevelDifficulty> difficulties = new List<LevelDifficulty>();
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
-            JSONArray difficultyLevels = node["difficultyLevels"].AsArray;
-            foreach (var item in difficultyLevels)
+            JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
+            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristic.ToString()).Value;
+            var difficultyBeatmaps = difficultySet["_difficultyBeatmaps"].AsArray;
+
+            foreach (var item in difficultyBeatmaps)
             {
-                //We can't use DifficultyRank as it uses the same enum value for Expert and E+
-                Enum.TryParse(item.Value["difficulty"], out LevelDifficulty difficulty);
+                Enum.TryParse(item.Value["_difficulty"], out LevelDifficulty difficulty);
                 difficulties.Add(difficulty);
             }
             return difficulties.OrderBy(x => x).ToArray();
@@ -100,48 +116,54 @@ namespace EventServer.BeatSaver
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty)
+        public LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty) => GetClosestDifficultyPreferLower(BeatmapCharacteristic.Standard, difficulty);
+        public LevelDifficulty GetClosestDifficultyPreferLower(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
         {
-            if (Difficulties.Contains(difficulty)) return difficulty;
+            if (GetLevelDifficulties(characteristic).Contains(difficulty)) return difficulty;
 
             int ret = -1;
             if (ret == -1)
             {
-                ret = GetLowerDifficulty(difficulty);
+                ret = GetLowerDifficulty(characteristic, difficulty);
             }
             if (ret == -1)
             {
-                ret = GetHigherDifficulty(difficulty);
+                ret = GetHigherDifficulty(characteristic, difficulty);
             }
             return (LevelDifficulty)ret;
         }
 
         //Returns the next-lowest difficulty to the one provided
-        private int GetLowerDifficulty(LevelDifficulty difficulty)
+        private int GetLowerDifficulty(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
         {
-            return Difficulties.Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
+            return GetLevelDifficulties(characteristic).Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
         }
 
         //Returns the next-highest difficulty to the one provided
-        private int GetHigherDifficulty(LevelDifficulty difficulty)
+        private int GetHigherDifficulty(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
         {
-            return Difficulties.Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
+            return GetLevelDifficulties(characteristic).Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
         }
 
         private string GetInfoPath()
         {
-            var idFolder = $"{songDirectory}{SongId}";
+            var idFolder = $"{songDirectory}{SongHash}";
             var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
             var subFolder = songFolder.FirstOrDefault() ?? idFolder;
-            return Directory.GetFiles(subFolder, "info.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+            return Directory.GetFiles(subFolder, "info.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
 
         private string GetDifficultyPath(LevelDifficulty difficulty)
         {
-            var idFolder = $"{songDirectory}{SongId}";
+            var idFolder = $"{songDirectory}{SongHash}";
             var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
             var subFolder = songFolder.FirstOrDefault() ?? idFolder;
-            return Directory.GetFiles(subFolder, $"{difficulty}.json", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+            return Directory.GetFiles(subFolder, $"{difficulty}.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+        }
+
+        public static bool Exists(string hash)
+        {
+            return Directory.Exists($"{songDirectory}{hash}");
         }
     }
 }
