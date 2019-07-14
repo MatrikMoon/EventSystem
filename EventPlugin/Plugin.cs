@@ -2,6 +2,7 @@
 using UnityEngine.SceneManagement;
 using EventPlugin.UI;
 using IPA;
+using UnityEngine;
 
 namespace EventPlugin
 {
@@ -30,12 +31,36 @@ namespace EventPlugin
         {
         }
 
+        private static int framesUntilPrint = 900;
+        private static int currentFrameCount = 0;
+        private static float totalTime = 0;
+
         public void OnUpdate()
         {
+            /*currentFrameCount++;
+            totalTime += Time.deltaTime;
+            if (currentFrameCount >= framesUntilPrint)
+            {
+                EventShared.Logger.Debug($"TOOK {totalTime} TO RUN {framesUntilPrint} FRAMES; FPS: {framesUntilPrint / totalTime}");
+                currentFrameCount = 0;
+                totalTime = 0;
+            }*/
         }
+
+        private static int framesUntilPrintF = 900;
+        private static int currentFrameCountF = 0;
+        private static float totalTimeF = 0;
 
         public void OnFixedUpdate()
         {
+            /*currentFrameCountF++;
+            totalTimeF += Time.deltaTime;
+            if (currentFrameCountF >= framesUntilPrintF)
+            {
+                EventShared.Logger.Debug($"TOOK {totalTimeF} TO RUN {framesUntilPrintF} FRAMES; (FIXED) FPS: {framesUntilPrintF / totalTimeF}");
+                currentFrameCountF = 0;
+                totalTimeF = 0;
+            }*/
         }
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)

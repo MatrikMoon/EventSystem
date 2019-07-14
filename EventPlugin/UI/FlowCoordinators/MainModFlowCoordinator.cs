@@ -94,6 +94,30 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void SongListRowSelected(Song song)
         {
+            AsyncRowSelected(song);
+        }
+
+        private async void AsyncRowSelected(Song song)
+        {
+            //When the row is selected, load the beatmap
+            IBeatmapLevel beatmapLevel = null;
+            if (!(song.PreviewBeatmap is BeatmapLevelSO))
+            {
+                var result = await SongUtils.GetLevelFromPreview(song.PreviewBeatmap);
+                if (!result.Value.isError)
+                {
+                    beatmapLevel = result.Value.beatmapLevel;
+                }
+                else
+                {
+                    songListViewController.ErrorHappened($"Could not load level from preview for {song.SongName}");
+                    return;
+                }
+            }
+            else beatmapLevel = (BeatmapLevelSO)song.PreviewBeatmap;
+
+            song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, (BeatmapDifficulty)(int)song.Difficulty);
+
             //Open up the custom/global leaderboard pane when we need to
             if (_communityLeaderboard == null)
             {
@@ -124,11 +148,11 @@ namespace EventPlugin.UI.FlowCoordinators
         private void ReloadServerData()
         {
             Client.GetData(
-                new BeatmapLevelCollectionSO[] {
+                /*new BeatmapLevelCollectionSO[] {
                     _primaryLevelCollection,
                     _secondaryLevelCollection,
                     _extrasLevelCollection
-                },
+                },*/
                 songListViewController,
                 Plugin.UserId.ToString(),
                 (player) =>

@@ -102,7 +102,6 @@ namespace EventPlugin.Misc
 
         //Starts the necessary coroutine chain to make the mod functional
         public static void GetData(
-            BeatmapLevelCollectionSO[] lcfgm,
             SongListViewController slvc,
             string userId,
             Action<Player> userDataGottenCallback = null,
@@ -110,12 +109,11 @@ namespace EventPlugin.Misc
             Action<List<Song>> songsGottenCallback = null
             )
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(lcfgm, slvc, userId, userDataGottenCallback, teamsGottenCallback, songsGottenCallback));
+            SharedCoroutineStarter.instance.StartCoroutine(GetAllData(slvc, userId, userDataGottenCallback, teamsGottenCallback, songsGottenCallback));
         }
 
         //Gets all relevant data for the mod to work
         private static IEnumerator GetAllData(
-            BeatmapLevelCollectionSO[] lcfgm,
             SongListViewController slvc,
             string userId,
             Action<Player> userDataGottenCallback = null,
@@ -125,7 +123,7 @@ namespace EventPlugin.Misc
         {
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetUserData(slvc, userId, userDataGottenCallback));
             yield return SharedCoroutineStarter.instance.StartCoroutine(GetTeams(slvc, teamsGottenCallback));
-            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(lcfgm, slvc, userId, songsGottenCallback));
+            if (!slvc.errorHappened && !slvc.HasSongs()) yield return SharedCoroutineStarter.instance.StartCoroutine(GetSongs(slvc, userId, songsGottenCallback));
         }
 
         //GET the user's profile data from the server
@@ -139,7 +137,7 @@ namespace EventPlugin.Misc
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error($"Error getting player stats: {www.error}");
-                slvc.DownloadErrorHappened($"Error getting player stats: {www.error}");
+                slvc.ErrorHappened($"Error getting player stats: {www.error}");
             }
             else
             {
@@ -150,14 +148,14 @@ namespace EventPlugin.Misc
                     //If there is a message from the server, display it
                     if (node["message"] != null && node["message"].ToString().Length > 1)
                     {
-                        slvc.DownloadErrorHappened(node["message"]);
+                        slvc.ErrorHappened(node["message"]);
                         yield break;
                     }
 
                     //If the client is out of date, show update message
                     if (VersionCode < Convert.ToInt32(node["version"].Value))
                     {
-                        slvc.DownloadErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
+                        slvc.ErrorHappened($"Version {SharedConstructs.Version} is now out of date. Please download the newest one from the Discord.");
                     }
 
                     Player.Instance.Team = node["team"];
@@ -169,7 +167,7 @@ namespace EventPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error parsing playerstats data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing playerstats data: {e}");
+                    slvc.ErrorHappened($"Error parsing playerstats data: {e}");
                 }
             }
         }
@@ -227,7 +225,7 @@ namespace EventPlugin.Misc
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error($"Error getting teams: {www.error}");
-                slvc.DownloadErrorHappened($"Error getting teams: {www.error}");
+                slvc.ErrorHappened($"Error getting teams: {www.error}");
             }
             else
             {
@@ -257,7 +255,7 @@ namespace EventPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error parsing teams data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing teams data: {e}");
+                    slvc.ErrorHappened($"Error parsing teams data: {e}");
                     yield break;
                 }
             }
@@ -265,7 +263,7 @@ namespace EventPlugin.Misc
 
         //GET the songs from the server, then start the Download coroutine to download and display them
         //TODO: Time complexity here is a mess.
-        private static IEnumerator GetSongs(BeatmapLevelCollectionSO[] lcfgm, SongListViewController slvc, string userId, Action<List<Song>> songsGottenCallback = null)
+        private static IEnumerator GetSongs(SongListViewController slvc, string userId, Action<List<Song>> songsGottenCallback = null)
         {
             UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/songs/{userId}/");
             Logger.Debug($"REQUESTING SONGS: {discordCommunityApi}/songs/{userId}/");
@@ -276,7 +274,7 @@ namespace EventPlugin.Misc
             if (www.isNetworkError || www.isHttpError)
             {
                 Logger.Error($"Error getting songs: {www.error}");
-                slvc.DownloadErrorHappened($"Error getting songs: {www.error}");
+                slvc.ErrorHappened($"Error getting songs: {www.error}");
             }
             else
             {
@@ -303,7 +301,7 @@ namespace EventPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error parsing getsong data: {e}");
-                    slvc.DownloadErrorHappened($"Error parsing getsong data: {e}");
+                    slvc.ErrorHappened($"Error parsing getsong data: {e}");
                     yield break;
                 }
 
@@ -323,38 +321,43 @@ namespace EventPlugin.Misc
 
                         var customPreview = Loader.CustomLevelsCollection.beatmapLevels.First(x => x.levelID == levelId) as CustomPreviewBeatmapLevel;
 
+                        song.PreviewBeatmap = customPreview;
+
                         //TODO: Figure out proper async-ness here
-                        var beatmapLevelResult = Task.Run(async () => await SongUtils.GetLevelFromPreview(customPreview));
+                        /*var beatmapLevelResult = Task.Run(async () => await SongUtils.GetLevelFromPreview(customPreview));
                         beatmapLevelResult.Wait();
 
                         //TODO: add characteristic name field to the song data stored in the server
                         song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevelResult.Result?.beatmapLevel, (BeatmapDifficulty)song.Difficulty);
-                        availableSongs.Add(song);
+                        availableSongs.Add(song);*/
                     }
                     else
                     {
-                        slvc.DownloadErrorHappened($"Could not load level {song.SongName}");
+                        slvc.ErrorHappened($"Could not load level {song.SongName}");
                     }
                 };
 
-                //Of what we already have, add the Levels to the availableSongs list
-                alreadyHave.ToList().ForEach(x => loadLevel(x));
-
-                //If there's an error at this point, one of the levels failed to load. Do not continue.
-                if (slvc.errorHappened) yield break;
-
-                osts.ToList().ForEach(x =>
+                //Load the preview levels for what we have
+                foreach (Song song in osts)
                 {
-                    //TODO: Time complexity fix?
-                    var level = lcfgm
-                                    .FirstOrDefault(y => y.beatmapLevels.Any(z => z.levelID.StartsWith(x.Hash))).beatmapLevels
-                                    .FirstOrDefault(y => y.levelID.StartsWith(x.Hash)) as BeatmapLevelSO;
-                    x.Beatmap = SongUtils.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)x.Difficulty);
-                    availableSongs.Add(x);
-                });
+                    foreach (IBeatmapLevelPack pack in Loader.BeatmapLevelsModelSO.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks)
+                    {
+                        var foundLevel = pack.beatmapLevelCollection.beatmapLevels.FirstOrDefault(y => y.levelID.ToLower() == song.Hash.ToLower());
+                        if (foundLevel != null)
+                        {
+                            song.PreviewBeatmap = foundLevel;
+                        }
+                    }
+                }
 
-                //Remove what we already have
-                songs.RemoveAll(x => alreadyHave.Contains(x) || osts.Contains(x)); //Don't redownload
+                foreach (Song song in alreadyHave) loadLevel(song);
+
+                //Of what we already have, add the Levels to the availableSongs list
+                availableSongs.AddRange(alreadyHave);
+                availableSongs.AddRange(osts);
+
+                //Remove what we already have from the download queue
+                songs.RemoveAll(x => availableSongs.Contains(x)); //Don't redownload
 
                 //Download the things we don't have, or if we have everything, show the menu
                 if (songs.Count > 0)
@@ -420,7 +423,7 @@ namespace EventPlugin.Misc
             if (www.isNetworkError || www.isHttpError || timeout)
             {
                 Logger.Error($"Error downloading song {songHash}: {www.error}");
-                slvc.DownloadErrorHappened($"Error downloading song {songHash}: {www.error}");
+                slvc.ErrorHappened($"Error downloading song {songHash}: {www.error}");
             }
             else
             {
@@ -446,7 +449,7 @@ namespace EventPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error writing zip: {e}");
-                    slvc.DownloadErrorHappened($"Error writing zip: {e}");
+                    slvc.ErrorHappened($"Error writing zip: {e}");
                     yield break;
                 }
 
@@ -459,7 +462,7 @@ namespace EventPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Unable to extract ZIP! Exception: {e}");
-                    slvc.DownloadErrorHappened($"Unable to extract ZIP! Exception: {e}");
+                    slvc.ErrorHappened($"Unable to extract ZIP! Exception: {e}");
                     yield break;
                 }
 
@@ -470,7 +473,7 @@ namespace EventPlugin.Misc
                 catch (IOException e)
                 {
                     Logger.Warning($"Unable to delete zip! Exception: {e}");
-                    slvc.DownloadErrorHappened($"Unable to delete zip! Exception: {e}");
+                    slvc.ErrorHappened($"Unable to delete zip! Exception: {e}");
                     yield break;
                 }
 

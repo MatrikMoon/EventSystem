@@ -133,7 +133,7 @@ namespace EventPlugin.UI.ViewControllers
             }
         }
 
-        public void DownloadErrorHappened(string error)
+        public void ErrorHappened(string error)
         {
             songsTableView.gameObject.SetActive(false);
             _pageUpButton.gameObject.SetActive(false);
@@ -178,7 +178,7 @@ namespace EventPlugin.UI.ViewControllers
             songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
             if (selectWhenLoaded != null)
             {
-                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.Beatmap.level.levelID == selectWhenLoaded).First());
+                int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.Beatmap?.level.levelID == selectWhenLoaded).First());
                 songsTableView.SelectCellWithIdx(songIndex, true);
             }
             SongsDownloaded?.Invoke();
@@ -193,7 +193,7 @@ namespace EventPlugin.UI.ViewControllers
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 
-            IBeatmapLevel song = availableSongs[row].Beatmap.level;
+            IPreviewBeatmapLevel song = availableSongs[row].PreviewBeatmap;
 
             cell.reuseIdentifier = "SongCell";
             cell.SetDataFromLevelAsync(song);

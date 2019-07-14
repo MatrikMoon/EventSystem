@@ -1,4 +1,5 @@
-﻿using SongCore;
+﻿using EventShared;
+using SongCore;
 using System;
 using System.IO;
 using System.Linq;
@@ -135,7 +136,8 @@ namespace EventPlugin.Utils
 
         public static string GetHashFromLevelId(string levelId)
         {
-            return levelId.Substring(0, Math.Min(32, levelId.Length));
+            if (OstHelper.IsOst(levelId)) return levelId;
+            return Collections.hashForLevelID(levelId).ToLower();
         }
 
         public static bool GetSongExistsBySongId(string songId)

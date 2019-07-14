@@ -141,6 +141,8 @@ namespace EventPlugin.UI.ViewControllers
             //Set globals
             selectedSong = song;
 
+            //Load the beatmap
+
             if (teamIndex >= 0)
             {
                 selectedTeam = Team.allTeams.ToArray().ElementAt(teamIndex).TeamId;

@@ -16,6 +16,9 @@ namespace EventPlugin.Models
         public LevelDifficulty Difficulty { get; set; }
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
+        public IPreviewBeatmapLevel PreviewBeatmap { get; set; }
+
+        [Obfuscation(Exclude = false, Feature = "-rename;")]
         public IDifficultyBeatmap Beatmap { get; set; }
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]

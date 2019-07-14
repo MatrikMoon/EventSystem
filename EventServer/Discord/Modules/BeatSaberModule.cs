@@ -235,6 +235,16 @@ namespace EventServer.Discord.Modules
                     songId = songId.Substring(0, songId.IndexOf("&"));
                 }
 
+                if (songId.StartsWith("https://bsaber.com/"))
+                {
+                    songId = songId.Substring(songId.LastIndexOf("/") + 1);
+                }
+
+                if (songId.Contains("&"))
+                {
+                    songId = songId.Substring(0, songId.IndexOf("&"));
+                }
+
                 //Get the hash for the song
                 var hash = BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
 
