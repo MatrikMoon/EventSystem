@@ -90,8 +90,8 @@ namespace EventPlugin.UI.ViewControllers
                 _infoText = BeatSaberUI.CreateText(rectTransform, "Downloading songs...", new Vector2(0f, -25f));
                 _infoText.fontSize = 8f;
                 _infoText.alignment = TextAlignmentOptions.Center;
-                _infoText.rectTransform.anchorMin = new Vector2(.5f, .6f);
-                _infoText.rectTransform.anchorMax = new Vector2(.5f, .6f);
+                _infoText.rectTransform.anchorMin = new Vector2(.5f, .9f);
+                _infoText.rectTransform.anchorMax = new Vector2(.5f, .9f);
                 _infoText.rectTransform.sizeDelta = new Vector2(120f, 6f);
                 _infoText.enableWordWrapping = true;
 

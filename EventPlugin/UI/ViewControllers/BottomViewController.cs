@@ -75,7 +75,7 @@ namespace EventPlugin.UI.ViewControllers
             if (_tokensText != null && _rankUpButton != null)
             {
                 if (_player != null) _tokensText.SetText($"Tokens: {_player.Tokens}");
-                if (_player != null && _teams != null)
+                if (_player != null && _teams != null && _teams.Select(x => x.TeamId).Contains(_player.Team))
                 {
                     var currentTeam = _teams.First(x => x.TeamId == _player.Team);
                     var nextTeam = _teams.First(x => x.TeamId == currentTeam.NextPromotion);

@@ -268,12 +268,18 @@ namespace EventServer
                         JSONNode json = new JSONObject();
 
                         if (Player.Exists(userId) && Player.IsRegistered(userId)) {
-                            Player player = new Player(userId);
-
-                            json["version"] = VersionCode;
-                            json["team"] = player.Team;
-                            json["tokens"] = player.Tokens;
-                            json["serverSettings"] = (int)Config.ServerFlags;
+                            if (Config.ServerFlags.HasFlag(ServerFlags.Teams) && new Player(userId).Team == "-1")
+                            {
+                                json["message"] = "Please be sure you're assigned to a team before playing";
+                            }
+                            else
+                            {
+                                Player player = new Player(userId);
+                                json["version"] = VersionCode;
+                                json["team"] = player.Team;
+                                json["tokens"] = player.Tokens;
+                                json["serverSettings"] = (int)Config.ServerFlags;
+                            }
                         }
                         else if (Player.Exists(userId) && !Player.IsRegistered(userId))
                         {
