@@ -46,7 +46,7 @@ namespace EventPlugin.Misc
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
 #if BETA
-        static void SubmitScore(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+        public static void SubmitScore(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #else
         static void a(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #endif

@@ -1,14 +1,11 @@
 ﻿using EventServer.Database;
 using EventServer.Discord;
-using EventServer.Discord.Services;
 using EventShared;
 using EventShared.SimpleJSON;
-using Microsoft.Extensions.DependencyInjection;
 using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;

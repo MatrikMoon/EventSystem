@@ -56,7 +56,7 @@ namespace EventPlugin.Models
         public int GetLocalScore(IDifficultyBeatmap map, PlayerDataModelSO dataModel = null)
         {
             dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var playerLevelStatsData = dataModel.playerData.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             return playerLevelStatsData.validScore ? playerLevelStatsData.highScore : 0;
         }
 
@@ -64,43 +64,39 @@ namespace EventPlugin.Models
         public RankModel.Rank GetLocalRank(IDifficultyBeatmap map, PlayerDataModelSO dataModel = null)
         {
             dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-            var playerLevelStatsData = dataModel.currentLocalPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
+            var playerLevelStatsData = dataModel.playerData.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
         }
 
         //User ID code, courtesy of Kyle and Beat Saber Utils//
-        public static void UpdateUserId()
+        public static void GetPlatformUsername(Action<string, ulong> usernameResolved)
         {
-            if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR || Environment.CommandLine.Contains("-vrmode oculus"))
+            if (PersistentSingleton<VRPlatformHelper>.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR || Environment.CommandLine.Contains("-vrmode oculus"))
             {
-                GetSteamUser();
+                GetSteamUser(usernameResolved);
             }
-            else if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
+            else if (PersistentSingleton<VRPlatformHelper>.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
             {
-                GetOculusUser();
+                GetOculusUser(usernameResolved);
             }
-            else if (Environment.CommandLine.Contains("fpfc") && VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Unknown)
-            {
-                GetSteamUser();
-            }
-            else GetSteamUser();
+            else GetSteamUser(usernameResolved);
         }
 
-        private static void GetSteamUser()
+        private static void GetSteamUser(Action<string, ulong> usernameResolved)
         {
             if (SteamManager.Initialized)
             {
-                Plugin.UserId = SteamUser.GetSteamID().m_SteamID;
+                usernameResolved?.Invoke(SteamFriends.GetPersonaName(), SteamUser.GetSteamID().m_SteamID);
             }
         }
 
-        private static void GetOculusUser()
+        private static void GetOculusUser(Action<string, ulong> usernameResolved)
         {
             Users.GetLoggedInUser().OnComplete((Message<User> msg) =>
             {
                 if (!msg.IsError)
                 {
-                    Plugin.UserId = msg.Data.ID;
+                    usernameResolved?.Invoke(msg.Data.OculusID, msg.Data.ID);
                 }
             });
         }

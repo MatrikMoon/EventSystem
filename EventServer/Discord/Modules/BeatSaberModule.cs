@@ -225,18 +225,12 @@ namespace EventServer.Discord.Modules
                 }
 
                 //Sanitize input
-                if (songId.StartsWith("https://beatsaver.com/"))
+                if (songId.StartsWith("https://beatsaver.com/") || songId.StartsWith("https://bsaber.com/"))
                 {
-                    songId = songId.Substring(songId.LastIndexOf("/") + 1);
-                }
+                    //Strip off the trailing slash if there is one
+                    if (songId.EndsWith("/")) songId = songId.Substring(0, songId.Length - 1);
 
-                if (songId.Contains("&"))
-                {
-                    songId = songId.Substring(0, songId.IndexOf("&"));
-                }
-
-                if (songId.StartsWith("https://bsaber.com/"))
-                {
+                    //Strip off the beginning of the url to leave the id
                     songId = songId.Substring(songId.LastIndexOf("/") + 1);
                 }
 

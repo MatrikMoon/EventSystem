@@ -30,7 +30,8 @@ namespace EventPlugin.UI.ViewControllers
         private Button _downloadErrorReloadButton;
         private string selectWhenLoaded;
 
-        public TableView songsTableView;
+        TableView songsTableView;
+        TableViewScroller _songTableViewScroller;
         LevelListTableCell _songTableCellInstance;
         TextMeshProUGUI _infoText;
 
@@ -50,7 +51,8 @@ namespace EventPlugin.UI.ViewControllers
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
                 _pageUpButton.onClick.AddListener(() =>
                 {
-                    songsTableView.PageScrollUp();
+                    _songTableViewScroller.PageScrollUp();
+                    songsTableView.RefreshScrollButtons();
                 });
                 _pageUpButton.interactable = false;
 
@@ -61,7 +63,8 @@ namespace EventPlugin.UI.ViewControllers
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
                 _pageDownButton.onClick.AddListener(() =>
                 {
-                    songsTableView.PageScrollDown();
+                    _songTableViewScroller.PageScrollDown();
+                    songsTableView.RefreshScrollButtons();
                 });
                 _pageDownButton.interactable = false;
 
@@ -117,9 +120,17 @@ namespace EventPlugin.UI.ViewControllers
                 songsTableView.SetField("_pageUpButton", _pageUpButton);
                 songsTableView.SetField("_pageDownButton", _pageDownButton);
 
+                //Following fix courtesy of superrob's multiplayer fork
+                RectTransform viewport = new GameObject("Viewport").AddComponent<RectTransform>();
+                viewport.SetParent(songsTableView.transform as RectTransform, false);
+                viewport.sizeDelta = new Vector2(0f, 58f);
+                songsTableView.Init();
+                songsTableView.SetField("_scrollRectTransform", viewport);
+
                 songsTableView.didSelectCellWithIdxEvent += SongsTableView_didSelectCellWithIdxEvent;
                 songsTableView.dataSource = this;
                 tableGO.SetActive(true);
+                _songTableViewScroller = songsTableView.GetField<TableViewScroller>("_scroller");
 
                 //Set to view "Downloading songs..." until the songs are set
                 songsTableView.gameObject.SetActive(false);
@@ -175,7 +186,7 @@ namespace EventPlugin.UI.ViewControllers
                 songsTableView.ReloadData();
             }
 
-            songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
+            songsTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, false);
             if (selectWhenLoaded != null)
             {
                 int songIndex = availableSongs.IndexOf(availableSongs.Where(x => x.Beatmap?.level.levelID == selectWhenLoaded).First());
@@ -189,7 +200,7 @@ namespace EventPlugin.UI.ViewControllers
             return availableSongs.Count > 0;
         }
 
-        public TableCell CellForIdx(int row)
+        public TableCell CellForIdx(TableView tableView, int row)
         {
             LevelListTableCell cell = Instantiate(_songTableCellInstance);
 

@@ -27,7 +27,6 @@ namespace EventPlugin.UI
         public static EventUI instance;
 
         public MainModFlowCoordinator _mainModFlowCoordinator; //TODO: Temporarily public, for nofail toggle
-        private RectTransform _mainMenuRectTransform;
         private MainFlowCoordinator _mainFlowCoordinator;
         private MainMenuViewController _mainMenuViewController;
         private MenuButton _communityButton;
@@ -53,7 +52,7 @@ namespace EventPlugin.UI
                 DontDestroyOnLoad(this);
                 Config.LoadConfig();
 
-                Player.UpdateUserId();
+                Player.GetPlatformUsername((username, id) => Plugin.UserId = id);
 
                 SceneManager.sceneLoaded += SceneManager_sceneLoaded;
                 Loader.SongsLoadedEvent += SongsLoaded;
@@ -88,7 +87,6 @@ namespace EventPlugin.UI
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
-            _mainMenuRectTransform = _mainMenuViewController.transform as RectTransform;
             if (_mainModFlowCoordinator == null)
             {
                 _mainModFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<MainModFlowCoordinator>();

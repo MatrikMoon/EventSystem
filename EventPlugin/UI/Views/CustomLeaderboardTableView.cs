@@ -37,6 +37,13 @@ namespace EventPlugin.UI.Views
             _tableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
             _tableView.InvokeMethod("Init");
 
+            //Following fix courtesy of superrob's multiplayer fork
+            RectTransform viewport = new GameObject("Viewport").AddComponent<RectTransform>();
+            viewport.SetParent(_tableView.transform as RectTransform, false);
+            viewport.sizeDelta = new Vector2(0f, 58f);
+            _tableView.Init();
+            _tableView.SetField("_scrollRectTransform", viewport);
+
             var currentView = Resources.FindObjectsOfTypeAll<LeaderboardTableView>().First();
             var currentTransform = (currentView.transform as RectTransform);
             var newTransform = (_tableView.transform as RectTransform);
@@ -61,7 +68,7 @@ namespace EventPlugin.UI.Views
             _tableView.SetField("_pageDownButton", downArrowButton);
         }
 
-        public TableCell CellForIdx(int row)
+        public TableCell CellForIdx(TableView tableView, int row)
         {
             LeaderboardTableCell leaderboardTableCell = Instantiate(_cellInstance);
             leaderboardTableCell.reuseIdentifier = "Cell";

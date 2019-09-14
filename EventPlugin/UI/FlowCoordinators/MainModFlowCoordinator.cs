@@ -22,9 +22,10 @@ namespace EventPlugin.UI.FlowCoordinators
         public MainMenuViewController mainMenuViewController;
         public SongListViewController songListViewController;
 
-        private AlwaysOwnedContentModelSO _alwaysOwnedContentModel;
+        private AlwaysOwnedContentSO _alwaysOwnedContent;
         private BeatmapLevelCollectionSO _primaryLevelCollection;
         private BeatmapLevelCollectionSO _secondaryLevelCollection;
+        private BeatmapLevelCollectionSO _tertiaryLevelCollection;
         private BeatmapLevelCollectionSO _extrasLevelCollection;
 
         private PlayerDataModelSO _playerDataModel;
@@ -67,10 +68,11 @@ namespace EventPlugin.UI.FlowCoordinators
             if (_menuLightsManager == null) _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
             if (_soloFreePlayFlowCoordinator == null) _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             if (_campaignFlowCoordinator == null) _campaignFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
-            if (_alwaysOwnedContentModel == null) _alwaysOwnedContentModel = Resources.FindObjectsOfTypeAll<AlwaysOwnedContentModelSO>().First();
-            if (_primaryLevelCollection == null) _primaryLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContentModel.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_alwaysOwnedContent == null) _alwaysOwnedContent = Resources.FindObjectsOfTypeAll<AlwaysOwnedContentSO>().First();
+            if (_primaryLevelCollection == null) _primaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_tertiaryLevelCollection == null) _tertiaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[3].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
             {
                 SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
@@ -187,14 +189,13 @@ namespace EventPlugin.UI.FlowCoordinators
             else Logger.Debug("BSUtils not installed, not disabling other plugins");
 
             MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
-            var playerSettings = _playerDataModel.currentLocalPlayer.playerSpecificSettings;
+            var playerSettings = _playerDataModel.playerData.playerSpecificSettings;
 
             //Override defaults if we have forced options enabled
             if (song.PlayerOptions != PlayerOptions.None)
             {
                 playerSettings = new PlayerSpecificSettings();
                 playerSettings.leftHanded = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
-                playerSettings.swapColors = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
                 playerSettings.staticLights = song.PlayerOptions.HasFlag(PlayerOptions.StaticLights);
                 playerSettings.noTextsAndHuds = song.PlayerOptions.HasFlag(PlayerOptions.NoHud);
                 playerSettings.advancedHud = song.PlayerOptions.HasFlag(PlayerOptions.AdvancedHud);
@@ -221,7 +222,7 @@ namespace EventPlugin.UI.FlowCoordinators
             gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
             gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
 
-            menuTransitionHelper.StartStandardLevel(song.Beatmap, gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);//Callback for when the song is ready to be played
+            menuTransitionHelper.StartStandardLevel(song.Beatmap, null, null, gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);//Callback for when the song is ready to be played
         }
 
         private bool BSUtilsScoreDisabled()
@@ -234,7 +235,7 @@ namespace EventPlugin.UI.FlowCoordinators
             standardLevelScenesTransitionSetupData.didFinishEvent -= SongFinished;
 
             var map = _communityLeaderboard.selectedSong.Beatmap;
-            var localPlayer = _playerDataModel.currentLocalPlayer;
+            var localPlayer = _playerDataModel.playerData;
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
@@ -248,14 +249,13 @@ namespace EventPlugin.UI.FlowCoordinators
                 MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
                 var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
                     .FirstOrDefault()?
-                    .currentLocalPlayer.playerSpecificSettings;
+                    .playerData.playerSpecificSettings;
 
                 //Override defaults if we have forced options enabled
                 if (song.PlayerOptions != PlayerOptions.None)
                 {
                     playerSettings = new PlayerSpecificSettings();
                     playerSettings.leftHanded = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
-                    playerSettings.swapColors = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
                     playerSettings.staticLights = song.PlayerOptions.HasFlag(PlayerOptions.StaticLights);
                     playerSettings.noTextsAndHuds = song.PlayerOptions.HasFlag(PlayerOptions.NoHud);
                     playerSettings.advancedHud = song.PlayerOptions.HasFlag(PlayerOptions.AdvancedHud);
@@ -264,6 +264,8 @@ namespace EventPlugin.UI.FlowCoordinators
 
                 menuTransitionHelper.StartStandardLevel(
                     song.Beatmap,
+                    null,
+                    null,
                     results.gameplayModifiers,
                     playerSettings,
                     null,
@@ -314,45 +316,17 @@ namespace EventPlugin.UI.FlowCoordinators
 #endif
                     var cs = c.InvokeMethod(n, Plugin.UserId, songHash, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
 
+                    /*var song = _communityLeaderboard.selectedSong;
+                    string signed = RSA.SignScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, (int)song.PlayerOptions, (int)song.GameOptions);
+                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);*/
+
                     //Scoresaber leaderboards
-                    var plmt = ReflectionUtil.GetStaticType("PlatformLeaderboardsModel, Assembly-CSharp");
-                    var pdmt = ReflectionUtil.GetStaticType("PlayerDataModelSO, Assembly-CSharp");
-                    var plm = Resources.FindObjectsOfTypeAll(plmt).First();
-                    var pdm = Resources.FindObjectsOfTypeAll(pdmt).First();
-                    pdm.GetProperty("currentLocalPlayer")
-                        .GetProperty("playerAllOverallStatsData")
-                        .GetProperty("soloFreePlayOverallStatsData")
-                        .InvokeMethod("UpdateWithLevelCompletionResults", results);
-                    pdm.InvokeMethod("Save");
-
-                    var clp = pdm.GetProperty("currentLocalPlayer");
-                    var dbm = _communityLeaderboard.GetField("selectedSong").GetProperty("Beatmap");
-                    var gm = results.GetProperty("gameplayModifiers");
-                    var lest = results.GetProperty("levelEndStateType");
-                    var cld = (int)lest == (int)LevelCompletionResults.LevelEndStateType.Cleared;
-                    var lid = dbm.GetProperty("level").GetProperty("levelID");
-                    var dif = dbm.GetProperty("difficulty");
-                    var plsd = clp.InvokeMethod("GetPlayerLevelStatsData", lid, dif, dbm.GetProperty("parentDifficultyBeatmapSet").GetProperty("beatmapCharacteristic"));
-                    var res = (int)plsd.GetProperty("highScore") < (int)results.GetProperty("modifiedScore");
-                    plsd.InvokeMethod("IncreaseNumberOfGameplays");
-
-                    if (cld && res && !results.gameplayModifiers.noFail)
-                    {
-                        plsd.InvokeMethod("UpdateScoreData", results.GetProperty("modifiedScore"), results.GetProperty("maxCombo"), results.GetProperty("fullCombo"), results.GetProperty("rank"));
-                        plm.InvokeMethod("AddScore", dbm, results.GetProperty("rawScore"), results.GetProperty("modifiedScore"), gm);
-                    }
-
-                    //var song = _communityLeaderboard.selectedSong;
-                    //string signed = RSA.SignScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));
-                    //Client.SubmitScore(Plugin.PlayerId, songId, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.unmodifiedScore, signed, (int)song.PlayerOptions, (int)song.GameOptions, (int)(song.Speed * 100));  
-
-                    /*
                     var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
                     var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-                    playerDataModel.currentLocalPlayer.playerAllOverallStatsData.soloFreePlayOverallStatsData.UpdateWithLevelCompletionResults(results);
+                    playerDataModel.playerData.playerAllOverallStatsData.soloFreePlayOverallStatsData.UpdateWithLevelCompletionResults(results);
                     playerDataModel.Save();
 
-                    PlayerDataModelSO.LocalPlayer currentLocalPlayer = playerDataModel.currentLocalPlayer;
+                    PlayerData currentLocalPlayer = playerDataModel.playerData;
                     IDifficultyBeatmap difficultyBeatmap = _communityLeaderboard.selectedSong.Beatmap;
                     GameplayModifiers gameplayModifiers = results.gameplayModifiers;
                     bool cleared = results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
@@ -364,9 +338,8 @@ namespace EventPlugin.UI.FlowCoordinators
                     if (cleared && result)
                     {
                         playerLevelStatsData.UpdateScoreData(results.modifiedScore, results.maxCombo, results.fullCombo, results.rank);
-                        platformLeaderboardsModel.AddScore(difficultyBeatmap, results.rawScore, results.modifiedScore, gameplayModifiers);
+                        platformLeaderboardsModel.AddScoreFromComletionResults(difficultyBeatmap, results);
                     }
-                    */
                 }
 
                 Action<ResultsViewController> resultsContinuePressed = null;
