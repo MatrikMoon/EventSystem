@@ -1,6 +1,5 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using EventShared;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Linq.Mapping;
 

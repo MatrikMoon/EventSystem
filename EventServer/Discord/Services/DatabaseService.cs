@@ -2,7 +2,6 @@
 using EventShared;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Data.Entity;
 
 /**
  * Created by Moon on 5/18/2019
