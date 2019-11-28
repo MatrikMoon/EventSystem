@@ -84,16 +84,32 @@ namespace EventServer.BeatSaver
             return difficulties.OrderBy(x => x).ToArray();
         }
 
-        public int GetNoteCount(LevelDifficulty difficulty)
+        public string GetPathForDifficulty(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
         {
-            var infoText = File.ReadAllText(GetDifficultyPath(difficulty));
+            List<LevelDifficulty> difficulties = new List<LevelDifficulty>();
+            var infoText = File.ReadAllText(_infoPath);
+            JSONNode node = JSON.Parse(infoText);
+            JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
+            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristic.ToString()).Value;
+            var difficultyBeatmap = difficultySet["_difficultyBeatmaps"].Linq.First(x => x.Value["_difficulty"].Value == difficulty.ToString()).Value;
+            var fileName = difficultyBeatmap["_beatmapFilename"].Value;
+
+            var idFolder = $"{songDirectory}{SongHash}";
+            var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
+            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
+            return Directory.GetFiles(subFolder, fileName, SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
+        }
+
+        public int GetNoteCount(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        {
+            var infoText = File.ReadAllText(GetPathForDifficulty(characteristic, difficulty));
             JSONNode node = JSON.Parse(infoText);
             return node["_notes"].AsArray.Count;
         }
 
-        public int GetMaxScore(LevelDifficulty difficulty)
+        public int GetMaxScore(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
         {
-            int noteCount = GetNoteCount(difficulty);
+            int noteCount = GetNoteCount(characteristic, difficulty);
 
             //Coptied from game files
             int num = 0;
@@ -151,14 +167,6 @@ namespace EventServer.BeatSaver
             var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
             var subFolder = songFolder.FirstOrDefault() ?? idFolder;
             return Directory.GetFiles(subFolder, "info.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
-        }
-
-        private string GetDifficultyPath(LevelDifficulty difficulty)
-        {
-            var idFolder = $"{songDirectory}{SongHash}";
-            var songFolder = Directory.GetDirectories(idFolder); //Assuming each id folder has only one song folder
-            var subFolder = songFolder.FirstOrDefault() ?? idFolder;
-            return Directory.GetFiles(subFolder, $"{difficulty}.dat", SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
 
         public static bool Exists(string hash)
