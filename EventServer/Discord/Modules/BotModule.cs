@@ -1,16 +1,9 @@
 ﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using EventServer.Database;
 using EventServer.Discord.Database;
 using EventServer.Discord.Services;
-using EventShared;
-using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Collections.Generic;
-using System.Data.Entity.Validation;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 /**

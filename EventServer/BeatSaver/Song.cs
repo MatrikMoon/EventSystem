@@ -128,7 +128,7 @@ namespace EventServer.BeatSaver
                 break;
             }
             num += noteCount * num2;
-            return num * 110;
+            return num * 115;
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist

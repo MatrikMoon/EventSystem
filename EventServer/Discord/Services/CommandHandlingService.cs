@@ -9,7 +9,6 @@ using Discord.WebSocket;
 namespace EventServer.Discord.Services
 {
     public class CommandHandlingService
-
     {
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
