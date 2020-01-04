@@ -493,7 +493,7 @@ namespace EventServer.Discord.Modules
                                 string percentage = "???%";
                                 if (!OstHelper.IsOst(song.SongHash))
                                 {
-                                    var maxScore = new BeatSaver.Song(song.SongHash).GetMaxScore(score.Difficulty);
+                                    var maxScore = new BeatSaver.Song(song.SongHash).GetMaxScore(BeatmapCharacteristic.Standard, score.Difficulty);
                                     percentage = ((double)score.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                                 }
 
@@ -534,7 +534,7 @@ namespace EventServer.Discord.Modules
                             string percentage = "???%";
                             if (!OstHelper.IsOst(hash))
                             {
-                                var maxScore = new BeatSaver.Song(hash).GetMaxScore(item.Difficulty);
+                                var maxScore = new BeatSaver.Song(hash).GetMaxScore(BeatmapCharacteristic.Standard, item.Difficulty);
                                 percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                             }
 

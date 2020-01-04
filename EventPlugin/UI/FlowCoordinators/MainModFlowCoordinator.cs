@@ -1,15 +1,13 @@
-﻿using CustomUI.BeatSaber;
+﻿using EventPlugin.Misc;
 using EventPlugin.Models;
-using EventPlugin.Misc;
 using EventPlugin.UI.ViewControllers;
 using EventPlugin.Utils;
 using EventShared;
+using HMUI;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using VRUI;
 using static EventShared.SharedConstructs;
 using Logger = EventShared.Logger;
 
@@ -19,7 +17,6 @@ namespace EventPlugin.UI.FlowCoordinators
     class MainModFlowCoordinator : FlowCoordinator
     {
         public MainFlowCoordinator mainFlowCoordinator;
-        public MainMenuViewController mainMenuViewController;
         public SongListViewController songListViewController;
 
         private AlwaysOwnedContentSO _alwaysOwnedContent;
@@ -45,13 +42,18 @@ namespace EventPlugin.UI.FlowCoordinators
             if (activationType == ActivationType.AddedToHierarchy)
             {
                 title = "EventPlugin";
+                showBackButton = true;
 
                 _mainModNavigationController = BeatSaberUI.CreateViewController<GeneralNavigationController>();
-                _mainModNavigationController.didFinishEvent += (_) => mainFlowCoordinator.InvokeMethod("DismissFlowCoordinator", this, null, false);
 
                 ProvideInitialViewControllers(_mainModNavigationController);
                 OpenSongsList();
             }
+        }
+
+        protected override void BackButtonWasPressed(ViewController topViewController)
+        {
+            mainFlowCoordinator.DismissFlowCoordinator(this, null, false);
         }
 
         public void PresentMainModUI()
@@ -73,9 +75,9 @@ namespace EventPlugin.UI.FlowCoordinators
             if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_tertiaryLevelCollection == null) _tertiaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[3].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
-            if (_mainModNavigationController.GetField<List<VRUIViewController>>("_viewControllers").IndexOf(songListViewController) < 0)
+            if (!songListViewController.isInViewControllerHierarchy || !songListViewController.isActiveAndEnabled)
             {
-                SetViewControllersToNavigationConctroller(_mainModNavigationController, new VRUIViewController[] { songListViewController });
+                SetViewControllersToNavigationConctroller(_mainModNavigationController, new ViewController[] { songListViewController });
 
                 songListViewController.SelectWhenLoaded(songToSelectWhenLoaded);
                 songListViewController.SongListRowSelected += SongListRowSelected;
@@ -188,7 +190,7 @@ namespace EventPlugin.UI.FlowCoordinators
             }
             else Logger.Debug("BSUtils not installed, not disabling other plugins");
 
-            MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
+            MenuTransitionsHelper menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().FirstOrDefault();
             var playerSettings = _playerDataModel.playerData.playerSpecificSettings;
 
             //Override defaults if we have forced options enabled
@@ -246,7 +248,7 @@ namespace EventPlugin.UI.FlowCoordinators
             if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart)
             {
                 var song = _communityLeaderboard.selectedSong;
-                MenuTransitionsHelperSO menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelperSO>().FirstOrDefault();
+                MenuTransitionsHelper menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().FirstOrDefault();
                 var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
                     .FirstOrDefault()?
                     .playerData.playerSpecificSettings;
@@ -338,7 +340,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     if (cleared && result)
                     {
                         playerLevelStatsData.UpdateScoreData(results.modifiedScore, results.maxCombo, results.fullCombo, results.rank);
-                        platformLeaderboardsModel.AddScoreFromComletionResults(difficultyBeatmap, results);
+                        platformLeaderboardsModel.UploadScore(difficultyBeatmap, results.rawScore, results.modifiedScore, results.fullCombo, results.goodCutsCount, results.badCutsCount, results.missedCount, results.maxCombo, results.gameplayModifiers);
                     }
                 }
 
@@ -351,7 +353,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 };
 
                 _menuLightsManager.SetColorPreset(scoreLights, true);
-                _resultsViewController.Init(results, map, highScore);
+                _resultsViewController.Init(results, map, false, highScore);
                 _resultsViewController.continueButtonPressedEvent += resultsContinuePressed;
                 PresentViewController(_resultsViewController, null, true);
             }

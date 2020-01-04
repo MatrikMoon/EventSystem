@@ -1,4 +1,4 @@
-﻿using EventShared;
+﻿﻿using EventShared;
 using UnityEngine.SceneManagement;
 using EventPlugin.UI;
 using IPA;

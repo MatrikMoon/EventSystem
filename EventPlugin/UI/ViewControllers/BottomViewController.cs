@@ -1,14 +1,13 @@
-﻿using CustomUI.BeatSaber;
-using EventPlugin.Misc;
+﻿using EventPlugin.Misc;
 using EventPlugin.Models;
 using EventShared;
+using HMUI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 
 /**
  * Created by Moon on 3/21/2019, 11:59pm
@@ -17,7 +16,7 @@ using VRUI;
 namespace EventPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class BottomViewController : VRUIViewController
+    class BottomViewController : ViewController
     {
         private Player _player;
         private List<Team> _teams;

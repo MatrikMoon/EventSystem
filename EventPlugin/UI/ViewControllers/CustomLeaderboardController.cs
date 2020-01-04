@@ -1,7 +1,7 @@
-﻿using CustomUI.BeatSaber;
+﻿using EventPlugin.Misc;
 using EventPlugin.Models;
-using EventPlugin.Misc;
 using EventPlugin.UI.Views;
+using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +9,6 @@ using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
-using static EventShared.SharedConstructs;
-using Logger = EventShared.Logger;
 
 /*
  * Created by Moon on 9/22/2018
@@ -21,7 +18,7 @@ using Logger = EventShared.Logger;
 namespace EventPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class CustomLeaderboardController : VRUIViewController
+    class CustomLeaderboardController : ViewController
     {
         protected CustomLeaderboardTableView _leaderboard;
 

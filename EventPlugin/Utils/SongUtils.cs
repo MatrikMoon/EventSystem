@@ -1,7 +1,6 @@
 ﻿using EventShared;
 using SongCore;
 using System;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -94,26 +93,24 @@ namespace EventPlugin.Utils
             return ret;
         }
 
-        public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModelSO additionalContentModel = null)
+        public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)
         {
-            additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModelSO>().FirstOrDefault();
-            var additionalContentHandler = additionalContentModel?.GetField<IPlatformAdditionalContentHandler>("_platformAdditionalContentHandler");
-
-            if (additionalContentHandler != null)
+            additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
+            if (additionalContentModel != null)
             {
                 getStatusCancellationTokenSource?.Cancel();
                 getStatusCancellationTokenSource = new CancellationTokenSource();
 
                 var token = getStatusCancellationTokenSource.Token;
-                return await additionalContentHandler.GetLevelEntitlementStatusAsync(levelId, token) == AdditionalContentModelSO.EntitlementStatus.Owned;
+                return await additionalContentModel.GetLevelEntitlementStatusAsync(levelId, token) == AdditionalContentModel.EntitlementStatus.Owned;
             }
 
             return false;
         }
 
-        public static async Task<BeatmapLevelsModelSO.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModelSO beatmapLevelsModel = null)
+        public static async Task<BeatmapLevelsModel.GetBeatmapLevelResult?> GetLevelFromPreview(IPreviewBeatmapLevel level, BeatmapLevelsModel beatmapLevelsModel = null)
         {
-            beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModelSO>().FirstOrDefault();
+            beatmapLevelsModel = beatmapLevelsModel ?? Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().FirstOrDefault();
 
             if (beatmapLevelsModel != null)
             {
@@ -122,7 +119,7 @@ namespace EventPlugin.Utils
 
                 var token = getLevelCancellationTokenSource.Token;
 
-                BeatmapLevelsModelSO.GetBeatmapLevelResult? result = null;
+                BeatmapLevelsModel.GetBeatmapLevelResult? result = null;
                 try
                 {
                     result = await beatmapLevelsModel.GetBeatmapLevelAsync(level.levelID, token);
@@ -138,14 +135,6 @@ namespace EventPlugin.Utils
         {
             if (OstHelper.IsOst(levelId)) return levelId;
             return Collections.hashForLevelID(levelId).ToLower();
-        }
-
-        public static bool GetSongExistsBySongId(string songId)
-        {
-            //Checks directory names for the song id
-            var path = Environment.CurrentDirectory;
-            var songFolders = Directory.GetDirectories(path + "\\CustomSongs").ToList();
-            return songFolders.Any(x => Path.GetFileName(x) == songId);
         }
     }
 }

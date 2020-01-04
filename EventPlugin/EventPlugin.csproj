@@ -59,17 +59,17 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="BeatSaberCustomUI">
-      <HintPath>..\..\Plugins\BeatSaberCustomUI.dll</HintPath>
+    <Reference Include="BSML">
+      <HintPath>..\..\Plugins\BSML.dll</HintPath>
     </Reference>
     <Reference Include="BS_Utils">
       <HintPath>..\..\Plugins\BS_Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="HMLib">
+      <HintPath>..\..\Beat Saber_Data\Managed\HMLib.dll</HintPath>
+    </Reference>
+    <Reference Include="HMUI">
+      <HintPath>..\..\Beat Saber_Data\Managed\HMUI.dll</HintPath>
     </Reference>
     <Reference Include="IPA.Injector, Version=3.12.14.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -79,8 +79,20 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
     </Reference>
+    <Reference Include="MainAssembly">
+      <HintPath>..\..\Beat Saber_Data\Managed\MainAssembly.dll</HintPath>
+    </Reference>
+    <Reference Include="OculusPlatform">
+      <HintPath>..\..\Beat Saber_Data\Managed\OculusPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Polyglot.Scripts">
+      <HintPath>..\..\Beat Saber_Data\Managed\Polyglot.Scripts.dll</HintPath>
+    </Reference>
     <Reference Include="SongCore">
       <HintPath>..\..\Plugins\SongCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\..\Beat Saber_Data\Managed\Steamworks.NET.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -147,6 +159,7 @@
     <Compile Include="Misc\ParallelCoroutine.cs" />
     <Compile Include="Misc\Ryder.Lightweight.cs" />
     <Compile Include="Plugin.cs" />
+    <Compile Include="UI\BeatSaberUI.cs" />
     <Compile Include="UI\ViewControllers\BottomViewController.cs" />
     <Compile Include="UI\EventUI.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

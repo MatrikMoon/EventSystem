@@ -1,4 +1,4 @@
-﻿using CustomUI.MenuButton;
+﻿using BeatSaberMarkupLanguage.MenuButtons;
 using EventPlugin.Misc;
 using EventPlugin.Models;
 using EventPlugin.UI.FlowCoordinators;
@@ -80,18 +80,16 @@ namespace EventPlugin.UI
 
         private void SongsLoaded(Loader _, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            if (_communityButton != null) _communityButton.interactable = true;
+            if (_communityButton != null) _communityButton.Interactable = true;
         }
 
         private void CreateCommunitiyButton()
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
             if (_mainModFlowCoordinator == null)
             {
-                _mainModFlowCoordinator = _mainFlowCoordinator.gameObject.AddComponent<MainModFlowCoordinator>();
+                _mainModFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<MainModFlowCoordinator>(_mainFlowCoordinator.gameObject);
                 _mainModFlowCoordinator.mainFlowCoordinator = _mainFlowCoordinator;
-                _mainModFlowCoordinator.mainMenuViewController = _mainMenuViewController;
             }
 
             try
@@ -111,8 +109,10 @@ namespace EventPlugin.UI
                     var buttonName = "EVENT BETA";
                     var hint = "STILL A BETA";
 #endif
-                    _communityButton = MenuButtonUI.AddButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
-                    _communityButton.interactable = Loader.AreSongsLoaded;
+                    //_communityButton = MenuButtonUI.AddButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
+                    _communityButton = new MenuButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
+                    _communityButton.Interactable = Loader.AreSongsLoaded;
+                    MenuButtons.instance.RegisterButton(_communityButton);
                 }
                 else Logger.Error("MISSING SONGCORE PLUGIN");
             }

@@ -1,14 +1,12 @@
-﻿using CustomUI.BeatSaber;
+﻿using EventPlugin.Models;
 using HMUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using EventPlugin.Models;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 
 /**
  * Created by andruzzzhka, from the BeatSaverMultiplayer plugin,
@@ -18,7 +16,7 @@ using VRUI;
 namespace EventPlugin.UI.ViewControllers
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class SongListViewController : VRUIViewController, TableView.IDataSource
+    class SongListViewController : ViewController, TableView.IDataSource
     {
         public event Action<Song> SongListRowSelected;
         public event Action ReloadPressed;
@@ -52,7 +50,7 @@ namespace EventPlugin.UI.ViewControllers
                 _pageUpButton.onClick.AddListener(() =>
                 {
                     _songTableViewScroller.PageScrollUp();
-                    songsTableView.RefreshScrollButtons();
+                    songsTableView.InvokeMethod("RefreshScrollButtons", true);
                 });
                 _pageUpButton.interactable = false;
 
@@ -64,7 +62,7 @@ namespace EventPlugin.UI.ViewControllers
                 _pageDownButton.onClick.AddListener(() =>
                 {
                     _songTableViewScroller.PageScrollDown();
-                    songsTableView.RefreshScrollButtons();
+                    songsTableView.InvokeMethod("RefreshScrollButtons", true);
                 });
                 _pageDownButton.interactable = false;
 
@@ -124,7 +122,7 @@ namespace EventPlugin.UI.ViewControllers
                 RectTransform viewport = new GameObject("Viewport").AddComponent<RectTransform>();
                 viewport.SetParent(songsTableView.transform as RectTransform, false);
                 viewport.sizeDelta = new Vector2(0f, 58f);
-                songsTableView.Init();
+                songsTableView.InvokeMethod("Init");
                 songsTableView.SetField("_scrollRectTransform", viewport);
 
                 songsTableView.didSelectCellWithIdxEvent += SongsTableView_didSelectCellWithIdxEvent;
@@ -207,7 +205,7 @@ namespace EventPlugin.UI.ViewControllers
             IPreviewBeatmapLevel song = availableSongs[row].PreviewBeatmap;
 
             cell.reuseIdentifier = "SongCell";
-            cell.SetDataFromLevelAsync(song);
+            cell.SetDataFromLevelAsync(song, false);
             cell.SetField("_bought", true);
 
             return cell;

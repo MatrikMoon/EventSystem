@@ -41,7 +41,7 @@ namespace EventPlugin.UI.Views
             RectTransform viewport = new GameObject("Viewport").AddComponent<RectTransform>();
             viewport.SetParent(_tableView.transform as RectTransform, false);
             viewport.sizeDelta = new Vector2(0f, 58f);
-            _tableView.Init();
+            _tableView.InvokeMethod("Init");
             _tableView.SetField("_scrollRectTransform", viewport);
 
             var currentView = Resources.FindObjectsOfTypeAll<LeaderboardTableView>().First();

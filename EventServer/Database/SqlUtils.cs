@@ -346,7 +346,7 @@ namespace EventServer.Database
             //Necessary overrides for being used as a key in a Dictionary
             public static bool operator ==(SongConstruct a, SongConstruct b)
             {
-                if (b == null) return false;
+                if (ReferenceEquals(b, null)) return false;
                 return a.GetHashCode() == b.GetHashCode();
             }
 
