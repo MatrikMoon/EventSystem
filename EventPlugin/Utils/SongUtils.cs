@@ -20,7 +20,7 @@ namespace EventPlugin.Utils
         public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, BeatmapCharacteristicSO characteristic = null)
         {
             //First, look at the characteristic parameter. If there's something useful in there, we try to use it, but fall back to Standard
-            var desiredCharacteristic = level.beatmapCharacteristics.FirstOrDefault(x => x.serializedName == (characteristic?.serializedName ?? "Standard")) ?? level.beatmapCharacteristics.First();
+            var desiredCharacteristic = level.previewDifficultyBeatmapSets.FirstOrDefault(x => x.beatmapCharacteristic.serializedName == (characteristic?.serializedName ?? "Standard")).beatmapCharacteristic ?? level.previewDifficultyBeatmapSets.First().beatmapCharacteristic;
 
             IDifficultyBeatmap[] availableMaps =
                 level

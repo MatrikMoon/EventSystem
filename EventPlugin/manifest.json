@@ -2,9 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
   "author": "Moon",
   "description": "Plugin which allows you to play songs and have them be submitted to a server for a discord event",
-  "gameVersion": "1.6.0",
-  "id": "DiscordCommunityPlugin",
-  "name": "DiscordCommunityPlugin",
+  "gameVersion": "1.6.2",
+  "id": "TrueAccuracyPlugin",
+  "name": "TrueAccuracyPlugin",
   "version": "0.0.0",
   "features": [
   ]
