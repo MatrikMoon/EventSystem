@@ -28,7 +28,8 @@ namespace EventServer.Discord
         {
             "moderator",
             "weekly event manager",
-            "senpai"
+            "senpai",
+            "admin"
         };
 
         public static void Start(string serverName, ulong scoreChannel, string voteChannel, string databaseLocation = "botDatabase.db")

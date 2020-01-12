@@ -392,6 +392,8 @@ namespace EventServer
             int port = 3707;
 #elif (DISCORDCOMMUNITY)
             int port = 3703;
+#elif (TRUEACCURACY)
+            int port = 3711;
 #elif (ASIAVR)
             int port = 3709;
 #else
@@ -411,6 +413,8 @@ namespace EventServer
             var serverName = "Team Saber";
 #elif (DISCORDCOMMUNITY)
             var serverName = "Beat Saber Discord Server";
+#elif (TRUEACCURACY)
+            var serverName = "True Accuracy Championship";
 #elif (ASIAVR)
             var serverName = "Asia VR Community";
 #elif BETA
@@ -421,6 +425,8 @@ namespace EventServer
             string scoreChannel = "event-feed";
 #elif (DISCORDCOMMUNITY)
             ulong scoreChannel = 457952124307898368; //"event-scores";
+#elif (TRUEACCURACY)
+            ulong scoreChannel = 663160463017639971; //"qualifier-feed";
 #elif (ASIAVR)
             ulong scoreChannel = 572908789699969054; //"scores feed";
 #elif BETA

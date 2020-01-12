@@ -102,6 +102,9 @@ namespace EventPlugin.UI
 #elif DISCORDCOMMUNITY
                     var buttonName = "Discord Community";
                     var hint = "Compete with your team in the competition!";
+#elif TRUEACCURACY
+                    var buttonName = "True Accuracy Tournament";
+                    var hint = "Show off your skills!";
 #elif ASIAVR
                     var buttonName = "AsiaVR Tournament";
                     var hint = "Compete in the Asia Server Event!";

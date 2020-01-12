@@ -58,6 +58,10 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TrueAccuracy|AnyCPU'">
+    <OutputPath>bin\TrueAccuracy\</OutputPath>
+    <DefineConstants>TRUEACCURACY</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="BSML">
       <HintPath>..\..\Plugins\BSML.dll</HintPath>

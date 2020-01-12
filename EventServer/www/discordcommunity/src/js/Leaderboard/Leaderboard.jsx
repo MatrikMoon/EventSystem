@@ -19,7 +19,7 @@ class Leaderboard extends React.Component {
 
   componentDidMount() {
     //fetch('../weeklysongs')
-    fetch('/api/songs/')
+    fetch('/api-acc/songs/')
       .then(response => {
         return response.json();
       })
@@ -28,11 +28,11 @@ class Leaderboard extends React.Component {
         //Help me. I have no idea how to grab a random item from this
         let item = null;
         for (item in json) {}
-        if (this.state.teams != null) this.fetchLeaderboard(json[item].songId, json[item].difficulty, "-1");
+        if (this.state.teams != null) this.fetchLeaderboard(json[item].songHash, json[item].difficulty, "-1");
       });
     
     //fetch('../getteams')
-    fetch('/api/teams/')
+    fetch('/api-acc/teams/')
       .then(response => {
         return response.json();
       })
@@ -43,7 +43,7 @@ class Leaderboard extends React.Component {
           //Help me. I have no idea how to grab a random item from this
           let item = null;
           for (item in this.state.songList) {}  
-          this.fetchLeaderboard(this.state.songList[item].songId, this.state.songList[item].difficulty, "-1");
+          this.fetchLeaderboard(this.state.songList[item].songHash, this.state.songList[item].difficulty, "-1");
         }
       });
   }
@@ -99,11 +99,11 @@ class Leaderboard extends React.Component {
                               key={leaderboardData[x].place}
                               place={leaderboardData[x].place}
                               username={leaderboardData[x].player}
-                              team={this.state.teams[leaderboardData[x].team].teamName}
+                              team={this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].teamName : null}
                               score={leaderboardData[x].score}
-                              textColor={this.getTextColor(this.state.teams[leaderboardData[x].team].color)}
-                              backgroundColor={this.state.teams[leaderboardData[x].team].color}
-                              backgroundHighlight={this.getHighlightColor(this.state.teams[leaderboardData[x].team].color)}/>
+                              textColor={this.getTextColor(this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].color : null)}
+                              backgroundColor={this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].color : null}
+                              backgroundHighlight={this.getHighlightColor(this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].color : null)}/>
                         );
     }
   }
@@ -115,7 +115,7 @@ class Leaderboard extends React.Component {
       let array = [];
       const songList = this.state.songList;
       for (let item in songList) array.push(item);
-      return array.map(x => <button className="btn blue" key={x} onClick={() => this.fetchLeaderboard(songList[x].songId, songList[x].difficulty, null)}><a>{songList[x].songName}</a></button>)
+      return array.map(x => <button className="btn blue" key={x} onClick={() => this.fetchLeaderboard(songList[x].songHash, songList[x].difficulty, null)}><a>{songList[x].songName}</a></button>)
     }
   }
 
@@ -134,10 +134,10 @@ class Leaderboard extends React.Component {
     let newTeam, newDifficulty, newSong;
     newTeam = (team !== null) ? team : this.state.selectedTeam;
     newDifficulty = (difficulty !== null) ? difficulty : this.state.selectedDifficulty;
-    newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songId;
+    newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songHash;
     
     //fetch('../leaderboard')
-    fetch(`/api/leaderboards/${newSong}/${newDifficulty}/6/${newTeam}/`)
+    fetch(`/api-acc/leaderboards/${newSong}/${newDifficulty}/${newTeam}/`)
       .then(response => {
         return response.json();
       })
@@ -148,6 +148,7 @@ class Leaderboard extends React.Component {
 
   //COLOR HELPERS
   getTextColor(color) {
+    if (color == null) color = "#d50000";
     return this.shouldTextBeDarker(color) ? '#424242' : '#eeeeee';
   }
 
@@ -175,6 +176,7 @@ class Leaderboard extends React.Component {
   }
 
   getHighlightColor(color) {
+    if (color == null) color = "#d50000";
     return this.shouldTextBeDarker(color) ? this.shadeColor(color, -20) : this.shadeColor(color, 20);
   }
 

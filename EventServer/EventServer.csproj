@@ -59,6 +59,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'TrueAccuracy|AnyCPU'">
+    <OutputPath>bin\TrueAccuracy\</OutputPath>
+    <DefineConstants>TRUEACCURACY</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel" />
