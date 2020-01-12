@@ -339,8 +339,11 @@ namespace EventServer
                         }
                         else
                         {
+                            int take = 10;
                             int difficulty = Convert.ToInt32(requestData[2]);
                             string teamId = requestData[3];
+                            if (requestData.Length > 4) take = Convert.ToInt32(requestData[4]);
+
                             songHash = Regex.Replace(songHash, "[^a-zA-Z0-9- ]", "");
                             teamId = Regex.Replace(teamId, "[^a-zA-Z0-9- ]", "");
 
@@ -363,7 +366,7 @@ namespace EventServer
                             List<ScoreConstruct> scores = GetScoresForSong(songConstruct, teamId);
 
                             int place = 1;
-                            scores.Take(10).ToList().ForEach(x =>
+                            scores.Take(take).ToList().ForEach(x =>
                             {
                                 JSONNode node = new JSONObject();
                                 node["score"] = x.Score;
