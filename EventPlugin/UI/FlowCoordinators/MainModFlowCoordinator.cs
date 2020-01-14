@@ -190,6 +190,12 @@ namespace EventPlugin.UI.FlowCoordinators
             }
             else Logger.Debug("BSUtils not installed, not disabling other plugins");
 
+            if (_resultsViewController.isInViewControllerHierarchy) DismissViewController(_resultsViewController, () => PlaySong(song));
+            else PlaySong(song);
+        }
+
+        private void PlaySong(Song song)
+        {
             MenuTransitionsHelper menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().FirstOrDefault();
             var playerSettings = _playerDataModel.playerData.playerSpecificSettings;
 
@@ -224,7 +230,8 @@ namespace EventPlugin.UI.FlowCoordinators
             gameplayModifiers.disappearingArrows = song.GameOptions.HasFlag(GameOptions.DisappearingArrows);
             gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
 
-            menuTransitionHelper.StartStandardLevel(song.Beatmap, null, null, gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);//Callback for when the song is ready to be played
+            var colorSchemeSettings = _playerDataModel.playerData.colorSchemesSettings;
+            menuTransitionHelper.StartStandardLevel(song.Beatmap, _playerDataModel.playerData.overrideEnvironmentSettings, colorSchemeSettings.GetColorSchemeForId(colorSchemeSettings.selectedColorSchemeId), gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);
         }
 
         private bool BSUtilsScoreDisabled()
@@ -245,38 +252,7 @@ namespace EventPlugin.UI.FlowCoordinators
             var redLights = _campaignFlowCoordinator.GetField<MenuLightsPresetSO>("_newObjectiveLightsPreset");
             var defaultLights = _soloFreePlayFlowCoordinator.GetField<MenuLightsPresetSO>("_defaultLightsPreset");
 
-            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart)
-            {
-                var song = _communityLeaderboard.selectedSong;
-                MenuTransitionsHelper menuTransitionHelper = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().FirstOrDefault();
-                var playerSettings = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>()
-                    .FirstOrDefault()?
-                    .playerData.playerSpecificSettings;
-
-                //Override defaults if we have forced options enabled
-                if (song.PlayerOptions != PlayerOptions.None)
-                {
-                    playerSettings = new PlayerSpecificSettings();
-                    playerSettings.leftHanded = song.PlayerOptions.HasFlag(PlayerOptions.Mirror);
-                    playerSettings.staticLights = song.PlayerOptions.HasFlag(PlayerOptions.StaticLights);
-                    playerSettings.noTextsAndHuds = song.PlayerOptions.HasFlag(PlayerOptions.NoHud);
-                    playerSettings.advancedHud = song.PlayerOptions.HasFlag(PlayerOptions.AdvancedHud);
-                    playerSettings.reduceDebris = song.PlayerOptions.HasFlag(PlayerOptions.ReduceDebris);
-                }
-
-                menuTransitionHelper.StartStandardLevel(
-                    song.Beatmap,
-                    null,
-                    null,
-                    results.gameplayModifiers,
-                    playerSettings,
-                    null,
-                    "Menu",
-                    false,
-                    null,
-                    SongFinished
-                );
-            }
+            if (results.levelEndAction == LevelCompletionResults.LevelEndAction.Restart) PlaySong(_communityLeaderboard.selectedSong);
             else
             {
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
@@ -342,20 +318,20 @@ namespace EventPlugin.UI.FlowCoordinators
                         playerLevelStatsData.UpdateScoreData(results.modifiedScore, results.maxCombo, results.fullCombo, results.rank);
                         platformLeaderboardsModel.UploadScore(difficultyBeatmap, results.rawScore, results.modifiedScore, results.fullCombo, results.goodCutsCount, results.badCutsCount, results.missedCount, results.maxCombo, results.gameplayModifiers);
                     }
+
+                    Action<ResultsViewController> resultsContinuePressed = null;
+                    resultsContinuePressed = (e) =>
+                    {
+                        _resultsViewController.continueButtonPressedEvent -= resultsContinuePressed;
+                        _menuLightsManager.SetColorPreset(defaultLights, true);
+                        DismissViewController(_resultsViewController);
+                    };
+
+                    _menuLightsManager.SetColorPreset(scoreLights, true);
+                    _resultsViewController.Init(results, map, false, highScore);
+                    _resultsViewController.continueButtonPressedEvent += resultsContinuePressed;
+                    PresentViewController(_resultsViewController, null, true);
                 }
-
-                Action<ResultsViewController> resultsContinuePressed = null;
-                resultsContinuePressed = (e) =>
-                {
-                    _resultsViewController.continueButtonPressedEvent -= resultsContinuePressed;
-                    _menuLightsManager.SetColorPreset(defaultLights, true);
-                    DismissViewController(_resultsViewController);
-                };
-
-                _menuLightsManager.SetColorPreset(scoreLights, true);
-                _resultsViewController.Init(results, map, false, highScore);
-                _resultsViewController.continueButtonPressedEvent += resultsContinuePressed;
-                PresentViewController(_resultsViewController, null, true);
             }
         }
     }

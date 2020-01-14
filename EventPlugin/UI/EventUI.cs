@@ -1,15 +1,11 @@
 ﻿using BeatSaberMarkupLanguage.MenuButtons;
-using EventPlugin.Misc;
-using EventPlugin.Models;
-using EventPlugin.UI.FlowCoordinators;
 using SongCore;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using EventPlugin.UI.FlowCoordinators;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Logger = EventShared.Logger;
 
 /**
@@ -24,74 +20,27 @@ namespace EventPlugin.UI
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class EventUI : MonoBehaviour
     {
-        public static EventUI instance;
+        private static MainModFlowCoordinator _mainModFlowCoordinator;
+        private static MenuButton _communityButton;
 
-        public MainModFlowCoordinator _mainModFlowCoordinator; //TODO: Temporarily public, for nofail toggle
-        private MainFlowCoordinator _mainFlowCoordinator;
-        private MainMenuViewController _mainMenuViewController;
-        private MenuButton _communityButton;
-
-        //Called on Menu scene load (only once in lifetime)
-        [Obfuscation(Exclude = false, Feature = "-rename;")]
-        public static void OnLoad()
+        public static void CommunityButtonPressed()
         {
-            if (instance != null)
+            if (_mainModFlowCoordinator == null)
             {
-                return;
+                var mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+                _mainModFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<MainModFlowCoordinator>(mainFlowCoordinator.gameObject);
+                _mainModFlowCoordinator.mainFlowCoordinator = mainFlowCoordinator;
             }
-            new GameObject("EventPlugin").AddComponent<EventUI>();
+            _mainModFlowCoordinator.PresentMainModUI();
         }
 
-        //Called on object creation (only once in lifetime)
-        [Obfuscation(Exclude = false, Feature = "-rename;")]
-        public void Awake()
-        {
-            if (instance != this)
-            {
-                instance = this;
-                DontDestroyOnLoad(this);
-                Config.LoadConfig();
-
-                Player.GetPlatformUsername((username, id) => Plugin.UserId = id);
-
-                SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-                Loader.SongsLoadedEvent += SongsLoaded;
-                CreateCommunitiyButton(); //sceneLoaded won't be called the first time
-            }
-        }
-
-        private void SceneManager_sceneLoaded(Scene next, LoadSceneMode mode)
-        {
-            if (next.name == "MenuCore")
-            {
-                StartCoroutine(SetupUI());
-            }
-        }
-
-        //Waits for menu scenes to be loaded then creates UI elements
-        //Courtesy of BeatSaverDownloader
-        private IEnumerator SetupUI()
-        {
-            List<Scene> menuScenes = new List<Scene>() { SceneManager.GetSceneByName("MenuCore"), SceneManager.GetSceneByName("MenuViewControllers"), SceneManager.GetSceneByName("MainMenu") };
-            yield return new WaitUntil(() => { return menuScenes.All(x => x.isLoaded); });
-
-            CreateCommunitiyButton();
-        }
-
-        private void SongsLoaded(Loader _, Dictionary<string, CustomPreviewBeatmapLevel> levels)
+        private static void SongsLoaded(Loader _, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             if (_communityButton != null) _communityButton.Interactable = true;
         }
 
-        private void CreateCommunitiyButton()
+        public static void CreateCommunitiyButton()
         {
-            _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            if (_mainModFlowCoordinator == null)
-            {
-                _mainModFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<MainModFlowCoordinator>(_mainFlowCoordinator.gameObject);
-                _mainModFlowCoordinator.mainFlowCoordinator = _mainFlowCoordinator;
-            }
-
             try
             {
                 if (ReflectionUtil.ListLoadedAssemblies().Any(x => x.GetName().Name == "SongCore"))
@@ -112,10 +61,11 @@ namespace EventPlugin.UI
                     var buttonName = "EVENT BETA";
                     var hint = "STILL A BETA";
 #endif
-                    //_communityButton = MenuButtonUI.AddButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
-                    _communityButton = new MenuButton(buttonName, hint, () => _mainModFlowCoordinator.PresentMainModUI());
+                    _communityButton = new MenuButton(buttonName, hint, CommunityButtonPressed);
                     _communityButton.Interactable = Loader.AreSongsLoaded;
                     MenuButtons.instance.RegisterButton(_communityButton);
+
+                    Loader.SongsLoadedEvent += SongsLoaded;
                 }
                 else Logger.Error("MISSING SONGCORE PLUGIN");
             }

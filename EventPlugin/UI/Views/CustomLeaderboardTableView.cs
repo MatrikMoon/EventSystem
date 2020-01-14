@@ -31,17 +31,19 @@ namespace EventPlugin.UI.Views
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         public void Awake()
         {
-            _tableView = new GameObject().AddComponent<TableView>();
+            var viewGO = new GameObject();
+            viewGO.SetActive(false);
+            _tableView = viewGO.AddComponent<TableView>();
             _tableView.transform.SetParent(transform, false);
             _tableView.SetField("_isInitialized", false);
             _tableView.SetField("_preallocatedCells", new TableView.CellsGroup[0]);
             _tableView.InvokeMethod("Init");
+            viewGO.SetActive(true);
 
             //Following fix courtesy of superrob's multiplayer fork
             RectTransform viewport = new GameObject("Viewport").AddComponent<RectTransform>();
             viewport.SetParent(_tableView.transform as RectTransform, false);
             viewport.sizeDelta = new Vector2(0f, 58f);
-            _tableView.InvokeMethod("Init");
             _tableView.SetField("_scrollRectTransform", viewport);
 
             var currentView = Resources.FindObjectsOfTypeAll<LeaderboardTableView>().First();

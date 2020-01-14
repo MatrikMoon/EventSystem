@@ -1,8 +1,9 @@
-﻿﻿using EventShared;
-using UnityEngine.SceneManagement;
+﻿using EventPlugin.Misc;
+using EventPlugin.Models;
 using EventPlugin.UI;
+using EventShared;
 using IPA;
-using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace EventPlugin
 {
@@ -15,6 +16,7 @@ namespace EventPlugin
 
         public void OnApplicationStart()
         {
+            EventUI.CreateCommunitiyButton();
         }
 
 
@@ -67,7 +69,8 @@ namespace EventPlugin
         {
             if (scene.name == "MenuCore")
             {
-                EventUI.OnLoad();
+                Config.LoadConfig();
+                Player.GetPlatformUsername((username, id) => UserId = id);
             }
         }
 
