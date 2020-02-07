@@ -3,60 +3,58 @@ import '../../style/Leaderboard.scss';
 import '../../style/Button.scss';
 import LeaderboardItem from './LeaderboardItem';
 
-class Leaderboard extends React.Component {
+class CVRELeaderboard extends React.Component {
   constructor(props) {
     super(props);
     
     this.state = {
-      songList: null,
-      teams: null,
+      songList: [],
+      teams: [],
       selectedSong: null,
-      selectedDifficulty: null,
       selectedTeam: null,
-      leaderboardData: null
+      rawData: null
     };
   }
 
   componentDidMount() {
-    //fetch('../weeklysongs')
-    fetch('/api/songs/')
-      .then(response => {
-        return response.json();
-      })
-      .then(json => {
-        this.setState({songList: json});
-        //Help me. I have no idea how to grab a random item from this
-        let item = null;
-        for (item in json) {}
-        if (this.state.teams != null) this.fetchLeaderboard(json[item].songHash, json[item].difficulty, "-1");
-      });
+    const allowedSongs = ["custom_level_D0B25B0B05C7B14C5EA55774D1F751705F360026", "custom_level_AB36FD22C1060AC3696AF0CD6BD1E25DB3AEBF18", "custom_level_B3BD1BBBB18A53381E183EEADF78CCC5E523F07D"];
     
-    //fetch('../getteams')
-    fetch('/api/teams/')
+    fetch('https://cvrescores.herokuapp.com/api/scores')
       .then(response => {
         return response.json();
       })
       .then(json => {
-        this.setState({teams: json});
+        this.setState({rawData: json});
 
-        if (this.state.songList != null) {
-          //Help me. I have no idea how to grab a random item from this
-          let item = null;
-          for (item in this.state.songList) {}  
-          this.fetchLeaderboard(this.state.songList[item].songHash, this.state.songList[item].difficulty, "-1");
+        let item = null;
+        for (item in json) {
+          item = json[item];
+          if ((!this.state.teams || (this.state.teams && !this.state.teams.includes(item.team))) && item.team) {
+            this.state.teams[item.team] = {
+              "teamName" : item.team,
+              "color" : "#2ecc71"
+            };
+          }
+          if ((!this.state.songList || (this.state.songList && !this.state.songList.includes(item.levelId))) && allowedSongs.includes(item.levelId)) {
+            this.state.songList[item.levelId] = {
+              "songName" : item.mapName,
+              "songHash" : item.levelId
+            };
+          }
         }
+        this.fetchLeaderboard(json['0'].levelId, null);
       });
   }
 
   render() {
     let teamButtons = <div className="team-button-panel">
                         {this.renderTeamButtons()}
-                        <button className="btn" onClick={() => this.fetchLeaderboard(null, null, "-1")}><a>Mixed</a></button>
+                        <button className="btn" onClick={() => this.fetchLeaderboard(null, "-1")}><a>Mixed</a></button>
                       </div>;
     return (
       <div className="Leaderboard transition-item">
         <header className="header">
-          <span>Weekly Event Leaderboard</span>
+          <span>CVRE Leaderboard</span>
         </header>
         <div className="page">
           <span>{`${this.state.selectedSong != null ? this.state.songList[this.state.selectedSong].songName : "Loading..."} Leaderboard`}</span>
@@ -82,7 +80,7 @@ class Leaderboard extends React.Component {
   }
 
   renderLeaderboardItems() {
-    if (this.state.leaderboardData === null) {
+    if (this.state.selectedSong === null) {
       return (
         <div>
           Leaderboard error
@@ -92,18 +90,34 @@ class Leaderboard extends React.Component {
     else {
       //Must be in array form so we can .map
       //Gross time complexity, because this is in render(), I know
-      let array = [];
-      const leaderboardData = this.state.leaderboardData;
-      for (let item in leaderboardData) array.push(item);
-      return array.map(x => <LeaderboardItem
-                              key={leaderboardData[x].place}
-                              place={leaderboardData[x].place}
-                              username={leaderboardData[x].player}
-                              team={this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].teamName : null}
-                              score={leaderboardData[x].score}
-                              textColor={this.getTextColor(this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].color : null)}
-                              backgroundColor={this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].color : null}
-                              backgroundHighlight={this.getHighlightColor(this.state.teams[leaderboardData[x].team] !== undefined ? this.state.teams[leaderboardData[x].team].color : null)}/>
+      let scoresForThisSong = [];
+      const leaderboardData = this.state.rawData;
+      leaderboardData.sort((a, b) => {
+        return b.score - a.score;
+      });
+
+      for (let item in leaderboardData) {
+        let score = leaderboardData[item];
+        if (score.levelId == this.state.selectedSong && !scoresForThisSong.some(x => x.player == score.username)
+          && ((!this.state.selectedTeam || this.state.selectedTeam == "-1") || this.state.selectedTeam == score.team)) {
+          scoresForThisSong[scoresForThisSong.length] = {
+            "place" : scoresForThisSong.length + 1,
+            "player" : score.username,
+            "score" : `${score.score} (${parseFloat(score.accuracy) * 100}%)`,
+            "team" : score.team
+          };
+        }
+      }
+
+      return scoresForThisSong.map(x => <LeaderboardItem
+                              key={x.place}
+                              place={x.place}
+                              username={x.player}
+                              team={this.state.teams[x.team] !== undefined ? this.state.teams[x.team].teamName : null}
+                              score={x.score}
+                              textColor={this.getTextColor(this.state.teams[x.team] !== undefined ? this.state.teams[x.team].color : null)}
+                              backgroundColor={this.state.teams[x.team] !== undefined ? this.state.teams[x.team].color : null}
+                              backgroundHighlight={this.getHighlightColor(this.state.teams[x.team] !== undefined ? this.state.teams[x.team].color : null)}/>
                         );
     }
   }
@@ -115,7 +129,7 @@ class Leaderboard extends React.Component {
       let array = [];
       const songList = this.state.songList;
       for (let item in songList) array.push(item);
-      return array.map(x => <button className="btn blue" key={x} onClick={() => this.fetchLeaderboard(songList[x].songHash, songList[x].difficulty, null)}><a>{songList[x].songName}</a></button>)
+      return array.map(x => <button className="btn blue" key={x} onClick={() => this.fetchLeaderboard(songList[x].songHash, null)}><a>{songList[x].songName}</a></button>)
     }
   }
 
@@ -126,24 +140,16 @@ class Leaderboard extends React.Component {
       let array = [];
       const teams = this.state.teams;
       for (let item in teams) array.push(item);
-      return array.map(x => <button className="btn" key={x} style={{'--background-color': `${teams[x].color}`, color: `${this.getTextColor(teams[x].color)}`, '--background-highlight': `${this.getHighlightColor(teams[x].color)}`}} onClick={() => this.fetchLeaderboard(null, null, x)}><a>{teams[x].teamName}</a></button>)
+      return array.map(x => <button className="btn" key={x} style={{'--background-color': `${teams[x].color}`, color: `${this.getTextColor(teams[x].color)}`, '--background-highlight': `${this.getHighlightColor(teams[x].color)}`}} onClick={() => this.fetchLeaderboard(null, x)}><a>{teams[x].teamName}</a></button>)
     }
   }
 
-  fetchLeaderboard(song, difficulty, team) {
-    let newTeam, newDifficulty, newSong;
+  fetchLeaderboard(song, team) {
+    let newTeam, newSong;
     newTeam = (team !== null) ? team : this.state.selectedTeam;
-    newDifficulty = (difficulty !== null) ? difficulty : this.state.selectedDifficulty;
     newSong = (song !== null) ? song : this.state.songList[this.state.selectedSong].songHash;
     
-    //fetch('../leaderboard')
-    fetch(`/api/leaderboards/${newSong}/${newDifficulty}/${newTeam}/64/`)
-      .then(response => {
-        return response.json();
-      })
-      .then(json => {
-        this.setState({leaderboardData: json, selectedSong: newSong + newDifficulty, selectedDifficulty: newDifficulty, selectedTeam: newTeam});
-      });
+    this.setState({selectedSong: newSong, selectedTeam: newTeam});
   }
 
   //COLOR HELPERS
@@ -202,4 +208,4 @@ class Leaderboard extends React.Component {
   //--End color methods
 }
 
-export default Leaderboard;
+export default CVRELeaderboard;

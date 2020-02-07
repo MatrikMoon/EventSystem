@@ -298,7 +298,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     string signed = RSA.SignScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, (int)song.PlayerOptions, (int)song.GameOptions);
                     Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);*/
 
-                    //Scoresaber leaderboards
+                    /*//Scoresaber leaderboards
                     var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
                     var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
                     playerDataModel.playerData.playerAllOverallStatsData.soloFreePlayOverallStatsData.UpdateWithLevelCompletionResults(results);
@@ -317,7 +317,7 @@ namespace EventPlugin.UI.FlowCoordinators
                     {
                         playerLevelStatsData.UpdateScoreData(results.modifiedScore, results.maxCombo, results.fullCombo, results.rank);
                         platformLeaderboardsModel.UploadScore(difficultyBeatmap, results.rawScore, results.modifiedScore, results.fullCombo, results.goodCutsCount, results.badCutsCount, results.missedCount, results.maxCombo, results.gameplayModifiers);
-                    }
+                    }*/
 
                     Action<ResultsViewController> resultsContinuePressed = null;
                     resultsContinuePressed = (e) =>
