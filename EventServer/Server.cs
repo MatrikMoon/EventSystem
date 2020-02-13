@@ -186,13 +186,15 @@ namespace EventServer
                         List<SongConstruct> songs = GetActiveSongs();
 
                         songs.ForEach(x => {
-                            if (x.Difficulty == LevelDifficulty.Auto) {
+                            //If the request doesn't include a player id, we can't be sure which difficulty the player is supposed to play, so we'll just leave
+                            //the difficulty set to Auto because it's probably the website asking
+                            if (x.Difficulty == LevelDifficulty.Auto && !string.IsNullOrEmpty(userId)) {
                                 if (OstHelper.IsOst(x.SongHash))
                                 {
-                                    x.Difficulty = string.IsNullOrEmpty(userId) ? LevelDifficulty.Easy : new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongHash));
+                                    x.Difficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongHash));
                                 }
                                 else {
-                                    var preferredDifficulty = string.IsNullOrEmpty(userId) ? LevelDifficulty.Easy : new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongHash));
+                                    var preferredDifficulty = new Player(userId).GetPreferredDifficulty(OstHelper.IsOst(x.SongHash));
                                     x.Difficulty = new BeatSaver.Song(x.SongHash).GetClosestDifficultyPreferLower(preferredDifficulty);
                                 }
                             }
@@ -400,7 +402,7 @@ namespace EventServer
 #elif (ASIAVR)
             int port = 3709;
 #else
-            int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
+            int port = 3703; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);
             httpServer.Listen();
