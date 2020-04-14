@@ -311,8 +311,8 @@ namespace EventServer
                             int take = 10;
                             string teamId = "-1";
 
-                            if (requestData.Length > 3) take = Convert.ToInt32(requestData[2]);
-                            if (requestData.Length > 4) teamId = requestData[4];
+                            if (requestData.Length > 2) take = Convert.ToInt32(requestData[2]);
+                            if (requestData.Length > 3) teamId = requestData[3];
 
                             List<SongConstruct> songs = GetAllScores(teamId);
                             songs.ToList().ForEach(x =>
@@ -402,7 +402,7 @@ namespace EventServer
 #elif (ASIAVR)
             int port = 3709;
 #else
-            int port = 3703; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
+            int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);
             httpServer.Listen();

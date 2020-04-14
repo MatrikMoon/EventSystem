@@ -10,8 +10,8 @@ namespace EventShared
     public static class SharedConstructs
     {
         public const string Name = "EventPlugin";
-        public const string Version = "0.3.6";
-        public const int VersionCode = 036;
+        public const string Version = "0.3.7";
+        public const int VersionCode = 037;
         public static string Changelog =
             "0.0.1: First attempt at fork from EventPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -39,9 +39,10 @@ namespace EventShared
             "0.3.1: Updated for Beat Saber 1.2.0\n" +
             "0.3.2: Added new songs since OST Vol 2\n" +
             "0.3.3: Updated for Beat Saber 1.3.0\n" +
-            "0.3.4: Updated for Beat Saber 1.6.0\n" + 
+            "0.3.4: Updated for Beat Saber 1.6.0\n" +
             "0.3.5: Updated for Beat Saber 1.6.2\n" +
-            "0.3.6: Disable scoresaber submission\n";
+            "0.3.6: Disable scoresaber submission\n" +
+            "0.3.7: Updated for Beat Saber 1.9.0\n";
 
         public enum LevelDifficulty
         {

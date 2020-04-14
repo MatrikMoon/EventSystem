@@ -25,7 +25,7 @@ namespace EventPlugin.UI.FlowCoordinators
         private BeatmapLevelCollectionSO _tertiaryLevelCollection;
         private BeatmapLevelCollectionSO _extrasLevelCollection;
 
-        private PlayerDataModelSO _playerDataModel;
+        private PlayerDataModel _playerDataModel;
         private MenuLightsManager _menuLightsManager;
         private SoloFreePlayFlowCoordinator _soloFreePlayFlowCoordinator;
         private CampaignFlowCoordinator _campaignFlowCoordinator;
@@ -66,7 +66,7 @@ namespace EventPlugin.UI.FlowCoordinators
             if (songListViewController == null) songListViewController = BeatSaberUI.CreateViewController<SongListViewController>();
             if (_bottomViewController == null) _bottomViewController = BeatSaberUI.CreateViewController<BottomViewController>();
             if (_resultsViewController == null) _resultsViewController = Resources.FindObjectsOfTypeAll<ResultsViewController>().First();
-            if (_playerDataModel == null) _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+            if (_playerDataModel == null) _playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
             if (_menuLightsManager == null) _menuLightsManager = Resources.FindObjectsOfTypeAll<MenuLightsManager>().First();
             if (_soloFreePlayFlowCoordinator == null) _soloFreePlayFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             if (_campaignFlowCoordinator == null) _campaignFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
@@ -77,7 +77,7 @@ namespace EventPlugin.UI.FlowCoordinators
             if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[3].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
             if (!songListViewController.isInViewControllerHierarchy || !songListViewController.isActiveAndEnabled)
             {
-                SetViewControllersToNavigationConctroller(_mainModNavigationController, new ViewController[] { songListViewController });
+                SetViewControllersToNavigationController(_mainModNavigationController, new ViewController[] { songListViewController });
 
                 songListViewController.SelectWhenLoaded(songToSelectWhenLoaded);
                 songListViewController.SongListRowSelected += SongListRowSelected;
@@ -184,7 +184,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void SongPlayPressed(Song song)
         {
-            if (IPA.Loader.PluginManager.AllPlugins.Any(x => x.Metadata.Name.ToLower() == "Beat Saber Utils".ToLower()))
+            if (IPA.Loader.PluginManager.AllPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
             {
                 BSUtilsDisableOtherPlugins();
             }
@@ -258,7 +258,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
                 {
                     //If bs_utils disables score submission, we do too
-                    if (IPA.Loader.PluginManager.AllPlugins.Any(x => x.Metadata.Name.ToLower() == "Beat Saber Utils".ToLower()))
+                    if (IPA.Loader.PluginManager.AllPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
                     {
                         if (BSUtilsScoreDisabled()) return;
                     }

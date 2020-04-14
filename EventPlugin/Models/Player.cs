@@ -53,17 +53,17 @@ namespace EventPlugin.Models
         }
 
         //Gets a the player's locally stored score for a map
-        public int GetLocalScore(IDifficultyBeatmap map, PlayerDataModelSO dataModel = null)
+        public int GetLocalScore(IDifficultyBeatmap map, PlayerDataModel dataModel = null)
         {
-            dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+            dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
             var playerLevelStatsData = dataModel.playerData.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             return playerLevelStatsData.validScore ? playerLevelStatsData.highScore : 0;
         }
 
         //Gets a the player's locally stored rank for a map
-        public RankModel.Rank GetLocalRank(IDifficultyBeatmap map, PlayerDataModelSO dataModel = null)
+        public RankModel.Rank GetLocalRank(IDifficultyBeatmap map, PlayerDataModel dataModel = null)
         {
-            dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
+            dataModel = dataModel ?? Resources.FindObjectsOfTypeAll<PlayerDataModel>().First();
             var playerLevelStatsData = dataModel.playerData.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             return playerLevelStatsData.validScore ? playerLevelStatsData.maxRank : RankModel.Rank.E;
         }

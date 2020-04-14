@@ -69,6 +69,9 @@
     <Reference Include="BS_Utils">
       <HintPath>..\..\Plugins\BS_Utils.dll</HintPath>
     </Reference>
+    <Reference Include="Colors">
+      <HintPath>..\..\Beat Saber_Data\Managed\Colors.dll</HintPath>
+    </Reference>
     <Reference Include="HMLib">
       <HintPath>..\..\Beat Saber_Data\Managed\HMLib.dll</HintPath>
     </Reference>
@@ -83,14 +86,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
     </Reference>
-    <Reference Include="MainAssembly">
-      <HintPath>..\..\Beat Saber_Data\Managed\MainAssembly.dll</HintPath>
+    <Reference Include="Main">
+      <HintPath>..\..\Beat Saber_Data\Managed\Main.dll</HintPath>
     </Reference>
     <Reference Include="OculusPlatform">
       <HintPath>..\..\Beat Saber_Data\Managed\OculusPlatform.dll</HintPath>
     </Reference>
-    <Reference Include="Polyglot.Scripts">
-      <HintPath>..\..\Beat Saber_Data\Managed\Polyglot.Scripts.dll</HintPath>
+    <Reference Include="Polyglot">
+      <HintPath>..\..\Beat Saber_Data\Managed\Polyglot.dll</HintPath>
     </Reference>
     <Reference Include="SongCore">
       <HintPath>..\..\Plugins\SongCore.dll</HintPath>

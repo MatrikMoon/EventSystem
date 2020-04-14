@@ -3,6 +3,7 @@ using EventPlugin.UI.ViewControllers;
 using EventPlugin.UI.Views;
 using EventShared;
 using EventShared.SimpleJSON;
+using SongCore;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,9 +15,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 using static EventShared.SharedConstructs;
 using Logger = EventShared.Logger;
-using EventPlugin.Utils;
-using SongCore;
-using System.Threading.Tasks;
 
 /*
  * Created by Moon on 9/9/2018
@@ -407,6 +405,7 @@ namespace EventPlugin.Misc
             bool timeout = false;
             float time = 0f;
 
+            www.SetRequestHeader("user-agent", @"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36");
             UnityWebRequestAsyncOperation asyncRequest = www.SendWebRequest();
 
             while (!asyncRequest.isDone || asyncRequest.progress < 1f)
