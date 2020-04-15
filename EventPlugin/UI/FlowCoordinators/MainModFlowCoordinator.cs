@@ -267,57 +267,9 @@ namespace EventPlugin.UI.FlowCoordinators
                     string songHash = SongUtils.GetHashFromLevelId(level.levelID);
 
                     //Community leaderboards
-                    var sn = _communityLeaderboard.GetField("selectedSong");
-                    var po = sn.GetProperty("PlayerOptions");
-                    var go = sn.GetProperty("GameOptions");
-                    
-                    var d = sn.GetProperty("Beatmap");
-                    var rs = results.GetProperty("rawScore");
-                    var fc = results.GetProperty("fullCombo");
-                    var ms = typeof(RSA);
-
-                    //var s = ms.InvokeMethod("SignScore", Plugin.PlayerId, songHash, d.GetProperty<int>("difficulty"), fc, rs, (int)po, (int)go);
-                    var s = RSA.SignScore(Plugin.UserId, songHash, d.GetProperty<int>("difficulty"), (bool)fc, (int)rs, (int)po, (int)go);
-
-
-                    var c = typeof(Client);
-                    Action<bool> don = (b) =>
-                    {
-                        //TODO: Fix refresh freeze issue
-                        Logger.Success("Score upload compete!");
-                        //if (b && _communityLeaderboard) _communityLeaderboard.Refresh();
-                    };
-#if BETA
-                    var n = "SubmitScore";
-#else
-                    var n = "a";
-#endif
-                    var cs = c.InvokeMethod(n, Plugin.UserId, songHash, d.GetProperty<int>("difficulty"), fc, rs, s, (int)po, (int)go, don);
-
-                    /*var song = _communityLeaderboard.selectedSong;
+                    var song = _communityLeaderboard.selectedSong;
                     string signed = RSA.SignScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, (int)song.PlayerOptions, (int)song.GameOptions);
-                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);*/
-
-                    /*//Scoresaber leaderboards
-                    var platformLeaderboardsModel = Resources.FindObjectsOfTypeAll<PlatformLeaderboardsModel>().First();
-                    var playerDataModel = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().First();
-                    playerDataModel.playerData.playerAllOverallStatsData.soloFreePlayOverallStatsData.UpdateWithLevelCompletionResults(results);
-                    playerDataModel.Save();
-
-                    PlayerData currentLocalPlayer = playerDataModel.playerData;
-                    IDifficultyBeatmap difficultyBeatmap = _communityLeaderboard.selectedSong.Beatmap;
-                    GameplayModifiers gameplayModifiers = results.gameplayModifiers;
-                    bool cleared = results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared;
-                    string levelID = difficultyBeatmap.level.levelID;
-                    BeatmapDifficulty difficulty = difficultyBeatmap.difficulty;
-                    PlayerLevelStatsData playerLevelStatsData = currentLocalPlayer.GetPlayerLevelStatsData(levelID, difficulty, difficultyBeatmap.parentDifficultyBeatmapSet.beatmapCharacteristic);
-                    bool result = playerLevelStatsData.highScore < results.modifiedScore;
-                    playerLevelStatsData.IncreaseNumberOfGameplays();
-                    if (cleared && result)
-                    {
-                        playerLevelStatsData.UpdateScoreData(results.modifiedScore, results.maxCombo, results.fullCombo, results.rank);
-                        platformLeaderboardsModel.UploadScore(difficultyBeatmap, results.rawScore, results.modifiedScore, results.fullCombo, results.goodCutsCount, results.badCutsCount, results.missedCount, results.maxCombo, results.gameplayModifiers);
-                    }*/
+                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);
 
                     Action<ResultsViewController> resultsContinuePressed = null;
                     resultsContinuePressed = (e) =>
