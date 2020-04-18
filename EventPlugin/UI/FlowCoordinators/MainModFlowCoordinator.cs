@@ -120,7 +120,7 @@ namespace EventPlugin.UI.FlowCoordinators
             }
             else beatmapLevel = (BeatmapLevelSO)song.PreviewBeatmap;
 
-            song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, (BeatmapDifficulty)(int)song.Difficulty);
+            song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, (BeatmapDifficulty)(int)song.Difficulty, song.Characteristic);
 
             //Open up the custom/global leaderboard pane when we need to
             if (_communityLeaderboard == null)
@@ -268,8 +268,8 @@ namespace EventPlugin.UI.FlowCoordinators
 
                     //Community leaderboards
                     var song = _communityLeaderboard.selectedSong;
-                    string signed = RSA.SignScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, (int)song.PlayerOptions, (int)song.GameOptions);
-                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);
+                    string signed = RSA.SignScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, _communityLeaderboard.selectedSong.Characteristic, results.fullCombo, results.rawScore, (int)song.PlayerOptions, (int)song.GameOptions);
+                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, _communityLeaderboard.selectedSong.Characteristic, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);
 
                     Action<ResultsViewController> resultsContinuePressed = null;
                     resultsContinuePressed = (e) =>

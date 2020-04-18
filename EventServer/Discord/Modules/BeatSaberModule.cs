@@ -210,6 +210,9 @@ namespace EventServer.Discord.Modules
                     }
                 }
 
+                string characteristicArg = ParseArgs(paramString, "characteristic");
+                characteristicArg = characteristicArg ?? "Standard";
+
                 GameOptions gameOptions = GameOptions.None;
                 PlayerOptions playerOptions = PlayerOptions.None;
 
@@ -244,12 +247,12 @@ namespace EventServer.Discord.Modules
 
                 if (OstHelper.IsOst(hash))
                 {
-                    if (!Song.Exists(hash, parsedDifficulty, true))
+                    if (!Song.Exists(hash, parsedDifficulty, characteristicArg, true))
                     {
-                        Song song = new Song(hash, parsedDifficulty);
+                        Song song = new Song(hash, parsedDifficulty, characteristicArg);
                         song.GameOptions = (int)gameOptions;
                         song.PlayerOptions = (int)playerOptions;
-                        await ReplyAsync($"Added: {OstHelper.GetOstSongNameFromLevelId(hash)} ({parsedDifficulty})" +
+                        await ReplyAsync($"Added: {OstHelper.GetOstSongNameFromLevelId(hash)} ({parsedDifficulty}) ({characteristicArg})" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                     }
@@ -263,11 +266,11 @@ namespace EventServer.Discord.Modules
                         BeatSaver.Song song = new BeatSaver.Song(hash);
                         string songName = song.SongName;
 
-                        if (parsedDifficulty != LevelDifficulty.Auto && !song.GetLevelDifficulties(BeatmapCharacteristic.Standard).Contains(parsedDifficulty))
+                        if (parsedDifficulty != LevelDifficulty.Auto && !song.GetLevelDifficulties(characteristicArg).Contains(parsedDifficulty))
                         {
                             LevelDifficulty nextBestDifficulty = song.GetClosestDifficultyPreferLower(parsedDifficulty);
 
-                            if (Song.Exists(hash, nextBestDifficulty))
+                            if (Song.Exists(hash, nextBestDifficulty, characteristicArg))
                             {
                                 await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, and {nextBestDifficulty} is already in the database.\n" +
                                     $"Song not added.");
@@ -275,7 +278,7 @@ namespace EventServer.Discord.Modules
 
                             else
                             {
-                                var databaseSong = new Song(hash, nextBestDifficulty);
+                                var databaseSong = new Song(hash, nextBestDifficulty, characteristicArg);
                                 databaseSong.GameOptions = (int)gameOptions;
                                 databaseSong.PlayerOptions = (int)playerOptions;
                                 await ReplyAsync($"{songName} doesn't have {parsedDifficulty}, using {nextBestDifficulty} instead.\n" +
@@ -286,16 +289,68 @@ namespace EventServer.Discord.Modules
                         }
                         else
                         {
-                            var databaseSong = new Song(hash, parsedDifficulty);
+                            var databaseSong = new Song(hash, parsedDifficulty, characteristicArg);
                             databaseSong.GameOptions = (int)gameOptions;
                             databaseSong.PlayerOptions = (int)playerOptions;
-                            await ReplyAsync($"{songName} ({parsedDifficulty}) downloaded and added to song list" +
+                            await ReplyAsync($"{songName} ({parsedDifficulty}) ({characteristicArg}) downloaded and added to song list" +
                                 $"{(gameOptions != GameOptions.None ? $" with game options: ({gameOptions.ToString()})" : "")}" +
                                 $"{(playerOptions != PlayerOptions.None ? $" with player options: ({playerOptions.ToString()})" : "!")}");
                         }
                     }
                     else await ReplyAsync("Could not download song.");
                 }
+            }
+        }
+
+        [Command("removeSong")]
+        public async Task RemoveSongAsync(string songId, [Remainder] string paramString = null)
+        {
+            if (IsAdmin())
+            {
+                //Parse the difficulty input, either as an int or a string
+                LevelDifficulty parsedDifficulty = LevelDifficulty.ExpertPlus;
+
+                string difficultyArg = ParseArgs(paramString, "difficulty");
+                if (difficultyArg != null)
+                {
+                    //If the enum conversion doesn't succeed, try it as an int
+                    if (!Enum.TryParse(difficultyArg, true, out parsedDifficulty))
+                    {
+                        await ReplyAsync("Could not parse difficulty parameter.\n" +
+                        "Usage: removeSong [songId] [difficulty]");
+
+                        return;
+                    }
+                }
+
+                string characteristicArg = ParseArgs(paramString, "characteristic");
+                characteristicArg = characteristicArg ?? "Standard";
+
+                //Sanitize input
+                if (songId.StartsWith("https://beatsaver.com/") || songId.StartsWith("https://bsaber.com/"))
+                {
+                    //Strip off the trailing slash if there is one
+                    if (songId.EndsWith("/")) songId = songId.Substring(0, songId.Length - 1);
+
+                    //Strip off the beginning of the url to leave the id
+                    songId = songId.Substring(songId.LastIndexOf("/") + 1);
+                }
+
+                if (songId.Contains("&"))
+                {
+                    songId = songId.Substring(0, songId.IndexOf("&"));
+                }
+
+                //Get the hash for the song
+                var hash = BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+
+                if (Song.Exists(hash, parsedDifficulty, characteristicArg, true))
+                {
+                    var song = new Song(hash, parsedDifficulty, characteristicArg);
+                    song.Old = true;
+                    await ReplyAsync($"Removed {song.SongName} ({song.Difficulty}) ({song.Characteristic}) from the song list");
+                }
+                else await ReplyAsync("Specified song does not exist with that difficulty and characteristic");
             }
         }
 
@@ -493,7 +548,7 @@ namespace EventServer.Discord.Modules
                                 string percentage = "???%";
                                 if (!OstHelper.IsOst(song.SongHash))
                                 {
-                                    var maxScore = new BeatSaver.Song(song.SongHash).GetMaxScore(BeatmapCharacteristic.Standard, score.Difficulty);
+                                    var maxScore = new BeatSaver.Song(song.SongHash).GetMaxScore(score.Characteristic, score.Difficulty);
                                     percentage = ((double)score.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                                 }
 
@@ -523,7 +578,7 @@ namespace EventServer.Discord.Modules
 
                     if (x.Scores.Count > 0) //Don't print if no one submitted scores
                     {
-                        var song = new Song(hash, x.Difficulty);
+                        var song = new Song(hash, x.Difficulty, x.Characteristic);
                         finalMessage += song.SongName + ":\n";
 
                         int place = 1;
@@ -534,7 +589,7 @@ namespace EventServer.Discord.Modules
                             string percentage = "???%";
                             if (!OstHelper.IsOst(hash))
                             {
-                                var maxScore = new BeatSaver.Song(hash).GetMaxScore(BeatmapCharacteristic.Standard, item.Difficulty);
+                                var maxScore = new BeatSaver.Song(hash).GetMaxScore(item.Characteristic, item.Difficulty);
                                 percentage = ((double)item.Score / maxScore).ToString("P", CultureInfo.InvariantCulture);
                             }
 

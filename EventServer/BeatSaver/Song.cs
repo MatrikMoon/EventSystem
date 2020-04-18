@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static EventShared.SharedConstructs;
 
 /*
@@ -21,7 +19,7 @@ namespace EventServer.BeatSaver
         public static readonly string currentDirectory = Directory.GetCurrentDirectory();
         public static readonly string songDirectory = $@"{currentDirectory}\DownloadedSongs\";
 
-        public BeatmapCharacteristic[] Characteristics { get; private set; }
+        public string[] Characteristics { get; private set; }
         public string SongName { get; }
 
         string SongHash { get; set; }
@@ -41,7 +39,7 @@ namespace EventServer.BeatSaver
             else
             {
                 SongName = OstHelper.GetOstSongNameFromLevelId(SongHash);
-                Characteristics = new BeatmapCharacteristic[] { BeatmapCharacteristic.Standard, BeatmapCharacteristic.OneSaber, BeatmapCharacteristic.NoArrows };
+                Characteristics = new string[] { "Standard", "OneSaber", "NoArrows", "90Degree", "360Degree" };
             }
         }
 
@@ -53,27 +51,26 @@ namespace EventServer.BeatSaver
             return node["_songName"];
         }
 
-        private BeatmapCharacteristic[] GetBeatmapCharacteristics()
+        private string[] GetBeatmapCharacteristics()
         {
-            List<BeatmapCharacteristic> characteristics = new List<BeatmapCharacteristic>();
+            List<string> characteristics = new List<string>();
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
             JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
             foreach (var item in difficultyBeatmapSets)
             {
-                Enum.TryParse(item.Value["_beatmapCharacteristicName"], out BeatmapCharacteristic difficulty);
-                characteristics.Add(difficulty);
+                characteristics.Add(item.Value["_beatmapCharacteristicName"]);
             }
             return characteristics.OrderBy(x => x).ToArray();
         }
 
-        public LevelDifficulty[] GetLevelDifficulties(BeatmapCharacteristic characteristic)
+        public LevelDifficulty[] GetLevelDifficulties(string characteristicId)
         {
             List<LevelDifficulty> difficulties = new List<LevelDifficulty>();
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
             JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
-            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristic.ToString()).Value;
+            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristicId).Value;
             var difficultyBeatmaps = difficultySet["_difficultyBeatmaps"].AsArray;
 
             foreach (var item in difficultyBeatmaps)
@@ -84,13 +81,13 @@ namespace EventServer.BeatSaver
             return difficulties.OrderBy(x => x).ToArray();
         }
 
-        public string GetPathForDifficulty(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        public string GetPathForDifficulty(string characteristicId, LevelDifficulty difficulty)
         {
             List<LevelDifficulty> difficulties = new List<LevelDifficulty>();
             var infoText = File.ReadAllText(_infoPath);
             JSONNode node = JSON.Parse(infoText);
             JSONArray difficultyBeatmapSets = node["_difficultyBeatmapSets"].AsArray;
-            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristic.ToString()).Value;
+            var difficultySet = difficultyBeatmapSets.Linq.First(x => x.Value["_beatmapCharacteristicName"] == characteristicId).Value;
             var difficultyBeatmap = difficultySet["_difficultyBeatmaps"].Linq.First(x => x.Value["_difficulty"].Value == difficulty.ToString()).Value;
             var fileName = difficultyBeatmap["_beatmapFilename"].Value;
 
@@ -100,16 +97,16 @@ namespace EventServer.BeatSaver
             return Directory.GetFiles(subFolder, fileName, SearchOption.AllDirectories).First(); //Assuming each song folder has only one info.json
         }
 
-        public int GetNoteCount(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        public int GetNoteCount(string characteristicId, LevelDifficulty difficulty)
         {
-            var infoText = File.ReadAllText(GetPathForDifficulty(characteristic, difficulty));
+            var infoText = File.ReadAllText(GetPathForDifficulty(characteristicId, difficulty));
             JSONNode node = JSON.Parse(infoText);
             return node["_notes"].AsArray.Count;
         }
 
-        public int GetMaxScore(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        public int GetMaxScore(string characteristicId, LevelDifficulty difficulty)
         {
-            int noteCount = GetNoteCount(characteristic, difficulty);
+            int noteCount = GetNoteCount(characteristicId, difficulty);
 
             //Coptied from game files
             int num = 0;
@@ -132,33 +129,33 @@ namespace EventServer.BeatSaver
         }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
-        public LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty) => GetClosestDifficultyPreferLower(BeatmapCharacteristic.Standard, difficulty);
-        public LevelDifficulty GetClosestDifficultyPreferLower(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        public LevelDifficulty GetClosestDifficultyPreferLower(LevelDifficulty difficulty) => GetClosestDifficultyPreferLower("Standard", difficulty);
+        public LevelDifficulty GetClosestDifficultyPreferLower(string characteristicId, LevelDifficulty difficulty)
         {
-            if (GetLevelDifficulties(characteristic).Contains(difficulty)) return difficulty;
+            if (GetLevelDifficulties(characteristicId).Contains(difficulty)) return difficulty;
 
             int ret = -1;
             if (ret == -1)
             {
-                ret = GetLowerDifficulty(characteristic, difficulty);
+                ret = GetLowerDifficulty(characteristicId, difficulty);
             }
             if (ret == -1)
             {
-                ret = GetHigherDifficulty(characteristic, difficulty);
+                ret = GetHigherDifficulty(characteristicId, difficulty);
             }
             return (LevelDifficulty)ret;
         }
 
         //Returns the next-lowest difficulty to the one provided
-        private int GetLowerDifficulty(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        private int GetLowerDifficulty(string characteristicId, LevelDifficulty difficulty)
         {
-            return GetLevelDifficulties(characteristic).Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
+            return GetLevelDifficulties(characteristicId).Select(x => (int)x).TakeWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).Last();
         }
 
         //Returns the next-highest difficulty to the one provided
-        private int GetHigherDifficulty(BeatmapCharacteristic characteristic, LevelDifficulty difficulty)
+        private int GetHigherDifficulty(string characteristicId, LevelDifficulty difficulty)
         {
-            return GetLevelDifficulties(characteristic).Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
+            return GetLevelDifficulties(characteristicId).Select(x => (int)x).SkipWhile(x => x < (int)difficulty).DefaultIfEmpty(-1).First();
         }
 
         private string GetInfoPath()

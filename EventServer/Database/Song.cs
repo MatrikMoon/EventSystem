@@ -1,11 +1,8 @@
 ﻿using EventShared;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static EventShared.SharedConstructs;
 using System.Text.RegularExpressions;
+using static EventShared.SharedConstructs;
 
 /*
  * Created by Moon on 9/11/2018
@@ -19,42 +16,44 @@ namespace EventServer.Database
         public string Hash { get; private set; }
         public string SongName
         {
-            get => SqlUtils.ExecuteQuery($"SELECT songName FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}", "songName").First();
-            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET songName = \'{value}\' WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}");
+            get => SqlUtils.ExecuteQuery($"SELECT songName FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'", "songName").First();
+            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET songName = \'{value}\' WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'");
         }
         public int GameOptions
         {
             get
             {
-                var optionString = SqlUtils.ExecuteQuery($"SELECT gameOptions FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}", "gameOptions").First();
+                var optionString = SqlUtils.ExecuteQuery($"SELECT gameOptions FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'", "gameOptions").First();
                 return Convert.ToInt32(optionString);
             }
-            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET gameOptions = {value} WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}");
+            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET gameOptions = {value} WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'");
         }
         public int PlayerOptions
         {
             get
             {
-                var optionString = SqlUtils.ExecuteQuery($"SELECT playerOptions FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}", "playerOptions").First();
+                var optionString = SqlUtils.ExecuteQuery($"SELECT playerOptions FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'", "playerOptions").First();
                 return Convert.ToInt32(optionString);
             }
-            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET playerOptions = {value} WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}");
+            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET playerOptions = {value} WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'");
         }
         public bool Old
         {
-            get => SqlUtils.ExecuteQuery($"SELECT old FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}", "old").First() == "1";
-            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET old = \'{(value ? "1" : "0")}\' WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty}");
+            get => SqlUtils.ExecuteQuery($"SELECT old FROM songTable WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'", "old").First() == "1";
+            set => SqlUtils.ExecuteCommand($"UPDATE songTable SET old = \'{(value ? "1" : "0")}\' WHERE songHash = \'{Hash}\' AND difficulty = {(int)Difficulty} AND characteristic = \'{Characteristic}\'");
         }
         public LevelDifficulty Difficulty { get; private set; }
+        public string Characteristic { get; private set; }
 
-        public Song(string hash, LevelDifficulty difficulty)
+        public Song(string hash, LevelDifficulty difficulty, string characteristic)
         {
-            Hash = hash;
             Difficulty = difficulty;
+            Characteristic = characteristic;
+            Hash = hash;
             if (!Exists(true))
             {
                 //Add a placeholder, trigger song download from BeatSaver if it doesn't exist
-                SqlUtils.AddSong("", "", "", hash, difficulty, SharedConstructs.PlayerOptions.None, SharedConstructs.GameOptions.None);
+                SqlUtils.AddSong("", "", "", hash, difficulty, characteristic, SharedConstructs.PlayerOptions.None, SharedConstructs.GameOptions.None);
                 if (OstHelper.IsOst(hash))
                 {
                     string songName = OstHelper.GetOstSongNameFromLevelId(hash);
@@ -75,12 +74,12 @@ namespace EventServer.Database
 
         public bool Exists(bool allowAutoDifficulty = false)
         {
-            return Exists(Hash, Difficulty, allowAutoDifficulty);
+            return Exists(Hash, Difficulty, Characteristic, allowAutoDifficulty);
         }
 
-        public static bool Exists(string songHash, LevelDifficulty difficulty, bool allowAutoDifficulty = false)
+        public static bool Exists(string songHash, LevelDifficulty difficulty, string characteristic, bool allowAutoDifficulty = false)
         {
-            return SqlUtils.ExecuteQuery($"SELECT * FROM songTable WHERE songHash = \'{songHash}\' AND (difficulty = {(int)difficulty}{(allowAutoDifficulty ? " OR difficulty = -1)" : ")")} AND old = 0", "songHash").Any();
+            return SqlUtils.ExecuteQuery($"SELECT * FROM songTable WHERE songHash = \'{songHash}\' AND characteristic = \'{characteristic}\' AND (difficulty = {(int)difficulty}{(allowAutoDifficulty ? " OR difficulty = -1)" : ")")} AND old = 0", "songHash").Any();
         }
 
         public bool ExistsAsAutoDifficulty() => ExistsAsAutoDifficulty(Hash);

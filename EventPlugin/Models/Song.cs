@@ -14,6 +14,7 @@ namespace EventPlugin.Models
         public string Hash { get; set; }
         public string SongName { get; set; }
         public LevelDifficulty Difficulty { get; set; }
+        public string Characteristic { get; set; }
 
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         public IPreviewBeatmapLevel PreviewBeatmap { get; set; }

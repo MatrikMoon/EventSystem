@@ -46,13 +46,13 @@ namespace EventPlugin.Misc
 
         [Obfuscation(Exclude = false, Feature = "-rename;")] //This method is called through reflection, so
 #if true //BETA
-        public static void SubmitScore(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
+        public static void SubmitScore(ulong userId, string levelId, int difficultyLevel, string characteristic, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #else
         public static void a(ulong userId, string levelId, int difficultyLevel, bool fullCombo, int score, string signed, int playerOptions, int gameOptions, Action<bool> scoreUploadedCallback = null)
 #endif
         {
             //Build score object
-            Score s = new Score(userId.ToString(), levelId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, signed);
+            Score s = new Score(userId.ToString(), levelId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, characteristic, signed);
 
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(s.ToBase64()));
@@ -95,9 +95,9 @@ namespace EventPlugin.Misc
         }
 
         //Gets the top 10 scores for a song and posts them to the provided leaderboard
-        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songHash, LevelDifficulty difficulty, string teamId, bool useTeamColors = false)
+        public static void GetSongLeaderboard(CustomLeaderboardController clc, string songHash, LevelDifficulty difficulty, string characteristic, string teamId, bool useTeamColors = false)
         {
-            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songHash, difficulty, teamId, useTeamColors));
+            SharedCoroutineStarter.instance.StartCoroutine(GetSongLeaderboardCoroutine(clc, songHash, difficulty, characteristic, teamId, useTeamColors));
         }
 
         //Starts the necessary coroutine chain to make the mod functional
@@ -172,9 +172,9 @@ namespace EventPlugin.Misc
             }
         }
 
-        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songHash, LevelDifficulty difficulty, string teamId = "-1", bool useTeamColors = false)
+        private static IEnumerator GetSongLeaderboardCoroutine(CustomLeaderboardController clc, string songHash, LevelDifficulty difficulty, string characteristic, string teamId = "-1", bool useTeamColors = false)
         {
-            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songHash}/{(int)difficulty}/{teamId}");
+            UnityWebRequest www = UnityWebRequest.Get($"{discordCommunityApi}/leaderboards/{songHash}/{(int)difficulty}/{characteristic}/{teamId}");
             www.timeout = 30;
             yield return www.SendWebRequest();
 
@@ -291,10 +291,11 @@ namespace EventPlugin.Misc
                             SongName = id.Value["songName"],
                             GameOptions = (GameOptions)Convert.ToInt32(id.Value["gameOptions"].ToString()),
                             PlayerOptions = (PlayerOptions)Convert.ToInt32(id.Value["playerOptions"].ToString()),
-                            Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString())
+                            Difficulty = (LevelDifficulty)Convert.ToInt32(id.Value["difficulty"].ToString()),
+                            Characteristic = id.Value["characteristic"]
                         };
 
-                        Logger.Debug($"ADDING SONG: {newSong.SongName} {newSong.Difficulty}");
+                        Logger.Debug($"ADDING SONG: {newSong.SongName} {newSong.Difficulty} {newSong.Characteristic}");
                         songs.Add(newSong);
                     }
                 }

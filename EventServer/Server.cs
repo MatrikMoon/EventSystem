@@ -35,17 +35,17 @@ namespace EventServer
                             //Get Score object from JSON
                             Score s = Score.FromString(node["pb"]);
 
-                            if (RSA.SignScore(Convert.ToUInt64(s.UserId), s.SongHash, s.Difficulty, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed &&
-                                Song.Exists(s.SongHash, (LevelDifficulty)s.Difficulty, true) &&
-                                !new Song(s.SongHash, (LevelDifficulty)s.Difficulty).Old &&
+                            if (RSA.SignScore(Convert.ToUInt64(s.UserId), s.SongHash, s.Difficulty, s.Characteristic, s.FullCombo, s.Score_, s.PlayerOptions, s.GameOptions) == s.Signed &&
+                                Song.Exists(s.SongHash, (LevelDifficulty)s.Difficulty, s.Characteristic, true) &&
+                                !new Song(s.SongHash, (LevelDifficulty)s.Difficulty, s.Characteristic).Old &&
                                 Player.Exists(s.UserId) &&
                                 Player.IsRegistered(s.UserId))
                             {
-                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {new Player(s.UserId).DiscordName} {s.SongHash} {s.Difficulty}");
+                                Logger.Info($"RECEIVED VALID SCORE: {s.Score_} FOR {new Player(s.UserId).DiscordName} {s.SongHash} {s.Difficulty} {s.Characteristic}");
                             }
                             else
                             {
-                                Logger.Error($"RECEIVED INVALID SCORE {s.Score_} FROM {new Player(s.UserId).DiscordName} FOR {s.UserId} {s.SongHash} {s.Difficulty}");
+                                Logger.Error($"RECEIVED INVALID SCORE {s.Score_} FROM {new Player(s.UserId).DiscordName} FOR {s.UserId} {s.SongHash} {s.Difficulty} {s.Characteristic}");
                                 return new HttpResponse()
                                 {
                                     ReasonPhrase = "Bad Request",
@@ -54,9 +54,9 @@ namespace EventServer
                             }
 
                             Database.Score oldScore = null;
-                            if (Database.Score.Exists(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty))
+                            if (Database.Score.Exists(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty, s.Characteristic))
                             {
-                                oldScore = new Database.Score(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty);
+                                oldScore = new Database.Score(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty, s.Characteristic);
                             }
 
                             if (oldScore == null ^ (oldScore != null && oldScore.GetScore() < s.Score_))
@@ -72,11 +72,11 @@ namespace EventServer
                                 player.IncrementSongsPlayed();
                                 player.TotalScore += s.Score_ - oldScoreNumber; //Increment total score only by the amount the score has increased
 
-                                Database.Score newScore = new Database.Score(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty);
+                                Database.Score newScore = new Database.Score(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty, s.Characteristic);
                                 newScore.SetScore(s.Score_, s.FullCombo);
 
                                 //Only send message if player is registered
-                                if (Player.Exists(s.UserId)) Discord.CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongHash, (LevelDifficulty)s.Difficulty).SongName} ({(LevelDifficulty)s.Difficulty})!");
+                                if (Player.Exists(s.UserId)) CommunityBot.SendToScoreChannel($"User \"{player.DiscordMention}\" has scored {s.Score_} on {new Song(s.SongHash, (LevelDifficulty)s.Difficulty, s.Characteristic).SongName} ({(LevelDifficulty)s.Difficulty}) ({s.Characteristic})!");
                             }
 
                             return new HttpResponse()
@@ -205,6 +205,7 @@ namespace EventServer
                             item["difficulty"] = (int)x.Difficulty;
                             item["gameOptions"] = (int)x.GameOptions;
                             item["playerOptions"] = (int)x.PlayerOptions;
+                            item["characteristic"] = x.Characteristic;
                             json.Add(x.SongHash + (int)x.Difficulty, item);
                         });
 
@@ -321,6 +322,7 @@ namespace EventServer
                                 songNode["levelId"] = x.SongHash;
                                 songNode["songName"] = x.Name;
                                 songNode["difficulty"] = (int)x.Difficulty;
+                                songNode["characteristic"] = x.Characteristic;
                                 songNode["scores"] = new JSONObject();
 
                                 int place = 1;
@@ -343,8 +345,9 @@ namespace EventServer
                         {
                             int take = 10;
                             int difficulty = Convert.ToInt32(requestData[2]);
-                            string teamId = requestData[3];
-                            if (requestData.Length > 4) take = Convert.ToInt32(requestData[4]);
+                            string characteristic = requestData[3];
+                            string teamId = requestData[4];
+                            if (requestData.Length > 5) take = Convert.ToInt32(requestData[5]);
 
                             songHash = Regex.Replace(songHash, "[^a-zA-Z0-9- ]", "");
                             teamId = Regex.Replace(teamId, "[^a-zA-Z0-9- ]", "");
@@ -352,10 +355,11 @@ namespace EventServer
                             SongConstruct songConstruct = new SongConstruct()
                             {
                                 SongHash = songHash,
-                                Difficulty = (LevelDifficulty)difficulty
+                                Difficulty = (LevelDifficulty)difficulty,
+                                Characteristic = characteristic
                             };
 
-                            if (!Song.Exists(songHash, (LevelDifficulty)difficulty, true))
+                            if (!Song.Exists(songHash, (LevelDifficulty)difficulty, characteristic, true))
                             {
                                 Logger.Error($"Song doesn't exist for leaderboards: {songHash}");
                                 return new HttpResponse()

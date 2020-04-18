@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace EventShared
 {
@@ -42,7 +43,8 @@ namespace EventShared
             "0.3.4: Updated for Beat Saber 1.6.0\n" +
             "0.3.5: Updated for Beat Saber 1.6.2\n" +
             "0.3.6: Disable scoresaber submission\n" +
-            "0.3.7: Updated for Beat Saber 1.9.0\n";
+            "0.3.7: Updated for Beat Saber 1.9.0\n" +
+            "0.3.8: Added new song packs\n";
 
         public enum LevelDifficulty
         {
@@ -52,14 +54,6 @@ namespace EventShared
             Hard = 2,
             Expert = 3,
             ExpertPlus = 4
-        }
-
-        public enum BeatmapCharacteristic
-        {
-            Auto = -1,
-            Standard = 0,
-            OneSaber = 2,
-            NoArrows = 3
         }
 
         [Flags]

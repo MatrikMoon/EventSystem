@@ -41,8 +41,8 @@ namespace EventServer.Database
             {
                 initialized = true;
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS playerTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, userId TEXT DEFAULT '', discordName TEXT DEFAULT '', discordExtension TEXT DEFAULT '', discordMention TEXT DEFAULT '', extras TEXT DEFAULT '', team TEXT DEFAULT '', rank INTEGER DEFAULT 0, tokens INTEGER DEFAULT 0, totalScore BIGINT DEFAULT 0, topScores BIGINT DEFAULT 0, songsPlayed INTEGER DEFAULT 0, personalBestsBeaten INTEGER DEFAULT 0, playersBeat INTEGER DEFAULT 0, mentionMe BIT DEFAULT 0, liquidated BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songHash TEXT DEFAULT '', userId TEXT DEFAULT '', team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
-                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songHash TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS scoreTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songHash TEXT DEFAULT '', userId TEXT DEFAULT '', team TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, characteristic TEXT DEFAULT '', gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, fullCombo BIT DEFAULT 0, score BIGINT DEFAULT 0, old BIT DEFAULT 0)");
+                ExecuteCommand("CREATE TABLE IF NOT EXISTS songTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, songName TEXT DEFAULT '', songAuthor TEXT DEFAULT '', songSubtext TEXT DEFAULT '', songHash TEXT DEFAULT '', difficulty INTEGER DEFAULT 0, characteristic TEXT DEFAULT '', gameOptions INTEGER DEFAULT 0, playerOptions INTEGER DEFAULT 0, old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS teamTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, teamId TEXT DEFAULT '', teamName TEXT DEFAULT '', captainId TEXT DEFAULT '', color TEXT DEFAULT '', requiredTokens INTEGER DEFAULT 0, nextPromotion TEXT DEFAULT '', old BIT DEFAULT 0)");
                 ExecuteCommand("CREATE TABLE IF NOT EXISTS voteTable (_id INTEGER PRIMARY KEY AUTOINCREMENT, userId TEXT DEFAULT '', messageId BIGINT DEFAULT 0, nextPromotion TEXT DEFAULT '', votes INTEGER DEFAULT 0, requiredVotes INTEGER DEFAULT 0, old BIT DEFAULT 0)");
             }
@@ -85,14 +85,14 @@ namespace EventServer.Database
             return ExecuteCommand($"INSERT INTO playerTable VALUES (NULL, \'{userId}\', \'{discordName}\', \'{discordExtension}\', \'{discordMention}\', \'{extras}\', \'{team}\', {rank}, {tokens}, {totalScore}, {topScores}, {songsPlayed}, {personalBestsBeaten}, {playersBeat}, {(mentionMe ? "1" : "0")}, 0)") > 0;
         }
 
-        public static bool AddScore(string songHash, string userId, string team, LevelDifficulty difficulty, PlayerOptions playerOptions, GameOptions gameOptions, bool fullCombo, long score)
+        public static bool AddScore(string songHash, string userId, string team, LevelDifficulty difficulty, string characteristic, PlayerOptions playerOptions, GameOptions gameOptions, bool fullCombo, long score)
         {
-            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songHash}\', \'{userId}\', \'{team}\', {(int)difficulty}, {(int)playerOptions}, {(int)gameOptions}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO scoreTable VALUES (NULL, \'{songHash}\', \'{userId}\', \'{team}\', {(int)difficulty}, \'{characteristic}\', {(int)playerOptions}, {(int)gameOptions}, {(fullCombo ? 1: 0)}, {score}, 0)") > 0;
         }
 
-        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songHash, LevelDifficulty difficulty, PlayerOptions playerOptions, GameOptions gameOptions)
+        public static bool AddSong(string songName, string songAuthor, string songSubtext, string songHash, LevelDifficulty difficulty, string characteristic, PlayerOptions playerOptions, GameOptions gameOptions)
         {
-            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songHash}\', {(int)difficulty}, {(int)playerOptions}, {(int)gameOptions}, 0)") > 0;
+            return ExecuteCommand($"INSERT INTO songTable VALUES (NULL, \'{songName}\', \'{songAuthor}\', \'{songSubtext}\', \'{songHash}\', {(int)difficulty}, \'{characteristic}\', {(int)playerOptions}, {(int)gameOptions}, 0)") > 0;
         }
 
         public static bool AddTeam(string teamId, string teamName, string captainId, string color, int requiredTokens, string nextPromotion)
@@ -182,7 +182,7 @@ namespace EventServer.Database
         {
             List<SongConstruct> ret = new List<SongConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand("SELECT songHash, songName, difficulty, gameOptions, playerOptions FROM songTable WHERE NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand("SELECT songHash, songName, difficulty, characteristic, gameOptions, playerOptions FROM songTable WHERE NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -193,6 +193,7 @@ namespace EventServer.Database
                             SongHash = reader["songHash"].ToString(),
                             Name = reader["songName"].ToString(),
                             Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString()),
+                            Characteristic = reader["characteristic"].ToString(),
                             GameOptions = (GameOptions)Convert.ToInt32(reader["gameOptions"].ToString()),
                             PlayerOptions = (PlayerOptions)Convert.ToInt32(reader["playerOptions"].ToString())
                         };
@@ -232,7 +233,7 @@ namespace EventServer.Database
         {
             List <ScoreConstruct> ret = new List<ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT userId, score, fullCombo, difficulty, team FROM scoreTable WHERE songHash = \'{s.SongHash}\' {(s.Difficulty != LevelDifficulty.Auto ? $"AND difficulty = {(int)s.Difficulty}" : "")} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT userId, score, fullCombo, difficulty, characteristic, team FROM scoreTable WHERE songHash = \'{s.SongHash}\' AND characteristic = \'{s.Characteristic}\' {(s.Difficulty != LevelDifficulty.Auto ? $"AND difficulty = {(int)s.Difficulty}" : "")} {(teamId != "-1" ? $"AND team = \'{teamId}\'" : null)} AND NOT old = 1 ORDER BY score DESC", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -245,7 +246,8 @@ namespace EventServer.Database
                                 Score = Convert.ToInt32(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 TeamId = reader["team"].ToString(),
-                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficulty"].ToString())
+                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficulty"].ToString()),
+                                Characteristic = reader["characteristic"].ToString()
                             });
                     }
                 }
@@ -261,7 +263,7 @@ namespace EventServer.Database
         {
             Dictionary<SongConstruct, ScoreConstruct> ret = new Dictionary<SongConstruct, ScoreConstruct>();
             SQLiteConnection db = OpenConnection();
-            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songHash, team, difficulty, fullCombo, gameOptions, playerOptions FROM scoreTable WHERE userId = \'{userId}\' AND NOT old = 1", db))
+            using (SQLiteCommand command = new SQLiteCommand($"SELECT score, songHash, team, difficulty, characteristic, fullCombo, gameOptions, playerOptions FROM scoreTable WHERE userId = \'{userId}\' AND NOT old = 1", db))
             {
                 using (SQLiteDataReader reader = command.ExecuteReader())
                 {
@@ -273,13 +275,15 @@ namespace EventServer.Database
                                 SongHash = reader["songHash"].ToString(),
                                 GameOptions = (GameOptions)Convert.ToInt32(reader["gameOptions"].ToString()),
                                 PlayerOptions = (PlayerOptions)Convert.ToInt32(reader["playerOptions"].ToString()),
-                                Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString())
+                                Difficulty = (LevelDifficulty)Convert.ToInt32(reader["difficulty"].ToString()),
+                                Characteristic = reader["characteristic"].ToString()
                             },
                             new ScoreConstruct {
                                 Score = Convert.ToInt32(reader["score"].ToString()),
                                 FullCombo = reader["fullCombo"].ToString() == "True",
                                 TeamId = reader["team"].ToString(),
-                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficulty"].ToString())
+                                Difficulty = (LevelDifficulty)Convert.ToInt64(reader["difficulty"].ToString()),
+                                Characteristic = reader["characteristic"].ToString()
                             });
                     }
                 }
@@ -332,6 +336,7 @@ namespace EventServer.Database
             public bool FullCombo { get; set; }
             public string TeamId { get; set; }
             public LevelDifficulty Difficulty { get; set; }
+            public string Characteristic { get; set; }
         }
 
         public class SongConstruct
@@ -339,6 +344,7 @@ namespace EventServer.Database
             public string SongHash { get; set; }
             public string Name { get; set; }
             public LevelDifficulty Difficulty { get; set; }
+            public string Characteristic { get; set; }
             public GameOptions GameOptions { get; set; }
             public PlayerOptions PlayerOptions { get; set; }
             public List<ScoreConstruct> Scores { get; set; }

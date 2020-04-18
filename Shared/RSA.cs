@@ -13,29 +13,15 @@ namespace EventShared
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class RSA
     {
-        ***REMOVED***
-            ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-            ***REMOVED***
+        private static string privKey = "";
 
-        ***REMOVED***
-            ***REMOVED***
-                ***REMOVED***
-                ***REMOVED***
-            ***REMOVED***
+        private static string pubKey = "";
 
-        public static string SignScore(ulong userId, string songId, int difficultyLevel, bool fullCombo, int score, int playerOptions, int gameOptions)
+        public static string SignScore(ulong userId, string songHash, int difficultyLevel, string characteristic, bool fullCombo, int score, int playerOptions, int gameOptions)
         {
             var sr = new StringReader(pubKey);
             var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-            var pubkey = (RSAParameters)xs.Deserialize(sr);
+            //var pubkey = (RSAParameters)xs.Deserialize(sr);
 
             sr = new StringReader(privKey);
             var privkey = (RSAParameters)xs.Deserialize(sr);
@@ -43,7 +29,7 @@ namespace EventShared
             var csp = new RSACryptoServiceProvider();
             csp.ImportParameters(privkey);
 
-            var plainTextData = userId + songId + difficultyLevel + fullCombo + score + playerOptions + gameOptions + "<3";
+            var plainTextData = userId + songHash + difficultyLevel + characteristic + fullCombo + score + playerOptions + gameOptions + "<3";
             var bytesPlainTextData = System.Text.Encoding.Unicode.GetBytes(plainTextData);
 
             var bytesSignedText = csp.SignData(bytesPlainTextData, CryptoConfig.MapNameToOID("SHA512"));
@@ -56,7 +42,7 @@ namespace EventShared
         {
             var sr = new StringReader(pubKey);
             var xs = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-            var pubkey = (RSAParameters)xs.Deserialize(sr);
+            //var pubkey = (RSAParameters)xs.Deserialize(sr);
 
             sr = new StringReader(privKey);
             var privkey = (RSAParameters)xs.Deserialize(sr);

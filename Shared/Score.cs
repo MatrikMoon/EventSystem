@@ -22,6 +22,7 @@ namespace EventShared
         public bool FullCombo { get; private set; }
         public int PlayerOptions { get; private set; }
         public int GameOptions { get; private set; }
+        public string Characteristic { get; private set; }
         public string Signed { get; private set; }
 
         public Score(
@@ -32,6 +33,7 @@ namespace EventShared
             bool fullCombo,
             int playerOptions,
             int gameOptions,
+            string characteristic,
             string signed)
         {
             UserId = userId;
@@ -41,6 +43,7 @@ namespace EventShared
             FullCombo = fullCombo;
             PlayerOptions = playerOptions;
             GameOptions = gameOptions;
+            Characteristic = characteristic;
             Signed = signed;
         }
 
@@ -56,6 +59,7 @@ namespace EventShared
             var fullComboBytes = new byte[sizeof(bool)];
             var playerOptionsBytes = new byte[sizeof(int)];
             var gameOptionsBytes = new byte[sizeof(int)];
+            var characteristicBytes = new List<byte>();
             var signedBytes = new List<byte>();
 
             //Verify that this file was indeed made by us
@@ -86,6 +90,13 @@ namespace EventShared
             read = (byte)stream.ReadByte();
             while (read != 0x0)
             {
+                characteristicBytes.Add(read);
+                read = (byte)stream.ReadByte();
+            }
+
+            read = (byte)stream.ReadByte();
+            while (read != 0x0)
+            {
                 signedBytes.Add(read);
                 read = (byte)stream.ReadByte();
             }
@@ -97,9 +108,10 @@ namespace EventShared
             var fullCombo = BitConverter.ToBoolean(fullComboBytes, 0);
             var playerOptions = BitConverter.ToInt32(playerOptionsBytes, 0);
             var gameOptions = BitConverter.ToInt32(gameOptionsBytes, 0);
+            var characteristic = Encoding.UTF8.GetString(characteristicBytes.ToArray());
             var signed = Encoding.UTF8.GetString(signedBytes.ToArray());
 
-            return new Score(userId, songHash, score, difficulty, fullCombo, playerOptions, gameOptions, signed);
+            return new Score(userId, songHash, score, difficulty, fullCombo, playerOptions, gameOptions, characteristic, signed);
         }
 
         public string ToBase64()
@@ -112,9 +124,10 @@ namespace EventShared
             var fullComboBytes = BitConverter.GetBytes(FullCombo);
             var playerOptionsBytes = BitConverter.GetBytes(PlayerOptions);
             var gameOptionsBytes = BitConverter.GetBytes(GameOptions);
+            var characteristicBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(Characteristic), new byte[] { 0x0 } });
             var signedBytes = Combine(new byte[][] { Encoding.UTF8.GetBytes(Signed), new byte[] { 0x0 } });
 
-            var allBytes = Combine(new byte[][] { magicFlag, userIdBytes, songHashBytes, scoreBytes, difficultyBytes, fullComboBytes, playerOptionsBytes, gameOptionsBytes, signedBytes });
+            var allBytes = Combine(new byte[][] { magicFlag, userIdBytes, songHashBytes, scoreBytes, difficultyBytes, fullComboBytes, playerOptionsBytes, gameOptionsBytes, characteristicBytes, signedBytes });
             return Convert.ToBase64String(allBytes);
         }
 
