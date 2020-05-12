@@ -35,6 +35,8 @@ namespace EventPlugin.Misc
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-asiavr";
 #elif (TRUEACCURACY)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-acc";
+#elif (QUALIFIER)
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-qualifiers";
 #elif BETA
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
 #elif !BETA

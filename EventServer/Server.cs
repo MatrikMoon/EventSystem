@@ -405,6 +405,8 @@ namespace EventServer
             int port = 3711;
 #elif (ASIAVR)
             int port = 3709;
+#elif QUALIFIER
+            int port = 3713;
 #else
             int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #endif
@@ -426,6 +428,8 @@ namespace EventServer
             var serverName = "True Accuracy Championship";
 #elif (ASIAVR)
             var serverName = "Asia VR Community";
+#elif QUALIFIER
+            var serverName = "Beat Saber World Cup";
 #elif BETA
             var serverName = "Beat Saber Testing Server";
 #endif
@@ -438,6 +442,8 @@ namespace EventServer
             ulong scoreChannel = 663160463017639971; //"qualifier-feed";
 #elif (ASIAVR)
             ulong scoreChannel = 572908789699969054; //"scores feed";
+#elif QUALIFIER
+            ulong scoreChannel = 709154896183820349; //"country-registration";
 #elif BETA
             ulong scoreChannel = 488445468141944842; //"event-scores";
 #endif

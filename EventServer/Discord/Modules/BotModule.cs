@@ -3,8 +3,11 @@ using Discord.Commands;
 using EventServer.Discord.Database;
 using EventServer.Discord.Services;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Logger = EventShared.Logger;
 
 /**
  * Created by Moon on 5/18/2019
@@ -18,6 +21,7 @@ namespace EventServer.Discord.Modules
     {
         public MessageUpdateService MessageUpdateService { get; set; }
         public DatabaseService DatabaseService { get; set; }
+        public ScoresaberService ScoresaberService { get; set; }
 
         //Pull parameters out of an argument list string
         //Note: argument specifiers are required to start with "-"
@@ -79,12 +83,37 @@ namespace EventServer.Discord.Modules
 
         [Command("test")]
         [Summary("A test command, for quick access to test features")]
-        public async Task Test([Remainder] string args = null)
+        public async Task Test(params string[] userIds)
         {
             if (IsAdmin())
             {
-                DatabaseService.DatabaseContext.ReactionRoles.RemoveRange(DatabaseService.DatabaseContext.ReactionRoles);
-                await DatabaseService.DatabaseContext.SaveChangesAsync();
+                var reply = string.Empty;
+                foreach (var x in userIds)
+                {
+                    string userId = x;
+
+                    //Sanitize input
+                    if (userId.StartsWith("https://scoresaber.com/u/"))
+                    {
+                        userId = userId.Substring("https://scoresaber.com/u/".Length);
+                    }
+
+                    if (userId.Contains("&"))
+                    {
+                        userId = userId.Substring(0, userId.IndexOf("&"));
+                    }
+
+                    userId = Regex.Replace(userId, "[^0-9]", "");
+
+                    var basicData = await ScoresaberService.GetBasicPlayerData(userId);
+                    var countryCode = ScoresaberService.GetPlayerCountry(basicData);
+                    var countryName = new RegionInfo(countryCode).EnglishName;
+
+                    Logger.Debug(countryName);
+                    reply += $"\'{countryName}\', ";
+                }
+
+                await ReplyAsync(reply);
             }
         }
 

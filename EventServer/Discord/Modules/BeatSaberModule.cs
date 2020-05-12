@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using EventServer.Database;
+using EventServer.Discord.Services;
 using EventShared;
 using System;
 using System.Collections.Generic;
@@ -21,6 +23,8 @@ namespace EventServer.Discord.Modules
 {
     public class BeatSaberModule : ModuleBase<SocketCommandContext>
     {
+        public ScoresaberService ScoresaberService { get; set; }
+
         //Pull parameters out of an argument list string
         //Note: argument specifiers are required to start with "-"
         private static string ParseArgs(string argString, string argToGet)
@@ -145,43 +149,59 @@ namespace EventServer.Discord.Modules
 
             if (!Player.Exists(userId) || !Player.IsRegistered(userId))
             {
-                int rank = 0;
-                var embed = Context.Message.Embeds.FirstOrDefault();
+                var basicData = await ScoresaberService.GetBasicPlayerData(userId);
 
-                if (embed != null)
+#if QUALIFIER || BETA
+                var country = ScoresaberService.GetPlayerCountry(basicData);
+                var countryName = new RegionInfo(country).EnglishName;
+                var countryRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == countryName.ToLower());
+
+                var teamId = countryName.Replace(" ", "").ToLower();
+                var teamName = countryName;
+
+                if (countryRole != null && Context.Guild.CurrentUser.GuildPermissions.ManageRoles)
                 {
-                    string username = Regex.Replace(user.Username, "[\'\";]", "");
+                    await (Context.User as SocketGuildUser).AddRoleAsync(countryRole);
 
-                    Player player = new Player(userId);
-                    player.DiscordName = username;
-                    player.DiscordExtension = user.Discriminator;
-                    player.DiscordMention = user.Mention;
-                    player.Extras = extras;
+                    if (!Team.Exists(teamId))
+                    {
+                        AddTeam(teamId, teamName, "", "#ffffff", 0, "");
+                    }
+                }
+                else
+                {
+                    await ReplyAsync($"I was unable to find or assign a role for \'{countryName}\', is the current role misspelled?");
+                    return;
+                }
+#endif
 
-                    //Scrape out the rank data
-                    var description = embed.Description;
-                    var searchBy = "Player Ranking: #";
-                    description = description.Substring(description.IndexOf(searchBy) + searchBy.Length);
-                    description = description.Substring(0, description.IndexOf("\n"));
+                string username = Regex.Replace(user.Username, "[\'\";]", "");
 
-                    rank = Convert.ToInt32(Regex.Replace(description, "[^0-9]", ""));
-                    player.Rank = rank;
+                Player player = new Player(userId);
+                player.DiscordName = username;
+                player.DiscordExtension = user.Discriminator;
+                player.DiscordMention = user.Mention;
+                player.Extras = extras;
+
+#if QUALIFIER || BETA
+                CommunityBot.ChangeTeam(player, new Team(teamId), false);
+#endif
+
+                player.Rank = Convert.ToInt32(ScoresaberService.GetPlayerRank(basicData));
 
 #if ASIAVR
-                    //Assign them to the proper tournamonth team
-                    if (isTier1) CommunityBot.ChangeTeam(player, new Team("tier1"), role: Context.Guild.GetRole(572765180140716062));
-                    else if (isTier2) CommunityBot.ChangeTeam(player, new Team("tier2"), role: Context.Guild.GetRole(572765611709693954));
+                //Assign them to the proper tournamonth team
+                if (isTier1) CommunityBot.ChangeTeam(player, new Team("tier1"), role: Context.Guild.GetRole(572765180140716062));
+                else if (isTier2) CommunityBot.ChangeTeam(player, new Team("tier2"), role: Context.Guild.GetRole(572765611709693954));
 #endif
 
 #if TEAMSABER
-                    //Add "registered" role
-                    await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
+                //Add "registered" role
+                await ((SocketGuildUser)Context.User).AddRoleAsync(Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == "Season Two Registrant".ToLower()));
 #endif
-                    string reply = $"User `{player.DiscordName}` successfully linked to `{player.UserId}`";
-                    if (rank > 0) reply += $" with rank `{rank}`";
-                    await ReplyAsync(reply);
-                }
-                else await ReplyAsync("Waiting for embedded content...");
+                string reply = $"User `{player.DiscordName}` successfully linked to `{player.UserId}`";
+                if (player.Rank > 0) reply += $" with rank `{player.Rank}`";
+                await ReplyAsync(reply);
             }
             else if (new Player(userId).DiscordMention!= user.Mention)
             {
@@ -411,8 +431,9 @@ namespace EventServer.Discord.Modules
                     //If the provided color can be parsed into a uint, we can use the provided color as the color for the dicsord role
                     Color discordColor = Color.Blue;
                     if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
-
+#if !QUALIFIER
                     await Context.Guild.CreateRoleAsync(name, color: discordColor, isHoisted: true);
+#endif
                     await ReplyAsync($"Team created with id `{teamId}`, name `{name}`, and color `{color}`");
                 }
                 else await ReplyAsync("That team already exists, sorry.");

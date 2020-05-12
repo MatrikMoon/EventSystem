@@ -29,7 +29,8 @@ namespace EventServer.Discord
             "moderator",
             "weekly event manager",
             "senpai",
-            "admin"
+            "admin",
+            "staff"
         };
 
         public static void Start(string serverName, ulong scoreChannel, string voteChannel, string databaseLocation = "botDatabase.db")
@@ -58,6 +59,14 @@ namespace EventServer.Discord
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
             var rankChannel = guild.GetTextChannel(_scoreChannel);
+
+#if QUALIFIER
+            if (player.Team != "-1")
+            {
+                var oldTeam = new Team(player.Team);
+                await user.RemoveRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == oldTeam.TeamName.ToLower()));
+            }
+#endif
 
             //Add the role of the team we're being switched to
             //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.
@@ -125,6 +134,7 @@ namespace EventServer.Discord
                 .AddSingleton<PictureService>()
                 .AddSingleton<MessageUpdateService>()
                 .AddSingleton(serviceProvider => new DatabaseService(_databaseLocation, serviceProvider))
+                .AddSingleton<ScoresaberService>()
                 .BuildServiceProvider();
         }
     }
