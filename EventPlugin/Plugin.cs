@@ -3,6 +3,7 @@ using EventPlugin.Models;
 using EventPlugin.UI;
 using EventShared;
 using IPA;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace EventPlugin
@@ -14,6 +15,8 @@ namespace EventPlugin
         public string Version => SharedConstructs.Version;
 
         public static ulong UserId;
+
+        private static UnityMainThreadDispatcher _threadDispatcher;
 
         [OnStart]
         public void OnStart()
@@ -27,6 +30,8 @@ namespace EventPlugin
         {
             if (scene.name == "MenuCore")
             {
+                _threadDispatcher = _threadDispatcher ?? new GameObject("Thread Dispatcher").AddComponent<UnityMainThreadDispatcher>();
+
                 Config.LoadConfig();
                 Player.GetPlatformUsername((username, id) => UserId = id);
             }

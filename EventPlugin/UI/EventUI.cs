@@ -20,18 +20,14 @@ namespace EventPlugin.UI
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class EventUI : MonoBehaviour
     {
-        private static MainModFlowCoordinator _mainModFlowCoordinator;
         private static MenuButton _communityButton;
 
         public static void CommunityButtonPressed()
         {
-            if (_mainModFlowCoordinator == null)
-            {
-                var mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                _mainModFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<MainModFlowCoordinator>(mainFlowCoordinator.gameObject);
-                _mainModFlowCoordinator.mainFlowCoordinator = mainFlowCoordinator;
-            }
-            _mainModFlowCoordinator.PresentMainModUI();
+            var mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            var mainModFlowCoordinator = BeatSaberUI.CreateFlowCoordinator<MainModFlowCoordinator>(mainFlowCoordinator.gameObject);
+            mainModFlowCoordinator.mainFlowCoordinator = mainFlowCoordinator;
+            mainModFlowCoordinator.PresentMainModUI();
         }
 
         private static void SongsLoaded(Loader _, Dictionary<string, CustomPreviewBeatmapLevel> levels)

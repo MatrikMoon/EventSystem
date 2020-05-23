@@ -57,7 +57,7 @@ namespace EventPlugin.UI.ViewControllers
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 3f);
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 6f);
                 _pageDownButton.onClick.AddListener(() =>
                 {

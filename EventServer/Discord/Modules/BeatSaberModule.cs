@@ -101,11 +101,11 @@ namespace EventServer.Discord.Modules
                     Config.ServerFlags = features;
                     Config.SaveConfig();
 
-                    await ReplyAsync($"Applied settings: {features.ToString()}");
+                    await ReplyAsync($"Applied settings: {features}");
                 }
                 else
                 {
-                    await ReplyAsync($"Current server options: {Config.ServerFlags.ToString()}");
+                    await ReplyAsync($"Current server options: {Config.ServerFlags}");
                 }
             }
         }
@@ -151,7 +151,7 @@ namespace EventServer.Discord.Modules
             {
                 var basicData = await ScoresaberService.GetBasicPlayerData(userId);
 
-#if QUALIFIER || BETA
+#if QUALIFIER
                 var country = ScoresaberService.GetPlayerCountry(basicData);
                 var countryName = new RegionInfo(country).EnglishName;
                 var countryRole = Context.Guild.Roles.FirstOrDefault(x => x.Name.ToLower() == countryName.ToLower());
@@ -183,7 +183,7 @@ namespace EventServer.Discord.Modules
                 player.DiscordMention = user.Mention;
                 player.Extras = extras;
 
-#if QUALIFIER || BETA
+#if QUALIFIER
                 CommunityBot.ChangeTeam(player, new Team(teamId), false);
 #endif
 

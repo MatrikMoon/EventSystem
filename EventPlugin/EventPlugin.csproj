@@ -66,6 +66,15 @@
     <OutputPath>bin\Qualifier\</OutputPath>
     <DefineConstants>QUALIFIER</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'BTH|AnyCPU'">
+    <OutputPath>bin\BTH\</OutputPath>
+    <DefineConstants>BTH</DefineConstants>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="BSML">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BSML.dll</HintPath>
@@ -161,6 +170,7 @@
     <Compile Include="..\Shared\SimpleJson.cs">
       <Link>Shared\SimpleJson.cs</Link>
     </Compile>
+    <Compile Include="Misc\UnityMainThreadDispatcher.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Models\Song.cs" />
     <Compile Include="Models\Team.cs" />

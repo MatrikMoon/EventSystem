@@ -53,7 +53,8 @@ namespace EventPlugin.UI.FlowCoordinators
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
-            mainFlowCoordinator.DismissFlowCoordinator(this, null, false);
+            if (topViewController is ResultsViewController) DismissViewController(topViewController);
+            else mainFlowCoordinator.DismissFlowCoordinator(this, null, false);
         }
 
         public void PresentMainModUI()
@@ -184,7 +185,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void SongPlayPressed(Song song)
         {
-            if (IPA.Loader.PluginManager.AllPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+            if (IPA.Loader.PluginManager.EnabledPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
             {
                 BSUtilsDisableOtherPlugins();
             }
@@ -258,7 +259,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
                 {
                     //If bs_utils disables score submission, we do too
-                    if (IPA.Loader.PluginManager.AllPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
+                    if (IPA.Loader.PluginManager.EnabledPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
                     {
                         if (BSUtilsScoreDisabled()) return;
                     }
@@ -269,7 +270,19 @@ namespace EventPlugin.UI.FlowCoordinators
                     //Community leaderboards
                     var song = _communityLeaderboard.selectedSong;
                     string signed = RSA.SignScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, _communityLeaderboard.selectedSong.Characteristic, results.fullCombo, results.rawScore, (int)song.PlayerOptions, (int)song.GameOptions);
-                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, _communityLeaderboard.selectedSong.Characteristic, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions);
+
+                    Action<bool> scoreUpdateComplete = (b) =>
+                    {
+                        Logger.Success("Score upload compete!");
+                        if (b && _communityLeaderboard)
+                        {
+                            UnityMainThreadDispatcher.Instance().Enqueue(() =>
+                            {
+                                _communityLeaderboard.Refresh();
+                            });
+                        }
+                    };
+                    Client.SubmitScore(Plugin.UserId, song.Hash, (int)_communityLeaderboard.selectedSong.Beatmap.difficulty, _communityLeaderboard.selectedSong.Characteristic, results.fullCombo, results.rawScore, signed, (int)song.PlayerOptions, (int)song.GameOptions, scoreUpdateComplete);
 
                     Action<ResultsViewController> resultsContinuePressed = null;
                     resultsContinuePressed = (e) =>

@@ -21,7 +21,7 @@ namespace EventServer.Discord
         private static IServiceProvider _services;
         private static string _serverName;
         private static ulong _scoreChannel;
-        private static string _voteChannel;
+        private static ulong _infoChannel;
         private static string _databaseLocation;
 
         public static List<string> AdminRoles { get; } = new List<string>
@@ -33,11 +33,11 @@ namespace EventServer.Discord
             "staff"
         };
 
-        public static void Start(string serverName, ulong scoreChannel, string voteChannel, string databaseLocation = "botDatabase.db")
+        public static void Start(string serverName, ulong scoreChannel, ulong infoChannel, string databaseLocation = "botDatabase.db")
         {
             _serverName = serverName;
             _scoreChannel = scoreChannel;
-            _voteChannel = voteChannel;
+            _infoChannel = infoChannel;
             _databaseLocation = databaseLocation;
             MainAsync().GetAwaiter().GetResult();
         }
@@ -48,17 +48,16 @@ namespace EventServer.Discord
             guild.GetTextChannel(_scoreChannel).SendMessageAsync(message);
         }
 
-        public static Task<RestUserMessage> SendToVoteChannel(string message)
+        public static Task<RestUserMessage> SendToInfoChannel(string message)
         {
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
-            return guild.TextChannels.First(x => x.Name == _voteChannel).SendMessageAsync(message);
+            return guild.GetTextChannel(_infoChannel).SendMessageAsync(message);
         }
 
         public static async void ChangeTeam(Player player, Team team, bool captain = false, IRole role = null)
         {
             var guild = _client.Guilds.ToList().Where(x => x.Name.Contains(_serverName)).First();
             var user = guild.Users.Where(x => x.Mention == player.DiscordMention).First();
-            var rankChannel = guild.GetTextChannel(_scoreChannel);
 
 #if QUALIFIER
             if (player.Team != "-1")
@@ -91,7 +90,7 @@ namespace EventServer.Discord
             if (captain) team.Captain = player.UserId;
 
             string teamName = team.TeamName;
-            await rankChannel.SendMessageAsync($"{player.DiscordMention} has been assigned {(captain ? "as the captain of" : "to")} `{((teamName == string.Empty || teamName == null )? team.TeamId: teamName)}`!");
+            await SendToInfoChannel($"{player.DiscordMention} has been assigned {(captain ? "as the captain of" : "to")} `{((teamName == string.Empty || teamName == null )? team.TeamId: teamName)}`!");
         }
 
         public static async Task MainAsync()

@@ -37,7 +37,7 @@ namespace EventServer.Database
                 $"https://scoresaber.com/u/{player.UserId}\n\n" +
                 ostInfo;
 
-            var message = await CommunityBot.SendToVoteChannel(messageText);
+            var message = await CommunityBot.SendToInfoChannel(messageText);
             MessageId = message.Id;
             NextPromotion = "blue";
 #if BETA

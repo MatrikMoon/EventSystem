@@ -407,6 +407,8 @@ namespace EventServer
             int port = 3709;
 #elif QUALIFIER
             int port = 3713;
+#elif (BTH)
+            int port = 3715;
 #else
             int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #endif
@@ -430,6 +432,8 @@ namespace EventServer
             var serverName = "Asia VR Community";
 #elif QUALIFIER
             var serverName = "Beat Saber World Cup";
+#elif BTH
+            var serverName = "Beat the Hub Season 1";
 #elif BETA
             var serverName = "Beat Saber Testing Server";
 #endif
@@ -443,12 +447,31 @@ namespace EventServer
 #elif (ASIAVR)
             ulong scoreChannel = 572908789699969054; //"scores feed";
 #elif QUALIFIER
-            ulong scoreChannel = 709154896183820349; //"country-registration";
+            ulong scoreChannel = 711326932901429310; //"map-pooling-scores";
+#elif BTH
+            ulong scoreChannel = 707296432712843276; //"voice-text"
 #elif BETA
             ulong scoreChannel = 488445468141944842; //"event-scores";
 #endif
+
+
+#if (TEAMSABER)
+            string infoChannel = "event-feed";
+#elif (DISCORDCOMMUNITY)
+            ulong infoChannel = 457952124307898368; //"event-scores";
+#elif (TRUEACCURACY)
+            ulong infoChannel = 663160463017639971; //"qualifier-feed";
+#elif (ASIAVR)
+            ulong infoChannel = 572908789699969054; //"scores feed";
+#elif QUALIFIER
+            ulong infoChannel = 709154896183820349; //"country-registration";
+#elif BTH
+            ulong infoChannel = 707296432712843276; //"voice-text"
+#elif BETA
+            ulong infoChannel = 488445468141944842; //"event-scores";
+#endif
             Thread thread1 = new Thread(async () => {
-                CommunityBot.Start(serverName, scoreChannel, "vote");
+                CommunityBot.Start(serverName, scoreChannel, infoChannel);
                 Vote.RegisterVotesWithBot();
                 await Task.Delay(-1);
             });

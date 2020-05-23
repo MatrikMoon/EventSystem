@@ -28,24 +28,23 @@ namespace EventPlugin.Models
         [Obfuscation(Exclude = false, Feature = "-rename;")]
         public PlayerOptions PlayerOptions { get; set; }
 
-        //Necessary overrides for being used as a key in a Dictionary
+        #region Equality
         public static bool operator ==(Song a, Song b)
         {
-            if (ReferenceEquals(b, null)) return false;
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) && ReferenceEquals(b, null);
             return a.GetHashCode() == b.GetHashCode();
         }
 
         public static bool operator !=(Song a, Song b)
         {
-            if (b == null) return false;
+            if (ReferenceEquals(a, null) || ReferenceEquals(b, null)) return ReferenceEquals(a, null) ^ ReferenceEquals(b, null);
             return a.GetHashCode() != b.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            if (obj == null) return false;
-            if (!(obj is Song)) return false;
-            return GetHashCode() == obj.GetHashCode();
+            if (!(other is Song)) return false;
+            return GetHashCode() == (other as Song).GetHashCode();
         }
 
         public override int GetHashCode()
@@ -55,6 +54,6 @@ namespace EventPlugin.Models
             hash = (hash * 7) + Difficulty.GetHashCode();
             return hash;
         }
-        //End necessary overrides
+        #endregion Equality
     }
 }

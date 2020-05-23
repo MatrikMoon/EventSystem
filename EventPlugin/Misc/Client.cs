@@ -379,7 +379,7 @@ namespace EventPlugin.Misc
                         {
                             //Now that they're refreshed, we can populate their beatmaps and add them to the available list
                             songs.ForEach(x => loadLevel(x));
-                            songsGottenCallback?.Invoke(availableSongs);
+                            songsGottenCallback?.Invoke(availableSongs.Union(songs).ToList());
                         };
 
                     Loader.SongsLoadedEvent -= songsLoaded;
