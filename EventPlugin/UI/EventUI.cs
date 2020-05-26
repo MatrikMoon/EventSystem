@@ -53,6 +53,9 @@ namespace EventPlugin.UI
 #elif ASIAVR
                     var buttonName = "AsiaVR Tournament";
                     var hint = "Compete in the Asia Server Event!";
+#elif BTH
+                    var buttonName = "BTH Qualifiers";
+                    var hint = "Qualifier plugin for Beat the Hub!";
 #else
                     var buttonName = "EVENT BETA";
                     var hint = "STILL A BETA";
