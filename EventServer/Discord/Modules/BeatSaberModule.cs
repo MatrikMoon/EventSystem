@@ -76,10 +76,10 @@ namespace EventServer.Discord.Modules
 
         private bool IsAdmin()
         {
-            ulong moderatorRoleId = Context.Guild.Roles.FirstOrDefault(x => CommunityBot.AdminRoles.Contains(x.Name.ToLower())).Id;
+            var moderatorRoleIds = Context.Guild.Roles.Where(x => CommunityBot.AdminRoles.Contains(x.Name.ToLower())).Select(x => x.Id);
             bool isAdmin =
                 ((IGuildUser)Context.User).GetPermissions((IGuildChannel)Context.Channel).Has(ChannelPermission.ManageChannels) ||
-                ((IGuildUser)Context.User).RoleIds.Any(x => x == moderatorRoleId);
+                ((IGuildUser)Context.User).RoleIds.Any(x => moderatorRoleIds.Contains(x));
             return isAdmin;
         }
 
@@ -319,6 +319,18 @@ namespace EventServer.Discord.Modules
                     }
                     else await ReplyAsync("Could not download song.");
                 }
+            }
+        }
+
+        [Command("listSongs")]
+        public async Task ListSongsAsync()
+        {
+            if (IsAdmin())
+            {
+                var response = string.Empty;
+                var songs = GetActiveSongs();
+                foreach (var song in songs) response += $"{song.Name} ({song.Characteristic}) ({song.Difficulty})\n";
+                await ReplyAsync(response);
             }
         }
 
