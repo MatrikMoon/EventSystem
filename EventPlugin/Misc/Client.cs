@@ -26,7 +26,7 @@ namespace EventPlugin.Misc
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client
     {
-        private static string discordCommunityUrl = "http://networkauditor.org";
+        private static string discordCommunityUrl = "https://networkauditor.org";
 #if (TEAMSABER)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
 #elif (DISCORDCOMMUNITY)
@@ -41,8 +41,6 @@ namespace EventPlugin.Misc
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-bth";
 #elif BETA
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
-#elif !BETA
-        private static string discordCommunityApi = $"{discordCommunityUrl}/api";
 #endif
 
         private static string beatSaverDownloadUrl = "https://beatsaver.com/api/download/hash/";
@@ -89,7 +87,7 @@ namespace EventPlugin.Misc
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logger.Error(www.error);
+                Logger.Error($"{www.responseCode} : {www.error}");
                 postCompleteCallback?.Invoke(false);
             }
             else

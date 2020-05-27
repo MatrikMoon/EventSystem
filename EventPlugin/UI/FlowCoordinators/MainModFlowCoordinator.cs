@@ -232,7 +232,11 @@ namespace EventPlugin.UI.FlowCoordinators
             gameplayModifiers.ghostNotes = song.GameOptions.HasFlag(GameOptions.GhostNotes);
 
             var colorSchemeSettings = _playerDataModel.playerData.colorSchemesSettings;
-            menuTransitionHelper.StartStandardLevel(song.Beatmap, _playerDataModel.playerData.overrideEnvironmentSettings, colorSchemeSettings.GetColorSchemeForId(colorSchemeSettings.selectedColorSchemeId), gameplayModifiers, playerSettings, null, "Menu", false, null, SongFinished);
+
+            SongUtils.LoadSong(song.Beatmap.level.levelID, (loadedLevel) =>
+            {
+                SongUtils.PlaySong(loadedLevel, song.Beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic, song.Beatmap.difficulty, _playerDataModel.playerData.overrideEnvironmentSettings, colorSchemeSettings.GetColorSchemeForId(colorSchemeSettings.selectedColorSchemeId), gameplayModifiers, playerSettings, SongFinished);
+            });
         }
 
         private bool BSUtilsScoreDisabled()
@@ -273,7 +277,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
                     Action<bool> scoreUpdateComplete = (b) =>
                     {
-                        Logger.Success("Score upload compete!");
+                        Logger.Success($"Score upload {(b ? "compete" : "failed")}!");
                         if (b && _communityLeaderboard)
                         {
                             UnityMainThreadDispatcher.Instance().Enqueue(() =>

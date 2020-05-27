@@ -147,6 +147,18 @@ namespace EventServer.Discord.Modules
             }
 #endif
 
+#if BTH
+            //Special roles for tournamonth
+            bool isA = (Context.User as IGuildUser).RoleIds.Contains((ulong)707264643743350854);
+            bool isAA = (Context.User as IGuildUser).RoleIds.Contains((ulong)707264729286180894);
+
+            if (!isA && !isAA)
+            {
+                await ReplyAsync("Sorry! You don't appear to be in group A or AA");
+                return;
+            }
+#endif
+
             if (!Player.Exists(userId) || !Player.IsRegistered(userId))
             {
                 var basicData = await ScoresaberService.GetBasicPlayerData(userId);
@@ -193,6 +205,12 @@ namespace EventServer.Discord.Modules
                 //Assign them to the proper tournamonth team
                 if (isTier1) CommunityBot.ChangeTeam(player, new Team("tier1"), role: Context.Guild.GetRole(572765180140716062));
                 else if (isTier2) CommunityBot.ChangeTeam(player, new Team("tier2"), role: Context.Guild.GetRole(572765611709693954));
+#endif
+
+#if BTH
+                //Assign them to the proper team
+                if (isA) CommunityBot.ChangeTeam(player, new Team("a"));
+                else if (isAA) CommunityBot.ChangeTeam(player, new Team("aa"));
 #endif
 
 #if TEAMSABER
@@ -561,7 +579,7 @@ namespace EventServer.Discord.Modules
 
             string finalMessage = "Leaderboard:\n\n";
 
-            if (Config.ServerFlags.HasFlag(ServerFlags.Tokens))
+            if (Config.ServerFlags.HasFlag(ServerFlags.Teams))
             {
                 foreach (var team in GetAllTeams())
                 {

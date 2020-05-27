@@ -1,6 +1,7 @@
 ﻿using EventPlugin.Misc;
 using EventPlugin.Models;
 using EventPlugin.UI;
+using EventPlugin.Utils;
 using EventShared;
 using IPA;
 using UnityEngine;
@@ -23,6 +24,7 @@ namespace EventPlugin
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
 
+            SongUtils.OnEnable();
             EventUI.CreateCommunitiyButton();
         }
 

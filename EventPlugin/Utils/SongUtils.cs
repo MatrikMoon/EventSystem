@@ -1,6 +1,7 @@
 ﻿using EventShared;
 using SongCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -11,10 +12,27 @@ using Logger = EventShared.Logger;
 namespace EventPlugin.Utils
 {
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
-    class SongUtils
+    public class SongUtils
     {
+        private static AlwaysOwnedContentSO _alwaysOwnedContent;
+        private static BeatmapLevelCollectionSO _primaryLevelCollection;
+        private static BeatmapLevelCollectionSO _secondaryLevelCollection;
+        private static BeatmapLevelCollectionSO _tertiaryLevelCollection;
+        private static BeatmapLevelCollectionSO _extrasLevelCollection;
         private static CancellationTokenSource getLevelCancellationTokenSource;
         private static CancellationTokenSource getStatusCancellationTokenSource;
+
+        public static List<IPreviewBeatmapLevel> masterLevelList;
+
+        public static void OnEnable()
+        {
+            Loader.SongsLoadedEvent += Loader_SongsLoadedEvent;
+        }
+
+        private static void Loader_SongsLoadedEvent(Loader arg1, Dictionary<string, CustomPreviewBeatmapLevel> arg2)
+        {
+            RefreshLoadedSongs();
+        }
 
         //Returns the closest difficulty to the one provided, preferring lower difficulties first if any exist
         public static IDifficultyBeatmap GetClosestDifficultyPreferLower(IBeatmapLevel level, BeatmapDifficulty difficulty, string characteristic)
@@ -32,7 +50,6 @@ namespace EventPlugin.Utils
                 .ToArray();
 
             IDifficultyBeatmap ret = availableMaps.FirstOrDefault(x => x.difficulty == difficulty);
-
             if (ret is CustomDifficultyBeatmap)
             {
                 var extras = Collections.RetrieveExtraSongData(ret.level.levelID);
@@ -93,6 +110,22 @@ namespace EventPlugin.Utils
             return ret;
         }
 
+        public static void RefreshLoadedSongs()
+        {
+            if (_alwaysOwnedContent == null) _alwaysOwnedContent = Resources.FindObjectsOfTypeAll<AlwaysOwnedContentSO>().First();
+            if (_primaryLevelCollection == null) _primaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[0].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_secondaryLevelCollection == null) _secondaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[1].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_tertiaryLevelCollection == null) _tertiaryLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[2].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+            if (_extrasLevelCollection == null) _extrasLevelCollection = _alwaysOwnedContent.alwaysOwnedPacks.First(x => x.packID == OstHelper.packs[3].PackID).beatmapLevelCollection as BeatmapLevelCollectionSO;
+
+            masterLevelList = new List<IPreviewBeatmapLevel>();
+            masterLevelList.AddRange(_primaryLevelCollection.beatmapLevels);
+            masterLevelList.AddRange(_secondaryLevelCollection.beatmapLevels);
+            masterLevelList.AddRange(_tertiaryLevelCollection.beatmapLevels);
+            masterLevelList.AddRange(_extrasLevelCollection.beatmapLevels);
+            masterLevelList.AddRange(Loader.CustomLevelsCollection.beatmapLevels);
+        }
+
         public static async Task<bool> HasDLCLevel(string levelId, AdditionalContentModel additionalContentModel = null)
         {
             additionalContentModel = additionalContentModel ?? Resources.FindObjectsOfTypeAll<AdditionalContentModel>().FirstOrDefault();
@@ -129,6 +162,75 @@ namespace EventPlugin.Utils
                 return result;
             }
             return null;
+        }
+
+        public static async void PlaySong(IPreviewBeatmapLevel level, BeatmapCharacteristicSO characteristic, BeatmapDifficulty difficulty, OverrideEnvironmentSettings overrideEnvironmentSettings = null, ColorScheme colorScheme = null, GameplayModifiers gameplayModifiers = null, PlayerSpecificSettings playerSettings = null, Action<StandardLevelScenesTransitionSetupDataSO, LevelCompletionResults> songFinishedCallback = null)
+        {
+            Action<IBeatmapLevel> SongLoaded = (loadedLevel) =>
+            {
+                MenuTransitionsHelper _menuSceneSetupData = Resources.FindObjectsOfTypeAll<MenuTransitionsHelper>().First();
+                _menuSceneSetupData.StartStandardLevel(
+                    loadedLevel.beatmapLevelData.GetDifficultyBeatmap(characteristic, difficulty),
+                    overrideEnvironmentSettings,
+                    colorScheme,
+                    gameplayModifiers ?? new GameplayModifiers(),
+                    playerSettings ?? new PlayerSpecificSettings(),
+                    null,
+                    "Menu",
+                    false,
+                    null,
+                    (standardLevelScenesTransitionSetupData, results) => songFinishedCallback?.Invoke(standardLevelScenesTransitionSetupData, results)
+                );
+            };
+
+            if ((level is PreviewBeatmapLevelSO && await HasDLCLevel(level.levelID)) ||
+                        level is CustomPreviewBeatmapLevel)
+            {
+                Logger.Debug("Loading DLC/Custom level...");
+                var result = await GetLevelFromPreview(level);
+                if (result != null && !(result?.isError == true))
+                {
+                    SongLoaded(result?.beatmapLevel);
+                }
+            }
+            else if (level is BeatmapLevelSO)
+            {
+                Logger.Debug("Reading OST data without songloader...");
+                SongLoaded(level as IBeatmapLevel);
+            }
+            else
+            {
+                Logger.Debug($"Skipping unowned DLC ({level.songName})");
+            }
+        }
+
+        public static async void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
+        {
+            IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
+
+            //Load IBeatmapLevel
+            if (level is PreviewBeatmapLevelSO || level is CustomPreviewBeatmapLevel)
+            {
+                if (level is PreviewBeatmapLevelSO)
+                {
+                    if (!await HasDLCLevel(level.levelID)) return; //In the case of unowned DLC, just bail out and do nothing
+                }
+
+                var result = await GetLevelFromPreview(level);
+                if (result != null && !(result?.isError == true))
+                {
+                    //HTTPstatus requires cover texture to be applied in here, and due to a fluke
+                    //of beat saber, it's not applied when the level is loaded, but it *is*
+                    //applied to the previewlevel it's loaded from
+                    var loadedLevel = result?.beatmapLevel;
+                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    loadedCallback(loadedLevel);
+                }
+            }
+            else if (level is BeatmapLevelSO)
+            {
+                loadedCallback(level as IBeatmapLevel);
+            }
         }
 
         public static string GetHashFromLevelId(string levelId)
