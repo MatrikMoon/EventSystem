@@ -449,7 +449,7 @@ namespace EventServer
 #elif QUALIFIER
             ulong scoreChannel = 711326932901429310; //"map-pooling-scores";
 #elif BTH
-            ulong scoreChannel = 713655231107301446; //"voice-text"
+            ulong scoreChannel = 713655231107301446; //"qualifier-scores"
 #elif BETA
             ulong scoreChannel = 488445468141944842; //"event-scores";
 #endif
@@ -466,7 +466,7 @@ namespace EventServer
 #elif QUALIFIER
             ulong infoChannel = 709154896183820349; //"country-registration";
 #elif BTH
-            ulong infoChannel = 713655231107301446; //"voice-text"
+            ulong infoChannel = 713655231107301446; //"qualifier-scores"
 #elif BETA
             ulong infoChannel = 488445468141944842; //"event-scores";
 #endif

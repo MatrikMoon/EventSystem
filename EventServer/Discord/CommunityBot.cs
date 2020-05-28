@@ -67,11 +67,12 @@ namespace EventServer.Discord
             }
 #endif
 
+#if !BTH
             //Add the role of the team we're being switched to
             //Note that this WILL NOT remove the role of the team the player is currently on, if there is one.
             if (role != null) await user.AddRoleAsync(role);
             else await user.AddRoleAsync(guild.Roles.FirstOrDefault(x => Regex.Replace(x.Name.ToLower(), "[^a-z0-9 ]", "") == team.TeamName.ToLower()));
-
+#endif
             player.Team = team.TeamId;
 
             //Sort out existing scores

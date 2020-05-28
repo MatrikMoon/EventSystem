@@ -190,7 +190,12 @@ namespace EventPlugin.Utils
                 var result = await GetLevelFromPreview(level);
                 if (result != null && !(result?.isError == true))
                 {
-                    SongLoaded(result?.beatmapLevel);
+                    //HTTPstatus requires cover texture to be applied in here, and due to a fluke
+                    //of beat saber, it's not applied when the level is loaded, but it *is*
+                    //applied to the previewlevel it's loaded from
+                    var loadedLevel = result?.beatmapLevel;
+                    //loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    SongLoaded(loadedLevel);
                 }
             }
             else if (level is BeatmapLevelSO)
@@ -204,10 +209,14 @@ namespace EventPlugin.Utils
             }
         }
 
-        public static async void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
+        public static void LoadSong(string levelId, Action<IBeatmapLevel> loadedCallback)
         {
             IPreviewBeatmapLevel level = masterLevelList.Where(x => x.levelID == levelId).First();
+            LoadSong(level, loadedCallback);
+        }
 
+        public static async void LoadSong(IPreviewBeatmapLevel level, Action<IBeatmapLevel> loadedCallback)
+        {
             //Load IBeatmapLevel
             if (level is PreviewBeatmapLevelSO || level is CustomPreviewBeatmapLevel)
             {
@@ -223,7 +232,7 @@ namespace EventPlugin.Utils
                     //of beat saber, it's not applied when the level is loaded, but it *is*
                     //applied to the previewlevel it's loaded from
                     var loadedLevel = result?.beatmapLevel;
-                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    //loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
                     loadedCallback(loadedLevel);
                 }
             }

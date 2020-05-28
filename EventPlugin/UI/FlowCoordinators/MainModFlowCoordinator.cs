@@ -99,55 +99,39 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void SongListRowSelected(Song song)
         {
-            AsyncRowSelected(song);
-        }
+            Action<IBeatmapLevel> songLoaded = (level) =>
+            {
+                song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(level, (BeatmapDifficulty)(int)song.Difficulty, song.Characteristic);
 
-        private async void AsyncRowSelected(Song song)
-        {
+                //Open up the custom/global leaderboard pane when we need to
+                if (_communityLeaderboard == null)
+                {
+                    _communityLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboardController>();
+                    _communityLeaderboard.PlayPressed += SongPlayPressed;
+                }
+                SetLeftScreenViewController(_communityLeaderboard);
+
+                if (_globalLeaderboard == null)
+                {
+                    _globalLeaderboard = Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First();
+                    _globalLeaderboard.name = "Community Global Leaderboard";
+                }
+
+                //Change global leaderboard view
+                _globalLeaderboard.SetData(song.Beatmap);
+
+                SetRightScreenViewController(_globalLeaderboard);
+
+                //Change community leaderboard view
+                //Use the currently selected team, if it exists
+                //TODO: Reimplement?
+                //int teamIndex = _communityLeaderboard.selectedTeamIndex;
+                //if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.Team);
+                _communityLeaderboard.SetSong(song, -1);
+            };
+
             //When the row is selected, load the beatmap
-            IBeatmapLevel beatmapLevel = null;
-            if (!(song.PreviewBeatmap is BeatmapLevelSO))
-            {
-                var result = await SongUtils.GetLevelFromPreview(song.PreviewBeatmap);
-                if (!result.Value.isError)
-                {
-                    beatmapLevel = result.Value.beatmapLevel;
-                }
-                else
-                {
-                    songListViewController.ErrorHappened($"Could not load level from preview for {song.SongName}");
-                    return;
-                }
-            }
-            else beatmapLevel = (BeatmapLevelSO)song.PreviewBeatmap;
-
-            song.Beatmap = SongUtils.GetClosestDifficultyPreferLower(beatmapLevel, (BeatmapDifficulty)(int)song.Difficulty, song.Characteristic);
-
-            //Open up the custom/global leaderboard pane when we need to
-            if (_communityLeaderboard == null)
-            {
-                _communityLeaderboard = BeatSaberUI.CreateViewController<CustomLeaderboardController>();
-                _communityLeaderboard.PlayPressed += SongPlayPressed;
-            }
-            SetLeftScreenViewController(_communityLeaderboard);
-
-            if (_globalLeaderboard == null)
-            {
-                _globalLeaderboard = Resources.FindObjectsOfTypeAll<PlatformLeaderboardViewController>().First();
-                _globalLeaderboard.name = "Community Global Leaderboard";
-            }
-
-            //Change global leaderboard view
-            _globalLeaderboard.SetData(song.Beatmap);
-
-            SetRightScreenViewController(_globalLeaderboard);
-
-            //Change community leaderboard view
-            //Use the currently selected team, if it exists
-            //TODO: Reimplement?
-            //int teamIndex = _communityLeaderboard.selectedTeamIndex;
-            //if (teamIndex <= -1) teamIndex = Team.allTeams.FindIndex(x => x.TeamId == Player.Instance.Team);
-            _communityLeaderboard.SetSong(song, -1);
+            SongUtils.LoadSong(song.PreviewBeatmap, songLoaded);
         }
 
         private void ReloadServerData()
@@ -185,11 +169,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
         private void SongPlayPressed(Song song)
         {
-            if (IPA.Loader.PluginManager.EnabledPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
-            {
-                BSUtilsDisableOtherPlugins();
-            }
-            else Logger.Debug("BSUtils not installed, not disabling other plugins");
+            BSUtilsDisableOtherPlugins();
 
             if (_resultsViewController.isInViewControllerHierarchy) DismissViewController(_resultsViewController, () => PlaySong(song));
             else PlaySong(song);
@@ -233,10 +213,7 @@ namespace EventPlugin.UI.FlowCoordinators
 
             var colorSchemeSettings = _playerDataModel.playerData.colorSchemesSettings;
 
-            SongUtils.LoadSong(song.Beatmap.level.levelID, (loadedLevel) =>
-            {
-                SongUtils.PlaySong(loadedLevel, song.Beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic, song.Beatmap.difficulty, _playerDataModel.playerData.overrideEnvironmentSettings, colorSchemeSettings.GetColorSchemeForId(colorSchemeSettings.selectedColorSchemeId), gameplayModifiers, playerSettings, SongFinished);
-            });
+            SongUtils.PlaySong(song.PreviewBeatmap, song.Beatmap.parentDifficultyBeatmapSet.beatmapCharacteristic, song.Beatmap.difficulty, _playerDataModel.playerData.overrideEnvironmentSettings, colorSchemeSettings.GetColorSchemeForId(colorSchemeSettings.selectedColorSchemeId), gameplayModifiers, playerSettings, SongFinished);
         }
 
         private bool BSUtilsScoreDisabled()
@@ -263,10 +240,7 @@ namespace EventPlugin.UI.FlowCoordinators
                 if (results.levelEndStateType == LevelCompletionResults.LevelEndStateType.Cleared) //Didn't quit and didn't die
                 {
                     //If bs_utils disables score submission, we do too
-                    if (IPA.Loader.PluginManager.EnabledPlugins.Any(x => x.Name.ToLower() == "Beat Saber Utils".ToLower()))
-                    {
-                        if (BSUtilsScoreDisabled()) return;
-                    }
+                    if (BSUtilsScoreDisabled()) return;
 
                     IBeatmapLevel level = _communityLeaderboard.selectedSong.Beatmap.level;
                     string songHash = SongUtils.GetHashFromLevelId(level.levelID);

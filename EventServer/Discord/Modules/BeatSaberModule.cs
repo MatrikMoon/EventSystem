@@ -461,7 +461,7 @@ namespace EventServer.Discord.Modules
                     //If the provided color can be parsed into a uint, we can use the provided color as the color for the dicsord role
                     Color discordColor = Color.Blue;
                     if (uint.TryParse(color.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var discordColorUint)) discordColor = new Color(discordColorUint);
-#if !QUALIFIER
+#if !QUALIFIER && !BTH
                     await Context.Guild.CreateRoleAsync(name, color: discordColor, isHoisted: true);
 #endif
                     await ReplyAsync($"Team created with id `{teamId}`, name `{name}`, and color `{color}`");
