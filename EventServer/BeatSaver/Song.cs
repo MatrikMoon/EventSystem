@@ -108,7 +108,7 @@ namespace EventServer.BeatSaver
         {
             int noteCount = GetNoteCount(characteristicId, difficulty);
 
-            //Coptied from game files
+            //Copied from game files
             int num = 0;
             int num2 = 1;
             while (num2 < 8)

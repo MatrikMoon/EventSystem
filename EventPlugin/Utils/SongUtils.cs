@@ -194,7 +194,7 @@ namespace EventPlugin.Utils
                     //of beat saber, it's not applied when the level is loaded, but it *is*
                     //applied to the previewlevel it's loaded from
                     var loadedLevel = result?.beatmapLevel;
-                    //loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
                     SongLoaded(loadedLevel);
                 }
             }
@@ -232,7 +232,7 @@ namespace EventPlugin.Utils
                     //of beat saber, it's not applied when the level is loaded, but it *is*
                     //applied to the previewlevel it's loaded from
                     var loadedLevel = result?.beatmapLevel;
-                    //loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
+                    loadedLevel.SetField("_coverImageTexture2D", level.GetField<Texture2D>("_coverImageTexture2D"));
                     loadedCallback(loadedLevel);
                 }
             }

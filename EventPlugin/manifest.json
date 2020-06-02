@@ -3,8 +3,8 @@
   "author": "Moon",
   "description": "Plugin which allows you to play songs and have them be submitted to a server for a discord event",
   "gameVersion": "1.9.0",
-  "id": "DiscordCommunityPlugin",
-  "name": "DiscordCommunityPlugin",
+  "id": "EventPlugin",
+  "name": "EventPlugin",
   "version": "0.0.0",
   "features": [
   ]
