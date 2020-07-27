@@ -26,6 +26,11 @@ namespace EventPlugin.Misc
     [Obfuscation(Exclude = false, Feature = "+rename(mode=decodable,renPdb=true)")]
     class Client
     {
+        //private const string songs = "{\"6b4e0f6a698973ca55754d057b40463063ae59d83\":{\"songName\":\"Weight of the World\",\"songHash\":\"6b4e0f6a698973ca55754d057b40463063ae59d8\",\"difficulty\":3,\"gameOptions\":0,\"playerOptions\":0,\"characteristic\":\"Standard\"},\"b58d4ca18269d630a2775e6e679ab7b71772680e3\":{\"songName\":\"Good Things Fall Apart\",\"songHash\":\"b58d4ca18269d630a2775e6e679ab7b71772680e\",\"difficulty\":3,\"gameOptions\":0,\"playerOptions\":0,\"characteristic\":\"Standard\"},\"af6f5fed9f48b5819d65bddea57d9443d8f9c5314\":{\"songName\":\"Sengoku HOP\",\"songHash\":\"af6f5fed9f48b5819d65bddea57d9443d8f9c531\",\"difficulty\":4,\"gameOptions\":0,\"playerOptions\":0,\"characteristic\":\"Standard\"},\"e3dd2b75ed8ba7426e09326618c26fee4a92f4fd4\":{\"songName\":\"Syzygia\",\"songHash\":\"e3dd2b75ed8ba7426e09326618c26fee4a92f4fd\",\"difficulty\":4,\"gameOptions\":0,\"playerOptions\":0,\"characteristic\":\"Standard\"},\"db4e579da10b4dec78d58ae828526b94ed4253c24\":{\"songName\":\"overcomplexification\",\"songHash\":\"db4e579da10b4dec78d58ae828526b94ed4253c2\",\"difficulty\":4,\"gameOptions\":0,\"playerOptions\":0,\"characteristic\":\"Standard\"},\"9df432f32b5679d06a623784cd7f7288a379f9074\":{\"songName\":\"ZiRNiTRA\",\"songHash\":\"9df432f32b5679d06a623784cd7f7288a379f907\",\"difficulty\":4,\"gameOptions\":0,\"playerOptions\":0,\"characteristic\":\"Standard\"}}";
+        //private const string player = "{\"version\":46,\"team\":\"none\",\"tokens\":0,\"serverSettings\":1}";
+        //private const string leaderboard = "{\"1\":{\"score\":0,\"player\":\"Disabled\",\"place\":1,\"fullCombo\":\"true\",\"userId\":\"781604085296575\",\"team\":\"staff\"}}";
+        //private const string teams = "{\"unitedstates\":{\"captainId\":\"\",\"teamName\":\"United States\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"unitedkingdom\":{\"captainId\":\"76561198166289091\",\"teamName\":\"United Kingdom\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"norway\":{\"captainId\":\"76561198045386379\",\"teamName\":\"Norway\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"netherlands\":{\"captainId\":\"76561198033166451\",\"teamName\":\"Netherlands\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"korea\":{\"captainId\":\"76561198211726521\",\"teamName\":\"Korea\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"australia\":{\"captainId\":\"76561198118969924\",\"teamName\":\"Australia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"germany\":{\"captainId\":\"76561198095106486\",\"teamName\":\"Germany\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"belgium\":{\"captainId\":\"76561198208468808\",\"teamName\":\"Belgium\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"unitedarabemirates\":{\"captainId\":\"76561198257978632\",\"teamName\":\"United Arab Emirates\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"estonia\":{\"captainId\":\"76561198029447509\",\"teamName\":\"Estonia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"denmark\":{\"captainId\":\"76561198046397592\",\"teamName\":\"Denmark\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"poland\":{\"captainId\":\"76561197994110158\",\"teamName\":\"Poland\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"sweden\":{\"captainId\":\"76561197990995606\",\"teamName\":\"Sweden\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"finland\":{\"captainId\":\"76561198362923485\",\"teamName\":\"Finland\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"canada\":{\"captainId\":\"76561198044562405\",\"teamName\":\"Canada\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"russia\":{\"captainId\":\"76561198089723593\",\"teamName\":\"Russia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"puertorico\":{\"captainId\":\"76561198391608994\",\"teamName\":\"Puerto Rico\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"switzerland\":{\"captainId\":\"2347676768639615\",\"teamName\":\"Switzerland\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"spain\":{\"captainId\":\"76561198152484492\",\"teamName\":\"Spain\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"newzealand\":{\"captainId\":\"1901015050000706\",\"teamName\":\"New Zealand\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"france\":{\"captainId\":\"\",\"teamName\":\"France\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"czechia\":{\"captainId\":\"76561198115975377\",\"teamName\":\"Czechia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"malaysia\":{\"captainId\":\"\",\"teamName\":\"Malaysia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"brazil\":{\"captainId\":\"\",\"teamName\":\"Brazil\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"latvia\":{\"captainId\":\"76561198117450963\",\"teamName\":\"Latvia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"japan\":{\"captainId\":\"\",\"teamName\":\"Japan\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"austria\":{\"captainId\":\"\",\"teamName\":\"Austria\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"china\":{\"captainId\":\"76561198377562021\",\"teamName\":\"China\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"slovakia\":{\"captainId\":\"\",\"teamName\":\"Slovakia\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"israel\":{\"captainId\":\"\",\"teamName\":\"Israel\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"staff\":{\"captainId\":\"76561198063268251\",\"teamName\":\"Staff\",\"color\":\"#ff0000\",\"requiredTokens\":0,\"nextPromotion\":\"\"},\"italy\":{\"captainId\":\"\",\"teamName\":\"Italy\",\"color\":\"#ffffff\",\"requiredTokens\":0,\"nextPromotion\":\"\"}}";
+
         private static string discordCommunityUrl = "https://networkauditor.org";
 #if (TEAMSABER)
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-teamsaber";
@@ -56,6 +61,8 @@ namespace EventPlugin.Misc
             //Build score object
             Score s = new Score(userId.ToString(), levelId, score, difficultyLevel, fullCombo, playerOptions, gameOptions, characteristic, signed);
 
+            Logger.Info($"Trying to submit score: {levelId} {userId} {difficultyLevel} {score} {fullCombo} {signed}");
+
             JSONObject o = new JSONObject();
             o.Add("pb", new JSONString(s.ToBase64()));
 
@@ -81,6 +88,9 @@ namespace EventPlugin.Misc
         //Post a score to the server
         private static IEnumerator PostCoroutine(string data, string address, Action<bool> postCompleteCallback = null)
         {
+            //TODO: REMOVE. Temp logging in for some players randomly failing to submit score
+            Logger.Info($"Posting: {address} {data}");
+
             UnityWebRequest www = UnityWebRequest.Post(address, data);
             www.timeout = 30;
             yield return www.SendWebRequest();
@@ -170,6 +180,7 @@ namespace EventPlugin.Misc
                 {
                     Logger.Error($"Error parsing playerstats data: {e}");
                     slvc.ErrorHappened($"Error parsing playerstats data: {e}");
+                    yield break;
                 }
             }
         }
@@ -189,6 +200,7 @@ namespace EventPlugin.Misc
                 try
                 {
                     var node = JSON.Parse(www.downloadHandler.text);
+                    
                     List<CustomLeaderboardTableView.CustomScoreData> scores = new List<CustomLeaderboardTableView.CustomScoreData>();
                     int myPos = -1;
                     foreach (var score in node)
@@ -212,6 +224,7 @@ namespace EventPlugin.Misc
                 catch (Exception e)
                 {
                     Logger.Error($"Error parsing leaderboard data: {e}");
+                    yield break;
                 }
             }
         }

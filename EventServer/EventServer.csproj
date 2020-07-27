@@ -136,6 +136,7 @@
     <Compile Include="Discord\Modules\BeatSaberModule.cs" />
     <Compile Include="Discord\Modules\BotModule.cs" />
     <Compile Include="Discord\Modules\PictureModule.cs" />
+    <Compile Include="Discord\Services\CCService.cs" />
     <Compile Include="Discord\Services\CommandHandlingService.cs" />
     <Compile Include="Discord\Services\DatabaseService.cs" />
     <Compile Include="Discord\Services\PictureService.cs" />

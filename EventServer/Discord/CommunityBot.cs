@@ -135,6 +135,7 @@ namespace EventServer.Discord
                 .AddSingleton<MessageUpdateService>()
                 .AddSingleton(serviceProvider => new DatabaseService(_databaseLocation, serviceProvider))
                 .AddSingleton<ScoresaberService>()
+                .AddSingleton<CCService>()
                 .BuildServiceProvider();
         }
     }

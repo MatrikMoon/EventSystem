@@ -6,8 +6,10 @@ using SimpleHttpServer;
 using SimpleHttpServer.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +21,23 @@ namespace EventServer
 {
     class Server
     {
+        public async static Task<bool> IsPlayerRegisteredInBSWC(string id)
+        {
+            HttpClientHandler httpClientHandler = new HttpClientHandler();
+            httpClientHandler.AllowAutoRedirect = false;
+
+            using (var client = new HttpClient(httpClientHandler))
+            {
+                client.DefaultRequestHeaders.Add("user-agent", "EventServer");
+
+                var response = await client.GetAsync("https://cube.community/main/bswc/api/player_roster?player");
+                var responseText = await response.Content.ReadAsStringAsync();
+                var playerList = JSON.Parse(responseText);
+
+                return playerList[id] != null;
+            }
+        }
+
         public static void StartHttpServer()
         {
             var route_config = new List<Route>() {
@@ -268,7 +287,19 @@ namespace EventServer
                         JSONNode json = new JSONObject();
 
                         if (Player.Exists(userId) && Player.IsRegistered(userId)) {
-                            if (Config.ServerFlags.HasFlag(ServerFlags.Teams) && new Player(userId).Team == "-1")
+#if QUALIFIER
+                            var isRegistered = true;
+                            if (userId != "76561198063268251")
+                            {
+                                var registrationCheck = IsPlayerRegisteredInBSWC(userId);
+                                registrationCheck.Wait();
+                                isRegistered = registrationCheck.Result;
+                            }
+#else
+                            var isRegistered = true;
+#endif
+
+                            if ((Config.ServerFlags.HasFlag(ServerFlags.Teams) && new Player(userId).Team == "-1") || !isRegistered)
                             {
                                 json["message"] = "Please be sure you're assigned to a team before playing";
                             }
@@ -283,7 +314,7 @@ namespace EventServer
                         }
                         else if (Player.Exists(userId) && !Player.IsRegistered(userId))
                         {
-                            json["message"] = "Your have been banned from this event.";
+                            json["message"] = "You have been banned from this event.";
                         }
                         else
                         {
@@ -418,6 +449,8 @@ namespace EventServer
 
         public static int Main(string[] args)
         {
+            Logger.Success(new SQLiteConnectionStringBuilder() { DataSource = "EventDatabase.db" }.ConnectionString);
+
             //Load server config
             Config.LoadConfig();
 
@@ -447,7 +480,7 @@ namespace EventServer
 #elif (ASIAVR)
             ulong scoreChannel = 572908789699969054; //"scores feed";
 #elif QUALIFIER
-            ulong scoreChannel = 711326932901429310; //"map-pooling-scores";
+            ulong scoreChannel = 724118394693222451; //"qualifier-scores";
 #elif BTH
             ulong scoreChannel = 713655231107301446; //"qualifier-scores"
 #elif BETA

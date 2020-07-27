@@ -24,6 +24,7 @@ namespace EventServer.Discord.Modules
     public class BeatSaberModule : ModuleBase<SocketCommandContext>
     {
         public ScoresaberService ScoresaberService { get; set; }
+        public CCService CCService { get; set; }
 
         //Pull parameters out of an argument list string
         //Note: argument specifiers are required to start with "-"
@@ -694,6 +695,40 @@ namespace EventServer.Discord.Modules
             });
 
             await ReplyAsync(finalMessage);
+        }
+
+        //TODO: REMOVE -- A hack for WC
+        [Command("setPlaying")]
+        public async Task SetPlayingAsync(string team)
+        {
+            if (IsAdmin())
+            {
+                var role = Context.Guild.GetRole(726133274094862447);
+
+                foreach (var player in CCService.GetPlayers(await CCService.GetTeamData(team)).Values)
+                {
+                    var databasePlayer = new Player(player["scoresaber"]);
+                    var discordUser = Context.Guild.GetUser(ulong.Parse(Regex.Replace(databasePlayer.DiscordMention, "[^0-9]", "")));
+                    await discordUser.AddRoleAsync(role);
+                }
+            }
+        }
+
+        //TODO: REMOVE -- A hack for WC
+        [Command("removePlaying")]
+        public async Task RemovePlayingAsync(string team)
+        {
+            if (IsAdmin())
+            {
+                var role = Context.Guild.GetRole(726133274094862447);
+
+                foreach (var player in CCService.GetPlayers(await CCService.GetTeamData(team)).Values)
+                {                    
+                    var databasePlayer = new Player(player["scoresaber"]);
+                    var discordUser = Context.Guild.GetUser(ulong.Parse(Regex.Replace(databasePlayer.DiscordMention, "[^0-9]", "")));
+                    await discordUser.RemoveRoleAsync(role);
+                }
+            }
         }
 
         [Command("help")]

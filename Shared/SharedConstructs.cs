@@ -11,8 +11,8 @@ namespace EventShared
     public static class SharedConstructs
     {
         public const string Name = "EventPlugin";
-        public const string Version = "0.4.0";
-        public const int VersionCode = 040;
+        public const string Version = "0.4.6";
+        public const int VersionCode = 046;
         public static string Changelog =
             "0.0.1: First attempt at fork from EventPlugin\n" +
             "0.0.2: Sample update\n" +
@@ -45,7 +45,9 @@ namespace EventShared
             "0.3.6: Disable scoresaber submission\n" +
             "0.3.7: Updated for Beat Saber 1.9.0\n" +
             "0.3.8: Added new song packs\n" +
-            "0.4.0: Updated characteristic handling\n";
+            "0.4.0: Updated characteristic handling\n" +
+            "0.4.5: Major bug fixes, configurations for other tournaments\n" +
+            "0.4.6: Added log which records score and signature for a failure fallback\n";
 
         public enum LevelDifficulty
         {

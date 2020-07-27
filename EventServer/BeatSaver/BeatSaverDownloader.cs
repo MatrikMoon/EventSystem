@@ -1,13 +1,11 @@
 ﻿using EventShared;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 
 /*
  * Created by Moon on 9/11/2018 (Inspired by andruzzzhka's BeatSaverMultiplayer)
