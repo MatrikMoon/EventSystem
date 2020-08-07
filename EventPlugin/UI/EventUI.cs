@@ -59,6 +59,9 @@ namespace EventPlugin.UI
 #elif QUALIFIER
                     var buttonName = "WC Qualifiers";
                     var hint = "Qualifier menu for Beat Saber World Cup";
+#elif BEATKHANA
+                    var buttonName = "BeatKhana Qualifiers";
+                    var hint = "Qualifier Plugin for BeatKhana";
 #else
                     var buttonName = "EVENT BETA";
                     var hint = "STILL A BETA";

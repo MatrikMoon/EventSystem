@@ -38,6 +38,27 @@ namespace EventServer
             }
         }
 
+        public static void PostToBeatKhana(string userId, string songHash, string score, string maxScore) 
+        {
+            HttpClientHandler httpClientHandler = new HttpClientHandler();
+            httpClientHandler.AllowAutoRedirect = false;
+
+            using (var client = new HttpClient(httpClientHandler))
+            {
+                client.DefaultRequestHeaders.Add("user-agent", "EventServer");
+                client.DefaultRequestHeaders.Add("Authorization", "d74d206a-e303-4956-a527-50cebe2bd446");
+
+                var json = new JSONObject();
+                json["ssId"] = userId;
+                json["songHash"] = songHash;
+                json["score"] = score;
+                json["totalScore"] = maxScore;
+                var content = new StringContent(json);
+
+                client.PostAsync($"https://beatkhana.com/api/tournament/2147484141/qualifiers", content);
+            }
+        }
+
         public static void StartHttpServer()
         {
             var route_config = new List<Route>() {
@@ -71,6 +92,10 @@ namespace EventServer
                                     StatusCode = "400"
                                 };
                             }
+
+#if BEATKHANA
+                            PostToBeatKhana(s.UserId, s.SongHash, s.Score_.ToString(), new EventServer.BeatSaver.Song(s.SongHash).GetMaxScore(s.Characteristic, (LevelDifficulty)s.Difficulty).ToString());
+#endif
 
                             Database.Score oldScore = null;
                             if (Database.Score.Exists(s.SongHash, s.UserId, (LevelDifficulty)s.Difficulty, s.Characteristic))
@@ -436,10 +461,12 @@ namespace EventServer
             int port = 3711;
 #elif (ASIAVR)
             int port = 3709;
-#elif QUALIFIER
+#elif (QUALIFIER)
             int port = 3713;
 #elif (BTH)
             int port = 3715;
+#elif (BEATKHANA)
+            int port = 3717;
 #else
             int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #endif
@@ -467,6 +494,9 @@ namespace EventServer
             var serverName = "Beat Saber World Cup";
 #elif BTH
             var serverName = "Beat the Hub Season 1";
+#elif BEATKHANA
+            //var serverName = "BeatKhana!";
+            var serverName = "Beat Saber Testing Server";
 #elif BETA
             var serverName = "Beat Saber Testing Server";
 #endif
@@ -482,7 +512,9 @@ namespace EventServer
 #elif QUALIFIER
             ulong scoreChannel = 724118394693222451; //"qualifier-scores";
 #elif BTH
-            ulong scoreChannel = 713655231107301446; //"qualifier-scores"
+            ulong scoreChannel = 713655231107301446; //"qualifier-scores";
+#elif BEATKHANA
+            ulong scoreChannel = 488445468141944842; //"event-scores";
 #elif BETA
             ulong scoreChannel = 488445468141944842; //"event-scores";
 #endif
@@ -499,7 +531,9 @@ namespace EventServer
 #elif QUALIFIER
             ulong infoChannel = 709154896183820349; //"country-registration";
 #elif BTH
-            ulong infoChannel = 713655231107301446; //"qualifier-scores"
+            ulong infoChannel = 713655231107301446; //"qualifier-scores";
+#elif BEATKHANA
+            ulong infoChannel = 488445468141944842; //"event-scores"
 #elif BETA
             ulong infoChannel = 488445468141944842; //"event-scores";
 #endif

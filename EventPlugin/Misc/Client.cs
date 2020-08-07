@@ -44,6 +44,8 @@ namespace EventPlugin.Misc
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-qualifiers";
 #elif BTH
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-bth";
+#elif BEATKHANA
+        private static string discordCommunityApi = $"{discordCommunityUrl}/api-beatkhana";
 #elif BETA
         private static string discordCommunityApi = $"{discordCommunityUrl}/api-beta";
 #endif
