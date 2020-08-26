@@ -363,6 +363,15 @@ namespace EventServer
                         string songHash = requestData[1];
                         JSONNode json = new JSONObject();
 
+#if HIDDENNOTES
+                        return new HttpResponse()
+                        {
+                            ContentAsUTF8 = json.ToString(),
+                            ReasonPhrase = "OK",
+                            StatusCode = "200"
+                        };
+#endif
+
                         if (songHash == "all")
                         {
                             int take = 10;
@@ -465,9 +474,13 @@ namespace EventServer
             int port = 3713;
 #elif (BTH)
             int port = 3715;
-#elif (BEATKHANA)
+#elif (FENCINGQUALIFIER)
             int port = 3717;
-#else
+#elif (BEATKHANA)
+            int port = 3719;
+#elif (HIDDENNOTES)
+            int port = 3721;
+#elif BETA
             int port = 3704; //My vhost is set up to direct to 3708 when the /api-beta/ route is followed
 #endif
             HttpServer httpServer = new HttpServer(port, route_config);
@@ -495,7 +508,8 @@ namespace EventServer
 #elif BTH
             var serverName = "Beat the Hub Season 1";
 #elif BEATKHANA
-            //var serverName = "BeatKhana!";
+            var serverName = "BeatKhana!";
+#elif HIDDENNOTES
             var serverName = "Beat Saber Testing Server";
 #elif BETA
             var serverName = "Beat Saber Testing Server";
@@ -515,6 +529,8 @@ namespace EventServer
             ulong scoreChannel = 713655231107301446; //"qualifier-scores";
 #elif BEATKHANA
             ulong scoreChannel = 488445468141944842; //"event-scores";
+#elif HIDDENNOTES
+            ulong scoreChannel = 488445468141944842;
 #elif BETA
             ulong scoreChannel = 488445468141944842; //"event-scores";
 #endif
@@ -534,6 +550,8 @@ namespace EventServer
             ulong infoChannel = 713655231107301446; //"qualifier-scores";
 #elif BEATKHANA
             ulong infoChannel = 488445468141944842; //"event-scores"
+#elif HIDDENNOTES
+            ulong infoChannel = 488445468141944842;
 #elif BETA
             ulong infoChannel = 488445468141944842; //"event-scores";
 #endif
